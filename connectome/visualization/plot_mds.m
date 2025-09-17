@@ -1,0 +1,130 @@
+function saved_fig_paths = plot_mds(data,test_criteria,output_file,varargin)
+
+if size(varargin,1)>1
+    %If we have any additional terms we are doing ROI based analysis and we
+    %are plottign those ROI listed out.
+    vertex=varargin{1};
+    check_vertex=numel(vertex);
+else
+    vertex=[];
+    check_vertex=numel(vertex)+1;
+end
+
+theta=0:0.01:2*pi;
+
+saved_fig_paths=cell(2,check_vertex);
+for VERTEX=1:check_vertex
+
+    if size(varargin,1)>1
+        data_subset=data(data.vertex==vertex(VERTEX));
+    else
+        data_subset=data;
+    end
+
+    if size(test_criteria,1)>1
+        [full_group_name,group_names,group_name_idx] = find_group_information_from_groupingcriteria(data_subset,test_criteria{2}{:});
+    else
+        [full_group_name,group_names,group_name_idx] = find_group_information_from_groupingcriteria(data_subset,test_criteria{1});
+    end
+
+    for n=1:numel(group_names)
+
+        xCenter(n)=mean(data_subset.X1(group_name_idx==n));
+        yCenter(n)=mean(data_subset.X2(group_name_idx==n));
+
+        xRadius=std(data_subset.X1(group_name_idx==n));
+        yRadius=std(data_subset.X2(group_name_idx==n));
+
+        x(:,n)=xRadius*cos(theta)+xCenter(n);
+        y(:,n)=yRadius*sin(theta)+yCenter(n);
+    end
+
+    disp('Plotting MDS...');
+    myColorOrder=[1 0 0; 0 1 0; 0 0 1; 0 1 1; 1 0 1; 1 1 0; 0 0 0];
+
+    fig1=figure;
+    box on;
+    set(gcf, 'Paperunits','inches','PaperPosition',[0 0 1 1]*3.3);
+    set(gca,'fontsize',9);
+
+    h=gscatter(data_subset.X1, data_subset.X2, full_group_name,'rgbcmyk'); %forcing rgbcmyk order
+
+    hold on
+
+    % if we have F or M in our group names, this is probably
+    % female/male, so set symbols + for female, and > for male. 
+    symbols=cell(size(group_names));
+    if (ischar(group_names)||iscell(group_names))
+        f_idx=reg_match(group_names,'(^|[\s_])F([\s_]|$)',1);
+        m_idx=reg_match(group_names,'(^|[\s_])M([\s_]|$)',1);
+
+        if nnz(f_idx|m_idx) == numel(group_names)
+            symbols(f_idx)={'+'};
+            symbols(m_idx)={'>'};
+            set(h,{'Marker'}, symbols(:),'markersize',6)
+        end
+    end
+
+    set(gca,'ColorOrder',myColorOrder)
+    ax=gca;
+    ax.ColorOrderIndex=1;
+
+    plot(x,y,'--'); %STDEV ring around centroid of data
+    hold off
+
+    xlabel('MDS_{1}');
+    ylabel('MDS_{2}');
+
+    set(fig1, 'unit', 'inches');
+    set(gca, 'unit', 'inches');
+    figure_pos =  get(fig1, 'position');
+    ax_pos=get(gca,'position');
+
+    if (ischar(group_names)||iscell(group_names))
+        legend(group_names);
+    else
+        legend(num2str(group_names));
+    end
+
+    if (ischar(group_names)||iscell(group_names))
+        % {
+        % fancier legend
+        legend_text=cell(size(group_names));
+        for i_l=1:numel(group_names)
+            % sum or nnz will both work i think.
+            count=nnz(reg_match(full_group_name,sprintf('^%s$',group_names{i_l})));
+            legend_text{i_l}=sprintf('%s (N=%i)',group_names{i_l},count);
+        end
+
+        %legend(legend_text);
+        h_legend=legend(legend_text,'NumColumns',2,'Location','southoutside');
+        set(h_legend, 'unit', 'inches');
+        h_legend.FontSize = 6;
+        legend_pos = get(h_legend, 'position');
+        new_ax_pos=get(gca,'position');
+        fig_shift=new_ax_pos - ax_pos;
+
+        set(fig1, 'position', figure_pos - [ 0 0 0 fig_shift(4)]);
+        set(h_legend,'position',legend_pos);
+        set(gca,'position',ax_pos + [ 0 fig_shift(2) 0 0 ]);
+    end
+    
+    if size(varargin,1)>1
+        img_out=strcat(output_file,'_vertex_',num2str(VERTEX(n)),'.png');
+        print(fig1,img_out,'-dpng','-r600');
+        saved_fig_paths{1,VERTEX}=img_out;
+
+        img_out=strcat(output_file,'_vertex_',num2str(VERTEX(n)),'.svg');
+        print(fig1,img_out,'-dsvg');
+        saved_fig_paths{2,VERTEX}=img_out;
+        clear fig1
+    else
+        print(fig1,output_file,'-dpng','-r600');
+        saved_fig_paths{1,VERTEX}=[output_file '.png'];
+
+        print(fig1,output_file,'-dsvg');
+        saved_fig_paths{2,VERTEX}=[output_file, '.svg'];
+        clear fig1
+    end
+end
+end
