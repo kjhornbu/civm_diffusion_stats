@@ -2,7 +2,7 @@
 close all;
 clear all;
 
-ontology_Order=civm_read_table("Z:\All_Staff\civm_diffusion_stats\Ontology_Order_EdgeStrengthPlots.csv");
+ontology_Order=civm_read_table("Ontology_Order_EdgeStrengthPlots.csv");
 %Keep this in the folder as a LUT??? this shouldn't change per run??
 
 dataframe_path="Z:\All_Staff\20.5xFAD.02\20.5xFAD.02_DataFrame_Combined_20250904_ChangedGenotypeGroups.txt";
