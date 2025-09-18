@@ -113,8 +113,15 @@ uit_treatedpw.DisplayDataChangedFcn=@(src,event)update_text(src,event,'treatment
 controlpw = uit_controlpw.Data;
 treatmentpw = uit_treatedpw.Data;
 
-add_row_button = uibutton(holding_add_button,'Text','+');
+holding_add_sub_button = uigridlayout(holding_add_button,[1,2]);
+holding_add_sub_button.RowHeight = {45};
+holding_add_sub_button.ColumnWidth = {'1x','1x'};
+
+add_row_button = uibutton(holding_add_sub_button,'Text','+');
 add_row_button.ButtonPushedFcn=@add_row_button_pushed;
+
+remove_row_button = uibutton(holding_add_sub_button,'Text','-');
+remove_row_button.ButtonPushedFcn=@remove_row_button_pushed;
 
 next_button = uibutton(main_grid,'Text','NEXT');
 next_button.ButtonPushedFcn=@next_button_pressed;
@@ -132,13 +139,10 @@ waitfor(next_button,'ButtonPushedFcn');
             [controlpw, treatmentpw]=update_text_sov_case_checkbox(src,event,entry);
         end
     end
-    function add_row_button_pushed(src,event)
-        %Make sure when we are adding rows that stuff got putt into the
-        %model_table correctly.
-        size_data_set=size(uit_treatedpw.Data);
-        size_case_data=size(uit_case.Data);
+    function save_prior_state(src,event)
+        controlpw = uit_controlpw.Data;
+        treatmentpw = uit_treatedpw.Data;
 
-        %Save prior state
         controlpw = uit_controlpw.Data;
         controlpw.applytosummary=uit_applytosummaryppt.Data.('Apply to "Simplify Summary PPT"')(1:end);
         controlpw.case = uit_case.Data.Case_Name(1:end);
@@ -148,6 +152,38 @@ waitfor(next_button,'ButtonPushedFcn');
         treatmentpw.applytosummary=uit_applytosummaryppt.Data.('Apply to "Simplify Summary PPT"')(1:end);
         treatmentpw.case = uit_case.Data.Case_Name(1:end);
         treatmentpw.source_of_variation = uit_sov.Data.Source_of_Variation(1:end);
+    end
+    function remove_row_button_pushed (src,event)
+        size_data_set=size(uit_controlpw.Data);
+
+        % save prior state
+        save_prior_state(src,event)
+
+        if size_data_set(1)==1
+            return;
+        end
+
+        controlpw(size_data_set(1),:)=[];
+        treatmentpw(size_data_set(1),:)=[];
+
+        uit_controlpw.Data=controlpw(:,1:size_data_set(2));
+        uit_treatedpw.Data=treatmentpw(:,1:size_data_set(2));
+    
+        uit_applytosummaryppt.Data(size_data_set(1),:)=[];
+        uit_applytosummaryppt.Data.('Apply to "Simplify Summary PPT"')=controlpw.applytosummary;
+        uit_case.Data(size_data_set(1),:)=[];
+        uit_case.Data.Case_Name=controlpw.case;
+        uit_sov.Data(size_data_set(1),:)=[];
+        uit_sov.Data.Source_of_Variation=controlpw.source_of_variation;
+    end
+    function add_row_button_pushed(src,event)
+        %Make sure when we are adding rows that stuff got putt into the
+        %model_table correctly.
+        size_data_set=size(uit_treatedpw.Data);
+        size_case_data=size(uit_case.Data);
+
+        %Save prior state
+        save_prior_state(src,event)
 
         % increment the GUI tables for additional entry
 
@@ -165,18 +201,7 @@ waitfor(next_button,'ButtonPushedFcn');
     end
     function next_button_pressed(src, event)
         %Save all state
-        controlpw = uit_controlpw.Data;
-        treatmentpw = uit_treatedpw.Data;
-
-        controlpw = uit_controlpw.Data;
-        controlpw.applytosummary=uit_applytosummaryppt.Data.('Apply to "Simplify Summary PPT"')(1:end);
-        controlpw.case = uit_case.Data.Case_Name(1:end);
-        controlpw.source_of_variation = uit_sov.Data.Source_of_Variation(1:end);
-
-        treatmentpw = uit_treatedpw.Data;
-        treatmentpw.applytosummary=uit_applytosummaryppt.Data.('Apply to "Simplify Summary PPT"')(1:end);
-        treatmentpw.case = uit_case.Data.Case_Name(1:end);
-        treatmentpw.source_of_variation = uit_sov.Data.Source_of_Variation(1:end);
+        save_prior_state(src,event)
 
         pairwise_criteria.control=controlpw;
         pairwise_criteria.treatment=treatmentpw;

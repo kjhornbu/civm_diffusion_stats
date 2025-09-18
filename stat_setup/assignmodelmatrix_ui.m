@@ -22,15 +22,17 @@ only_interesting_col_names=vertcat(configuration_table.Column_Names(GROUP_positi
 model_table=table('Size',[1 numel(only_interesting_col_names)],'VariableTypes',repmat({'logical'},[numel(only_interesting_col_names),1]),'VariableNames',only_interesting_col_names);
 model_table.Properties.RowNames=strsplit(num2str(1))';
 
+blank_table=model_table;
+
 fig=uifigure('Position',[100 100 2150 550]);
 main_grid = uigridlayout(fig,[1,2]);
 main_grid.ColumnWidth = {'1x','1x'};
 main_grid.RowHeight = {'1x'};
 
 %LEFT Side
-left_secondary_grid = uigridlayout(main_grid,[5,1]);
+left_secondary_grid = uigridlayout(main_grid,[6,1]);
 left_secondary_grid.ColumnWidth = {'1x'};
-left_secondary_grid.RowHeight = {'1x','1x',65,'1x',65};
+left_secondary_grid.RowHeight = {'1x','1x','1x',65,'1x',65};
 
 left_top_tertiary_grid = uigridlayout(left_secondary_grid,[2,1]);
 left_top_tertiary_grid.ColumnWidth = {'1x'};
@@ -46,7 +48,20 @@ uil_L2=uilabel(left_bottom_tertiary_grid,'text',sprintf(strcat('Connectome Stati
 uitext_L2=uieditfield(left_bottom_tertiary_grid,'text','Value','omnimanova_defined_matrix');
 uitext_L2.ValueChangedFcn=@(src,event) text_model(src,event,'manova');
 
-ui_instruction=uilabel(left_secondary_grid,'text','Click to populate matrix model representation for both regression models. Multiple entries in a row indicate interactions between clicked terms. Click the  + to add new rows.');
+ui_instruction=uilabel(left_secondary_grid,'text',sprintf('Click to populate matrix model representation for both regression models. Multiple entries in a row indicate interactions between clicked terms.\nClick "Main Effect Model" or "Full Interaction Model" to populate the matrix automatically. Click "Clear Matrix Model" to clear out the current matrix. Click the  + to add new rows.'));
+
+left_extra_bottom_tertiary_grid = uigridlayout(left_secondary_grid,[1,3]);
+left_extra_bottom_tertiary_grid.ColumnWidth = {'1x','1x','1x'};
+left_extra_bottom_tertiary_grid.RowHeight = {'1x'};
+
+main_effect_button = uibutton(left_extra_bottom_tertiary_grid,'Text','Main Effect Model');
+main_effect_button.ButtonPushedFcn=@main_effect_pushed;
+
+full_interaction_button = uibutton(left_extra_bottom_tertiary_grid,'Text','Full Interaction Model');
+full_interaction_button.ButtonPushedFcn=@full_interaction_pushed;
+
+clear_matrix_button = uibutton(left_extra_bottom_tertiary_grid,'Text','Clear Matrix Model');
+clear_matrix_button.ButtonPushedFcn=@clear_matrix_button_pushed;
 
 uit=uitable(left_secondary_grid);
 uit.Data=model_table;
@@ -85,6 +100,43 @@ next_button.ButtonPushedFcn=@next_button_pressed;
 waitfor(next_button,'ButtonPushedFcn');
 
 %internal actions
+    function main_effect_pushed(src,event)
+        clear_matrix_button_pushed(src,event)
+        terms=width(model_table);
+        check_mark_counter=dec2bin(2.^([0:terms-1]),terms);
+
+        for n=1:terms
+            if n>1
+                add_row_button_pushed(src, event)
+            end
+            for m=1:terms
+                uit.Data{n,m}=str2num(check_mark_counter(n,m));
+            end
+        end
+        model_table=uit.Data;
+    end
+
+    function full_interaction_pushed(src,event)
+        clear_matrix_button_pushed(src,event)
+
+        terms=width(model_table);
+        check_mark_counter=dec2bin(1:(2^terms-1),terms);
+
+        for n=1:(2^(terms)-1)
+            if n>1
+                add_row_button_pushed(src, event)
+            end
+            for m=1:terms
+                uit.Data{n,m}=str2num(check_mark_counter(n,m));
+            end
+        end
+        model_table=uit.Data;
+    end
+    function clear_matrix_button_pushed(src,event)
+        %replace the model table and the saving table with an empty table
+        model_table=blank_table;
+        uit.Data=blank_table;
+    end
     function track_changes(src,event)
         model_table=uit.Data; %make sure current data is in the saving table
     end
@@ -137,5 +189,4 @@ waitfor(next_button,'ButtonPushedFcn');
         close(fig);
         return
     end
-
 end

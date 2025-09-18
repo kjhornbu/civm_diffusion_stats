@@ -7,24 +7,7 @@ else
 end
 
 [Note,algorithm_Output] = james_to_study_inDataFrameEntry(dataFrame);
-
-Data=table;
-
-dataFrame_name=dataFrame.Properties.VariableNames;
-vcount_logical_idx=~cellfun(@isempty,regexpi(dataFrame_name,'^(vcount)$'));
-vcount_positional_idx=find(vcount_logical_idx);
-
-for n=1:vcount_positional_idx-1
-    Data.('Column_Names'){n}=dataFrame_name{n};
-end
-
-%Get 3 New Columns
-Data=addvars(Data,repmat({''},size(Data,1),1),'Before',1);
-Data=addvars(Data,repmat({''},size(Data,1),1),'Before',1);
-Data=addvars(Data,repmat({''},size(Data,1),1),'Before',1);
-
-%And Call them something Useful
-Data = renamevars(Data,1:3,["GROUP","SUBGROUP","RANDOM"]);
+[Data] = create_data_table(dataFrame);
 
 %Start the ui for figure generation
 fig=uifigure('Position',[100 100 2150 550]);
@@ -37,7 +20,7 @@ uit.Data=Data;
 
 Data_size=size(Data);
 uit.ColumnEditable=repmat(true,[1,Data_size(2)-1]);
-uit.DisplayDataChangedFcn=@track_changes;
+uit. CellEditCallback =@track_changes;
 
 secondary_grid = uigridlayout(main_grid,[3,1]);
 secondary_grid.ColumnWidth = {'1x'};
@@ -53,10 +36,12 @@ waitfor(next_button,'ButtonPushedFcn');
 
 %internal actions
     function track_changes(src,event)
+        find_Interaction_col=event.Source.Data.Properties.VariableNames(event.Indices(2));
+
         %Check for only one of the number in the data set
-        test=regexpi(event.InteractionVariable,'^(GROUP|SUBGROUP)$'); 
-        if ~isempty(test) && test
-            [Data,colorupdaterequired] = checkNumbering(src,Data,event);
+        test=regexpi(find_Interaction_col,'^(GROUP|SUBGROUP)$');
+        if ~isempty(test)
+            [Data,colorupdaterequired] = checkNumbering(src,Data,event,find_Interaction_col);
         else
             [Data,colorupdaterequired] = assignRandomEffect(src,Data,event);
         end
@@ -75,26 +60,26 @@ waitfor(next_button,'ButtonPushedFcn');
 %External Functions put back in
     function [Data, colorupdaterequired] = assignRandomEffect(src,Data,event)
         colorupdaterequired=false;
-        current_val=src.Data{event.DisplaySelection(1),event.DisplaySelection(2)};
-        prior_val=Data{event.DisplaySelection(1),event.DisplaySelection(2)};
+        current_val=event.NewData;
+        prior_val=event.PreviousData;
 
         if ~strcmp(current_val,prior_val)
             colorupdaterequired=true;
         end
 
-        Data{event.DisplaySelection(1),event.DisplaySelection(2)}=current_val;
+        Data{event.Indices(1),event.Indices(2)}={current_val};
     end
 
-    function [Data,colorupdaterequired] = checkNumbering(src,Data,event)
+    function [Data,colorupdaterequired] = checkNumbering(src,Data,event,find_Interaction_col)
         colorupdaterequired=false;
-        current_val=src.Data{event.DisplaySelection(1),event.DisplaySelection(2)};
+        current_val=event.NewData;
 
-        if regexpi(event.InteractionVariable,'^(GROUP)$')
+        if ~cellfun(@isempty,regexpi(find_Interaction_col,'^(GROUP)$'))
             idx=~cellfun(@isempty,src.Data.GROUP);
             Data_str=src.Data.GROUP(idx);
         end
 
-        if regexpi(event.InteractionVariable,'^(SUBGROUP)$')
+        if ~cellfun(@isempty,regexpi(find_Interaction_col,'^(SUBGROUP)$'))
             idx=~cellfun(@isempty,src.Data.SUBGROUP);
             Data_str=src.Data.SUBGROUP(idx);
         end
@@ -111,7 +96,7 @@ waitfor(next_button,'ButtonPushedFcn');
             colorupdaterequired=true;
         end
 
-        Data{event.DisplaySelection(1),event.DisplaySelection(2)}=current_val;
+        Data{event.Indices(1),event.Indices(2)}={current_val};
     end
 
     function [] = colorupdater_stats_config(src,event)
@@ -150,15 +135,34 @@ waitfor(next_button,'ButtonPushedFcn');
     function[] = remove_style_fcn(src,row_position)
         %For a given row remove all the style
         check_select=[];
-
         for m=1:numel(src.StyleConfigurations.TargetIndex)
             temp_Position=src.StyleConfigurations.TargetIndex{m};
             check_select(m)=temp_Position(1)==row_position;
         end
-
         select_positions=find(check_select);
         if ~isempty(select_positions)
             removeStyle(src,select_positions);
         end
-end
+    end
+
+
+    function [Data] = create_data_table(dataFrame)
+        Data=table;
+
+        dataFrame_name=dataFrame.Properties.VariableNames;
+        vcount_logical_idx=~cellfun(@isempty,regexpi(dataFrame_name,'^(vcount)$'));
+        vcount_positional_idx=find(vcount_logical_idx);
+
+        for n=1:vcount_positional_idx-1
+            Data.('Column_Names'){n}=dataFrame_name{n};
+        end
+
+        %Get 3 New Columns
+        Data=addvars(Data,repmat({''},size(Data,1),1),'Before',1);
+        Data=addvars(Data,repmat({''},size(Data,1),1),'Before',1);
+        Data=addvars(Data,repmat({''},size(Data,1),1),'Before',1);
+
+        %And Call them something Useful
+        Data = renamevars(Data,1:3,["GROUP","SUBGROUP","RANDOM"]);
+    end
 end

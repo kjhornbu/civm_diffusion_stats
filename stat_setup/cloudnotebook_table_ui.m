@@ -25,30 +25,17 @@ uit.ColumnEditable=repmat(true,[1,notebook_size(2)]);
 %uit.DisplayDataChangedFcn=@track_changes;
 uit. CellEditCallback = @cell_edit;
 
-done_button = uibutton(main_grid,'Text','SAVE CHANGES');
-done_button.ButtonPushedFcn=@done_button_pressed;
+save_button = uibutton(main_grid,'Text','SAVE CHANGES');
+save_button.ButtonPushedFcn=@save_button_pressed;
 
-close_button = uibutton(main_grid,'Text','CLOSE');
-close_button.ButtonPushedFcn=@close_button_pressed;
-waitfor(close_button,'ButtonPushedFcn');
+next_button = uibutton(main_grid,'Text','NEXT');
+next_button.ButtonPushedFcn=@next_button_pressed;
+waitfor(next_button,'ButtonPushedFcn');
 
 %internal actions
-%     function track_changes(src,event)
-%         %in theory src == uit
-%         if strcmp(event.InteractionVariable,'INCLUDE')|strcmp(event.InteractionVariable,'EXCLUDE')|strcmp(event.InteractionVariable,'DROP?')
-%             [notebook_info,colorupdaterequired] = filter_col_change_cloudnotebook_summary(src,notebook_info,event);
-%         else
-%             [notebook_info,colorupdaterequired] = spelling_update_cloudnotebook_summary(src,notebook_info,event);
-%         end
-%         if colorupdaterequired
-%             colorupdater(src,notebook_info,event)
-%         end
-%     end
 
     function cell_edit(src,event)
-
         find_Interaction_col=event.Source.Data.Properties.VariableNames(event.Indices(2));
-
         if strcmp(find_Interaction_col,'INCLUDE')|strcmp(find_Interaction_col,'EXCLUDE')|strcmp(find_Interaction_col,'DROP?')
             [notebook_info,colorupdaterequired] = filter_col_change_cloudnotebook_summary(notebook_info,event);
         else
@@ -59,11 +46,11 @@ waitfor(close_button,'ButtonPushedFcn');
         end
     end
 
-    function done_button_pressed(src,event)
+    function save_button_pressed(src,event)
         finish_cloudnotebook_editing(uit,notebook_info,output_path)
     end
 
-    function close_button_pressed(src,event)
+    function next_button_pressed(src,event)
         finish_cloudnotebook_editing(uit,notebook_info,output_path)
         close(fig);
     end
@@ -129,6 +116,7 @@ waitfor(close_button,'ButtonPushedFcn');
     end
 
     function [notebook_info,colorupdaterequired] = filter_col_change_cloudnotebook_summary(notebook_info,event)
+        colorupdaterequired=false;
         current_val=event.NewData;
 
         %check previous value isn't different
