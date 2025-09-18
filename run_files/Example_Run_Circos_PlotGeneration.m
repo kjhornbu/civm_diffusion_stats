@@ -41,3 +41,4 @@ selection_group_idx=ones(height(dataframe),1);
 output_connectome=vertcat(output_connectome{:});
 
 create_circos_file(directory,ontology_Order,total_Ordering,vertex,output_connectome,selection_pull,compare_group_A,compare_group_B,threshold); 
+

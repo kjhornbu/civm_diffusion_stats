@@ -14,7 +14,7 @@ for n=1:size(vertex_select,1)
         idx_A=~cellfun(@isempty,regexpi(output.selection_group,strcat('^(',selection_pull{m},')$'))) & ~cellfun(@isempty,regexpi(output.compare_group,group_A)) & vertex_idx==vertex_position;
         idx_B=~cellfun(@isempty,regexpi(output.selection_group,strcat('^(',selection_pull{m},')$'))) & ~cellfun(@isempty,regexpi(output.compare_group,group_B)) & vertex_idx==vertex_position;
 
-        % paths
+        % paths we are going to save data at
         A_name=fullfile(directory,strcat(selection_pull{m},'_',group_A,'_vertex_',num2str(vertex_select(n)),'_circos_input_file_atTHRES',num2str(threshold)));
         B_name=fullfile(directory,strcat(selection_pull{m},'_',group_B,'_vertex_',num2str(vertex_select(n)),'_circos_input_file_atTHRES',num2str(threshold)));
 
@@ -29,7 +29,7 @@ for n=1:size(vertex_select,1)
         %normalize together
         normalization_metric=max(max([output.data{idx_A};output.data{idx_B}]));
 
-        %in ROI order
+        %this data is in ROI order
         raw_percent_A=output.data{idx_A}./normalization_metric;
         raw_percent_B=output.data{idx_B}./normalization_metric;
 
@@ -40,7 +40,7 @@ for n=1:size(vertex_select,1)
         prep_map_4_circos(A_name,atlas_ontology,total_Ordering)
         prep_map_4_circos(B_name,atlas_ontology,total_Ordering)
 
-        %Prep Map Links.txt
+        %Prep Map Links.txt (the actual data)
         prep_data_4_circos(A_name,raw_percent_A,Seed_ABB,ontology,total_Ordering,threshold);
         prep_data_4_circos(B_name,raw_percent_B,Seed_ABB,ontology,total_Ordering,threshold);
     end

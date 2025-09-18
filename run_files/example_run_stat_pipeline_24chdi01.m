@@ -8,7 +8,7 @@ studyID='24.chdi.01';
 project_dir=fullfile(HOME_DIR,studyID);
 google_doc=fullfile(project_dir,'google_sheet_caps', '24.chdi.01 - MRI record for phase II-2025-09-08.tsv');
 cleaned_google_doc_path=fullfile(project_dir,'google_sheet_caps',strcat('Edited_GoogleSheet_',char(datetime('today')),'.txt'));
-dataframe_path=fullfile(project_dir, [studyID '_DataFrame_Windows_20250917.txt']);
+dataframe_path=fullfile(project_dir, [studyID '_DataFrame_Windows_20250918-6mo.txt']);
 % if empty string, script will make you a new setup file
 % or, pass it an existing one
 setup_file='';
@@ -21,7 +21,7 @@ atlas_ontology_path=fullfile(getenv("WORKSTATION_HOME"),'static_data','atlas','s
 pval_threshold=0.05;
 pval_cols=list2cell('pval_BH pval');
 user='Harrison Mansour ';
-save_dir=fullfile(project_dir,'stats_20250917_TestScalarConnectomev2-15mo');
+save_dir=fullfile(project_dir,'stats_20250918_TestScalarConnectomev2-6mo');
 
 %% uncomment to allow which part of pipeline desired to run. 
 %which_tests=list2cell('Scalar'); %does only scalar stats

@@ -22,7 +22,8 @@ uit.Data=notebook_info.edit_table;
 %should be able to edit the entire table
 notebook_size=size(notebook_info.edit_table);
 uit.ColumnEditable=repmat(true,[1,notebook_size(2)]);
-uit.DisplayDataChangedFcn=@track_changes;
+%uit.DisplayDataChangedFcn=@track_changes;
+uit. CellEditCallback = @cell_edit;
 
 done_button = uibutton(main_grid,'Text','SAVE CHANGES');
 done_button.ButtonPushedFcn=@done_button_pressed;
@@ -32,15 +33,29 @@ close_button.ButtonPushedFcn=@close_button_pressed;
 waitfor(close_button,'ButtonPushedFcn');
 
 %internal actions
-    function track_changes(src,event)
-        %in theory src == uit
-        if strcmp(event.InteractionVariable,'INCLUDE')|strcmp(event.InteractionVariable,'EXCLUDE')|strcmp(event.InteractionVariable,'DROP?')
-            [notebook_info,colorupdaterequired] = filter_col_change_cloudnotebook_summary(src,notebook_info,event);
+%     function track_changes(src,event)
+%         %in theory src == uit
+%         if strcmp(event.InteractionVariable,'INCLUDE')|strcmp(event.InteractionVariable,'EXCLUDE')|strcmp(event.InteractionVariable,'DROP?')
+%             [notebook_info,colorupdaterequired] = filter_col_change_cloudnotebook_summary(src,notebook_info,event);
+%         else
+%             [notebook_info,colorupdaterequired] = spelling_update_cloudnotebook_summary(src,notebook_info,event);
+%         end
+%         if colorupdaterequired
+%             colorupdater(src,notebook_info,event)
+%         end
+%     end
+
+    function cell_edit(src,event)
+
+        find_Interaction_col=event.Source.Data.Properties.VariableNames(event.Indices(2));
+
+        if strcmp(find_Interaction_col,'INCLUDE')|strcmp(find_Interaction_col,'EXCLUDE')|strcmp(find_Interaction_col,'DROP?')
+            [notebook_info,colorupdaterequired] = filter_col_change_cloudnotebook_summary(notebook_info,event);
         else
             [notebook_info,colorupdaterequired] = spelling_update_cloudnotebook_summary(src,notebook_info,event);
         end
         if colorupdaterequired
-            colorupdater(src,notebook_info,event)
+            colorupdater(src,notebook_info,event,find_Interaction_col)
         end
     end
 
@@ -49,6 +64,7 @@ waitfor(close_button,'ButtonPushedFcn');
     end
 
     function close_button_pressed(src,event)
+        finish_cloudnotebook_editing(uit,notebook_info,output_path)
         close(fig);
     end
 
@@ -112,25 +128,25 @@ waitfor(close_button,'ButtonPushedFcn');
         notebook_info.original_table=cloud_notebook;
     end
 
-    function [notebook_info,colorupdaterequired] = filter_col_change_cloudnotebook_summary(src,notebook_info,event)
-        current_val=src.Data{event.DisplaySelection(1),event.DisplaySelection(2)};
+    function [notebook_info,colorupdaterequired] = filter_col_change_cloudnotebook_summary(notebook_info,event)
+        current_val=event.NewData;
 
         %check previous value isn't different
-        prior_val=notebook_info.edit_table{event.DisplaySelection(1),event.DisplaySelection(2)};
+        prior_val=event.PreviousData;
 
         %if different set update detected (color update required)
         if ~strcmp(current_val,prior_val)
             colorupdaterequired=1;
         end
 
-        notebook_info.edit_table{event.DisplaySelection(1),event.DisplaySelection(2)}=current_val;
+        notebook_info.edit_table{event.Indices(1),event.Indices(2)}={current_val};
     end
 
     function [notebook_info,colorupdaterequired] = spelling_update_cloudnotebook_summary(src,notebook_info,event)
-        current_val=src.Data{event.DisplaySelection(1),event.DisplaySelection(2)};
+        current_val=event.NewData;
 
-        %check previous value isn't different
-        prior_val=notebook_info.edit_table{event.DisplaySelection(1),event.DisplaySelection(2)};
+        %check previous value saved in table isn't different
+        prior_val=notebook_info.edit_table{event.Indices(1),event.Indices(2)};
 
         % beacuase empty string classes DO NOT count for "isempty" we will force to
         % char array. We should look into docs a bit more to find a more correct
@@ -139,36 +155,42 @@ waitfor(close_button,'ButtonPushedFcn');
         current_val=char(current_val);
 
         colorupdaterequired=0;
-        if event.DisplaySelection(2) > 4
+        if event.Indices(2) > 4
             if strcmp(current_val,prior_val) %same data
             elseif isempty(prior_val) && (~strcmp(current_val,prior_val)) %different data where there should be no data (outside of the vals)
                 % have to convert back to string
                 prior_val=string(prior_val);
-                src.Data{event.DisplaySelection(1),event.DisplaySelection(2)}=prior_val;
+                src.Data{event.Indices(1),event.Indices(2)}=prior_val; %Make whatever was at the indices whatever it was previously and color so that obvious rejection
                 colorupdaterequired=1;
             elseif ~strcmp(current_val,prior_val) %different data where clearing out data or different data where adding data
-                update_idx=find(strcmp(table2array(notebook_info.val{event.DisplaySelection(1)}),prior_val));
-                assign_update_idx=notebook_info.idx(:,event.DisplaySelection(1))==update_idx;
-                notebook_info.original_table{assign_update_idx,event.DisplaySelection(1)}={current_val};
+                %find proper location of the new data using the prior value
+                %in the unique keeper. 
+                update_idx=find(strcmp(table2array(notebook_info.val{event.Indices(1)}),prior_val));
+                assign_update_idx=notebook_info.idx(:,event.Indices(1))==update_idx;
 
-                notebook_info.edit_table{event.DisplaySelection(1),event.DisplaySelection(2)}=string(current_val);
-                notebook_info.val{event.DisplaySelection(1)}{update_idx,1}={current_val};
-                %str2num(event.InteractionVariable)
+                %Change the data you are correcting in the original table
+                notebook_info.original_table{assign_update_idx,event.Indices(1)}={current_val};
+                %change the data in the summary table we are using to keep
+                %track of changes
+                notebook_info.edit_table{event.Indices(1),event.Indices(2)}={current_val};
+                %Change the value in the "unique keeper" to the new value
+                %at the proper location.
+                notebook_info.val{event.Indices(1)}{update_idx,1}={current_val};
             end
         else
             if strcmp(current_val,prior_val) %same data
             elseif ~strcmp(current_val,prior_val) %different data where clearing out data or different data where adding data
-                notebook_info.edit_table{event.DisplaySelection(1),event.DisplaySelection(2)}=string(current_val);
-                notebook_info.val{event.DisplaySelection(1)}.Properties.VariableNames={current_val};
-                notebook_info.original_table.Properties.VariableNames{event.DisplaySelection(1)}=current_val;
+                notebook_info.edit_table{event.Indices(1),event.Indices(2)}=string(current_val);
+                notebook_info.val{event.Indices(1)}.Properties.VariableNames={current_val};
+                notebook_info.original_table.Properties.VariableNames{event.Indices(1)}=current_val;
             end
         end
     end
 
-    function [] = colorupdater(src,notebook_info,event)
+    function [] = colorupdater(src,notebook_info,event,find_Interaction_col)
         ui_size=size(src.Data);
 
-        row_position = event.DisplaySelection(1);
+        row_position = event.Indices(1);
         remove_style_fcn(src,row_position)
 
         %check for include entry on row
@@ -205,10 +227,10 @@ waitfor(close_button,'ButtonPushedFcn');
         end
 
         % Assorted Other Issues
-        if ~reg_match(event.InteractionVariable,'EXCLUDE|INCLUDE|DROP?')
+        if ~reg_match(find_Interaction_col,'EXCLUDE|INCLUDE|DROP?')
             color = [1 1 0]; %yellow hey there is somethign going on here...
             % (probably adding something outside of scope) That isn't in one of our main update columns
-            col_positions= event.DisplaySelection(2);
+            col_positions= event.Indices(2);
 
             for o=1:numel(col_positions)
                 %only color the Include Critera that remains
@@ -219,7 +241,7 @@ waitfor(close_button,'ButtonPushedFcn');
 
         %DROP
         drop_entry=str2num(src.Data.("DROP?"){row_position});
-
+        %if you put a 1 it changes the drop otherwise it doesn't drop
         if drop_entry == 1
             color = [0.5 0 0]; %Maroon
             col_positions=1:ui_size(2);

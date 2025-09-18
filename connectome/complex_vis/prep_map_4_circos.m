@@ -1,6 +1,5 @@
 function [] = prep_map_4_circos(name,ontology_color,total_Ordering)
 
-
 ordered_ontology_color=ontology_color(total_Ordering,:);
 
 Level_Name=ordered_ontology_color.level_3;
