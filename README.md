@@ -1,0 +1,1 @@
+Welcome to the unified runner for statistical data processing at CIVM. This combines connectomic and scalar diffusion analysis within one pipeline with a helpful GUI setup for the statistical model. Example runner files, are located in run_files. 
