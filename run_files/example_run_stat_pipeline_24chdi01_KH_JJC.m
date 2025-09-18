@@ -6,13 +6,16 @@ studyID='24.chdi.01';
 project_dir='Z:\All_Staff\24.chdi.01_testing';
 google_doc=fullfile(project_dir,'google_sheet_caps', '24.chdi.01 - MRI record for phase II-2025-09-08.tsv');
 cleaned_google_doc_path=fullfile(project_dir,'google_sheet_caps',strcat('Edited_GoogleSheet_',char(datetime('today')),'.txt'));
+%if the day has changed since you ran this you want to make sure you set this to the fixed path!!!
+
 dataframe_path=fullfile(project_dir, [studyID '_DataFrame_Windows_20250918.txt']);
 % if empty string, script will make you a new setup file
 % or, pass it an existing one
 setup_file='';
 
-polished_sheets=fullfile(project_dir,'polished_sheets');
-% point this to somewhere else
+polished_sheets=fullfile(project_dir,'polished_sheets'); %where the polished sheets will be saved
+% point this to somewhere else if you are working from some local drive
+% etc... 
 project_research_archive=fullfile('A:/',studyID,'research');
 atlas_ontology_path=fullfile(getenv("WORKSTATION_HOME"),'static_data','atlas','symmetric15um','labels','RCCF','symmetric15um_RCCF_labels_lookup.txt'); 
 
