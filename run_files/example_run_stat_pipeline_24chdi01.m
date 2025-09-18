@@ -21,7 +21,7 @@ atlas_ontology_path=fullfile(getenv("WORKSTATION_HOME"),'static_data','atlas','s
 pval_threshold=0.05;
 pval_cols=list2cell('pval_BH pval');
 user='Harrison Mansour ';
-save_dir=fullfile(project_dir,'stats_20250917_TestScalarConnectomev2');
+save_dir=fullfile(project_dir,'stats_20250917_TestScalarConnectomev2-15mo');
 
 %% uncomment to allow which part of pipeline desired to run. 
 %which_tests=list2cell('Scalar'); %does only scalar stats
