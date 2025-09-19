@@ -306,6 +306,18 @@ for d_idx=1:numel(data_idx)
                 %errors only are edited by the harmonic mean (the equation is the
                 %simple one from genenetwork for a 1 way anova--https://genenetwork.org/glossary/#h
             end
+
+            % fix for bug causing complex cohenF scores
+            % this makes them strings and crashes when calling max(...)
+            % rare edge case caused by the data
+            % so far, only happens for ION__ in CHDI 15-months
+            inf_locations = find(output.F_Statistic==Inf);
+            output.df(inf_locations)=0;
+            output.Number_of_Groupings(inf_locations)=0;
+            output.F_Statistic(inf_locations)=NaN;
+            output.pval(inf_locations)=NaN;
+            output.eta2(inf_locations)=NaN;
+
             output.cohenF(length_output+(1:numel(p)))=sqrt(output.eta2(length_output+(1:numel(p)))./(1-output.eta2(length_output+(1:numel(p)))));
 
             %Error term entries tacked onto the end.
