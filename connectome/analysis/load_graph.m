@@ -45,6 +45,8 @@ for n=1:size(df,1)
             %[connectivity] = add_missing_roi_mat_file_extension(temp_connectome,look_up_table);
             graphs(n,:,:)=temp_connectome.connectivity(:,:);
             catch
+               graphs(n,:,:)=-1*ones(360,360); % a flag for telling if the data is bad after loading... see if there are patterns to the badness
+               
                keyboard;
             end
 

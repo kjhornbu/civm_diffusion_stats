@@ -1,6 +1,10 @@
 function [LUT,plot_lut] = make_percentChange_LUT(directory,difference_criteria,matrix_2_print,plot_lut)
 %not the exact same as the other LUT files lol James --KH 2025-09-12
 
+if ~exist(fullfile(directory,difference_criteria),'dir')
+    mkdir(fullfile(directory,difference_criteria))
+end
+
 %% Making Color Range, Bounds, and Color Levels themselves
 if reg_match(difference_criteria,'percent_difference')
     color_range=linspace(-0.5,0.5,11); %Percent Change
@@ -109,8 +113,8 @@ if plot_lut == 1
     yticks(linspace(1,size(color_range,2),size(color_range,2)))
     yticklabels(color_range)
 
-    print(fig_colormap, fullfile(directory,'LUT_ColorMap.png'),'-dpng','-r600');
-    print(fig_colormap, fullfile(directory,'LUT_ColorMap.svg'),'-dsvg','-vector');
+    print(fig_colormap, fullfile(directory,difference_criteria,'LUT_ColorMap.png'),'-dpng','-r600');
+    print(fig_colormap, fullfile(directory,difference_criteria,'LUT_ColorMap.svg'),'-dsvg','-vector');
 
     plot_lut = false;
 end

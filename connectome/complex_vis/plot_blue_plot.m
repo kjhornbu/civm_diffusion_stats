@@ -24,6 +24,16 @@ if ~exist(directory,'dir')
     mkdir(directory)
 end
 
+if ~exist(fullfile(directory,'annotations'),'dir')
+    mkdir(fullfile(directory,'annotations'))
+end
+
+if ~exist(fullfile(directory,'edge_strength_plot'),'dir')
+    mkdir(fullfile(directory,'edge_strength_plot'))
+end
+
+
+
 %% Where to put the Figure's X Label Things
 select_ROI=[100 180.5 1100];
 
@@ -66,7 +76,7 @@ end
 
 check_size=f.InnerPosition;
 set(gca,'FontSize',4.5,'FontName','Arial','TickDir','out');
-print(f, fullfile(directory,strcat('ROI_',num2str(vertex(1,1)),'_',Structure,'_Means.svg')),'-dsvg','-vector');
+print(f, fullfile(directory,'edge_strength_plot',strcat('ROI_',num2str(vertex(1,1)),'_',Structure,'_Means.svg')),'-dsvg','-vector');
 close all;
 
 %% Make output plots -- Average Mean Plots (Blue) -- ANNOTATIONS Labels.
@@ -115,7 +125,7 @@ xticklabels("");
 yticks(0);
 yticklabels("");
 
-print(f2, fullfile(directory,strcat('ANNOTATIONS_ROI_',num2str(vertex(1,1)),'_',Structure,'_Means.svg')),'-dsvg','-vector');
+print(f2, fullfile(directory,'annotations',strcat('ANNOTATIONS_ROI_',num2str(vertex(1,1)),'_',Structure,'_Means.svg')),'-dsvg','-vector');
 close all;
 
 if make_Left_Axis
@@ -140,7 +150,7 @@ if make_Left_Axis
     yticks(0);
     yticklabels("");
 
-    print(f3, fullfile(directory,strcat('ANNOTATIONS_LEFTAXIS_A_Means.svg')),'-dsvg','-vector');
+    print(f3, fullfile(directory,'annotations',strcat('ANNOTATIONS_LEFTAXIS_A_Means.svg')),'-dsvg','-vector');
     close all;
 
     %% Make output plots -- Average Mean Plots (Blue) -- Left Super labels for Y axis.
@@ -162,7 +172,7 @@ if make_Left_Axis
     yticks(0);
     yticklabels("");
 
-    print(f3, fullfile(directory,strcat('ANNOTATIONS_LEFTAXIS_B_Means.svg')),'-dsvg','-vector');
+    print(f3, fullfile(directory,'annotations',strcat('ANNOTATIONS_LEFTAXIS_B_Means.svg')),'-dsvg','-vector');
     close all;
 
     %% Make output plots -- Average Mean Plots (Blue) -- Left Super labels for Y axis.
@@ -187,7 +197,7 @@ if make_Left_Axis
     yticks(0);
     yticklabels("");
 
-    print(f3, fullfile(directory,strcat('ANNOTATIONS_LEFTAXIS_C_Means.svg')),'-dsvg','-vector');
+    print(f3, fullfile(directory,'annotations',strcat('ANNOTATIONS_LEFTAXIS_C_Means.svg')),'-dsvg','-vector');
     close all;
 end
 end

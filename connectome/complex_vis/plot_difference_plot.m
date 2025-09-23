@@ -1,4 +1,12 @@
-function [figure_entries,outputArg2] = plot_difference_plot(directory,difference_criteria,vertex,selection_pull,matrix_2_print_onlyKeyRegions,LUT,ontology_Order,positional_idx_regions)
+function [figure_entries] = plot_difference_plot(directory,difference_criteria,vertex,selection_pull,matrix_2_print_onlyKeyRegions,LUT,ontology_Order,positional_idx_regions)
+
+if ~exist(directory,'dir')
+    mkdir(directory)
+end
+
+if ~exist(fullfile(directory,difference_criteria),'dir')
+    mkdir(fullfile(directory,difference_criteria))
+end
 
 %% Preliminary Setups
 if ispc
@@ -15,9 +23,6 @@ Structure=strjoin(Structure_Temp(1:end-1),'_'); %Get the structure name to put i
 
 selection_Number=size(matrix_2_print_onlyKeyRegions,1); %selection number is the number of repeating units we have of data -- because difference each set == 1 row
 
-if ~exist(directory,'dir')
-    mkdir(directory)
-end
 %% Figures
 f=figure;
 set(gcf,'Units', 'inches','PaperUnits', 'inches','PaperPosition',[0 0 2 0.5*(selection_Number/6)]*3.3*printfactor,'Position',[0 0 2 0.5*(selection_Number/6)]*3.3*printfactor);
@@ -107,7 +112,7 @@ xticklabels("");
 
 legend("off");
 
-print(f, fullfile(directory,strcat('ROI_',num2str(vertex(1,1)),'_',Structure,'_Difference_via_',difference_criteria,'_Key_Edges.svg')),'-dsvg','-vector');
+print(f, fullfile(directory,difference_criteria,strcat('ROI_',num2str(vertex(1,1)),'_',Structure,'_Difference_via_',difference_criteria,'_Key_Edges.svg')),'-dsvg','-vector');
 close all
 
 end

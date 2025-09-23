@@ -312,6 +312,9 @@ for d_idx=1:numel(data_idx)
             % rare edge case caused by the data
             % so far, only happens for ION__ in CHDI 15-months
             inf_locations = find(output.F_Statistic==Inf);
+            if inf_locations
+                keyboard;
+            end
             output.df(inf_locations)=0;
             output.Number_of_Groupings(inf_locations)=0;
             output.F_Statistic(inf_locations)=NaN;

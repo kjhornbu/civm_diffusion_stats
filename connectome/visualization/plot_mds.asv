@@ -70,6 +70,7 @@ for VERTEX=1:check_vertex
     ax.ColorOrderIndex=1;
 
     for n=1:numel(group_names)
+
         xCenter=mean(data_subset.X1(group_name_idx==n));
         yCenter=mean(data_subset.X2(group_name_idx==n));
         xRadius=std(data_subset.X1(group_name_idx==n));
@@ -82,6 +83,7 @@ for VERTEX=1:check_vertex
             plot_STD_ring(xCenter,yCenter,xRadius,yRadius,myColorOrder(idx_color,:));
         end
     end
+
 
     %plot(x,y,'--'); %STDEV ring around centroid of data
     hold off
