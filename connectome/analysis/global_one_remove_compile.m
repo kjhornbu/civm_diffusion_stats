@@ -1,4 +1,4 @@
-function [Sig_Among_1RM] = global_one_remove_compile(save_cnt,connectome_outputs,Paths_Pval,pval_threshold)
+function [save_path] = global_one_remove_compile(save_cnt,connectome_outputs,Paths_Pval,pval_threshold)
 
 count=1;
 for n=1:numel(connectome_outputs)
@@ -40,6 +40,8 @@ for n=1:numel(all_sources)
     end
 end
 
-civm_write_table(Sig_Among_1RM,fullfile(save_cnt,'Global_Significant_Among_1_Remove.txt'));
+save_path=fullfile(save_cnt,'Global_Significant_Among_1_Remove.txt');
+
+civm_write_table(Sig_Among_1RM,save_path);
 
 end

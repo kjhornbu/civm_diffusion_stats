@@ -1,4 +1,4 @@
-function [Sig_Among_1RM] = regional_one_remove_compile(save_cnt,connectome_outputs,Paths_Pval,pval_threshold)
+function [save_path] = regional_one_remove_compile(save_cnt,connectome_outputs,Paths_Pval,pval_threshold)
 
 count=1;
 for n=1:numel(connectome_outputs)
@@ -39,7 +39,8 @@ for n=1:numel(all_sources)
         temp_wrkdata=RM_1_results.ROI(connectome_idx==postional_idx_connectome & sov_idx==postional_idx_sov);
         Sig_Among_1RM.(connectome_outputs{m})=sum(all_roi==temp_wrkdata',2);
     end
-    civm_write_table(Sig_Among_1RM,fullfile(save_cnt,strcat(strrep(all_sources{n},'_',''),'_Significant_Among_1_Remove.txt')));
+    save_path{n}=fullfile(save_cnt,strcat(strrep(all_sources{n},'_',''),'_Significant_Among_1_Remove.txt'));
+    civm_write_table(Sig_Among_1RM,save_path{n});
 end
 
 end

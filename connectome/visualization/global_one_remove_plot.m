@@ -1,4 +1,4 @@
-function [] = global_one_remove_plot(dataframe,data)
+function [] = global_one_remove_plot(save_path,dataframe,data)
 
 if ispc
     printfactor=(72/96);

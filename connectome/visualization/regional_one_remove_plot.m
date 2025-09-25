@@ -1,4 +1,4 @@
-function [] = regional_one_remove_plot(dataframe,data)
+function [] = regional_one_remove_plot(save_path,dataframe,data)
 
 if ispc
      printfactor=(72/96);
@@ -17,7 +17,7 @@ if ~istable(dataframe)
     dataframe=civm_read_table(temp_dataframe);
 end
 
-[~,~,c]=unique(data.count_sig_bh_brainscaled);
+[~,~,c]=unique(data.BrainScaled_Omni_Manova);
 set_data_size=height(dataframe)+1;
 set_data=sum(c==1:set_data_size);
 
