@@ -1,4 +1,5 @@
 function [ ] = regional_interesting_results(save_path,data,pval_threshold)
+file_extension={'png','svg'};
 if ispc
      printfactor=(72/96);
  end
@@ -6,7 +7,6 @@ if ispc
      printfactor=1;
  end
  
-
 if ~istable(data)
     temp_data=data;
     data=civm_read_table(temp_data);
@@ -25,7 +25,7 @@ f=figure;
 box on;
 set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 1 1]*3.3*printfactor);
 bar(categorical(strrep(all_sources,'_',' ')),count_regions);
-set(gca,'YLim',[0 358+10])
+set(gca,'YLim',[0 (numel(Pval_Check)/numel(all_sources))+10])
 set(gca, 'fontsize',6,'FontName','Arial');
 
 for n=1:numel(categorical(all_sources))
@@ -46,7 +46,7 @@ f=figure;
 box on;
 set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 1 1]*3.3*printfactor);
 bar(categorical(strrep(all_sources,'_',' ')),count_regions);
-set(gca,'YLim',[0 358+10])
+set(gca,'YLim',[0 (numel(Pval_Check)/numel(all_sources))+10])
 set(gca, 'fontsize',6,'FontName','Arial');
 
 for n=1:numel(categorical(all_sources))
@@ -54,8 +54,6 @@ for n=1:numel(categorical(all_sources))
         text(categorical(all_sources(n)),count_regions(n)+10,num2str(count_regions(n)),'HorizontalAlignment','center','FontSize',6,'FontName','Arial');
     end
 end
-
-
 ylabel('Significantly Changed Nodes With Large Effects');
 save_figure_file=fullfile(save_path,'Regional_Significant+LargeEffectSource.svg');
 print(f,save_figure_file,'-dsvg','-vector');

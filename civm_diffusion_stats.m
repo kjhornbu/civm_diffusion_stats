@@ -275,10 +275,7 @@ if sum(reg_match(which_tests,'^(Connectome)$'))>0
         end
         save_cnt=fullfile(save_dir,'Connectomics',stats_test_manova.name,name_augment);
     end
-%     if ~exist(save_cnt,'dir')
-%         mkdir(save_cnt);
-%     end
-
+    
     connectome_outputs=list2cell('Unscaled_Omni_Manova BrainScaled_Omni_Manova');
     do_binarize=0; do_mean_subtract=0; do_ptr=0; do_augment=0;
     t_start=tic;
@@ -411,7 +408,7 @@ oneRM_done=0;
 
     %% TO DO: Summary PPt for Connectomes
 
-    
+
 end
 end
 

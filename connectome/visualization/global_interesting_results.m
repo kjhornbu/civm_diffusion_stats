@@ -1,4 +1,6 @@
 function [ ] = global_interesting_results(save_path,data,pval_threshold)
+file_extension={'png','svg'};
+
 if ispc
      printfactor=1;
  end
@@ -46,7 +48,11 @@ xticklabels({'Significant Pvalue'; 'Signficant Pvalue +\newlineLarge Effect'});
 
 
 set(gca, 'fontsize',3,'FontName','Arial');
-save_figure_file=fullfile(save_path,'Global_SignificantSource_Significant+LargeEffectSource.svg');
+save_figure_file=fullfile(save_path,'Global_SignificantSource_Significant+LargeEffectSource');
+file_name='Global_SignificantSource_Significant+LargeEffectSource';
+file_extension=[]
+ saveMultiOutFigure(f,save_path,file_name,file_extension)
+
 print(f,save_figure_file,'-dsvg','-vector');
 
 end
