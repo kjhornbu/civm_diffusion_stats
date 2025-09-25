@@ -1,11 +1,11 @@
 function [figure_entries,Top_idx_10pct_noUncharted_inOntologyOrder,make_Left_Axis] = plot_blue_plot(directory,vertex,matrix_2_print,matrix_Criteria,selection_pull,data_y_labels,ontology_Order,make_Left_Axis,idx_vertex_10pct_noUncharted_inOntologyOrder)
 %% Preliminary Setups
 if ispc
-     printfactor=1;
+     printfactor=(72/96);
      print_num=96;
  end
  if ismac
-     printfactor=(72/96);
+     printfactor=1;
      print_num=72;
  end
 

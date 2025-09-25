@@ -10,11 +10,12 @@ end
 
 %% Preliminary Setups
 if ispc
-     printfactor=1;
- end
- if ismac
-     printfactor=(72/96);
- end
+    printfactor=(72/96);
+
+end
+if ismac
+    printfactor=1;
+end
 
  figure_entries=table;
 
