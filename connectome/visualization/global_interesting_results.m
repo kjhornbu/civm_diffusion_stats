@@ -38,11 +38,11 @@ end
 ytick_positions=(1:numel(Pval_Check))+0.5;
 ylabel('Sources of Variation');
 yticks(ytick_positions);
-yticklabels(data.source_of_variation);
+yticklabels(strrep(data.source_of_variation,'_',' '));
 
 xtick_positions=[0.5 1.5];
 xticks(xtick_positions);
-xticklabels({'Significant Pvalue'; 'Signficant Pvalue + Large Effect'});
+xticklabels({'Significant Pvalue'; 'Signficant Pvalue +\newlineLarge Effect'});
 
 
 set(gca, 'fontsize',3,'FontName','Arial');

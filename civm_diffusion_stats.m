@@ -309,6 +309,11 @@ if sum(reg_match(which_tests,'^(Connectome)$'))>0
 
             set_scale=n-1;
             [regional_paths,global_paths]=full_omni_manova_process(dataframe_path,o_dir,group, subgroup,test_criteria,test_remove_criteria,stats_test_manova,do_binarize, do_mean_subtract, do_ptr, do_augment, find_scale, set_scale);
+           
+            
+            global_interesting_results(o_dir,global_paths.pval,pval_threshold);
+            regional_interesting_results(o_dir,regional_paths.pval,pval_threshold);
+
             Paths_Pval.(connectome_outputs{n}).name{1}='All';
             Paths_Pval.(connectome_outputs{n}).regional{1}=regional_paths.pval;
             Paths_Pval.(connectome_outputs{n}).global{1}=global_paths.pval;
@@ -340,7 +345,7 @@ if sum(reg_match(which_tests,'^(Connectome)$'))>0
     %approx_specimenspace_remaining=max_specimen-2*(num_specimen+(num_specimen-1)^2); %total specimen possible based on memory - (2x because scaled/unscale) (specimen in inital omni  + all the one remove at the same time (so just )^2)
 %its really related to how many entries need to keep to hold the data...
 %which is more related to how many significant terms are we keeping
-
+oneRM_done=0;
     if dataLimit>0
         % ParFor for One remove testing
         if ~file_time_check(fullfile(save_cnt,'Pval_Paths.mat'),'newer',dataframe_path)
@@ -387,19 +392,17 @@ if sum(reg_match(which_tests,'^(Connectome)$'))>0
 
             save(fullfile(save_cnt,'Pval_Paths.mat'),'Paths_Pval')
 
-
             [Sig_Among_1RM_global_paths] = global_one_remove_compile(save_cnt,connectome_outputs,Paths_Pval,pval_threshold);
             [Sig_Among_1RM_regional_paths] = regional_one_remove_compile(save_cnt,connectome_outputs,Paths_Pval,pval_threshold);
 
             global_one_remove_plot(save_cnt,dataframe,Sig_Among_1RM_global_paths);
-            regional_one_remove_plot(save_cnt,dataframe,Sig_Among_1RM_regional_paths);
+            for n=1:numel(Sig_Among_1RM_regional_paths)
+                regional_one_remove_plot(save_cnt,dataframe,Sig_Among_1RM_regional_paths{n});
+            end
         end
-    end
-    %Gets a centroid to centroid comparision as we sort through the
-    %dataset. 
-    %iterate groups to hold for various test conditions in the data set
-     %[output] = centroid_2_centroid(Data,list2cell('group1'),groups_to_hold);
 
+        oneRM_done=1;
+    end
     %% TO DO: Put complex figure generation here for Connectomes
     % they are so dependant for ordering to put together but at least getting
     % the components  here would be a good thing.
@@ -407,6 +410,8 @@ if sum(reg_match(which_tests,'^(Connectome)$'))>0
     %This should be at least the blue figures
 
     %% TO DO: Summary PPt for Connectomes
+
+    
 end
 end
 

@@ -23,8 +23,9 @@ end
 
 RM_1_results=vertcat(output_save_table{:});
 
-save(fullfile(save_cnt,'1_Remove_Test.mat'),'RM_1_results');
-
+save_path=fullfile(save_cnt,'Regional_1_Remove_Test.txt');
+civm_write_table(RM_1_results,save_path);
+clear save_path;
 [connectome,~,connectome_idx]=unique(RM_1_results.connectome_factor);
 [sov,~,sov_idx]=unique(RM_1_results.source_of_variation);
 

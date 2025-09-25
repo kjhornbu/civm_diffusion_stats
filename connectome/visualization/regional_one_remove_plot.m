@@ -24,7 +24,7 @@ set_data=sum(c==1:set_data_size);
 f=figure;
 box on;
 set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 1 1]*3.3*printfactor);
-bar((1:set_data_size),set_data)
+bar((1:set_data_size)-1,set_data)
 set(gca,'XLim',[-2 set_data_size+2])
 set(gca,'YLim',[0 360+20])
 
