@@ -31,17 +31,13 @@ save(fullfile(save_cnt,'1_Remove_Test.mat'),'RM_1_results');
 for n=1:numel(all_sources)
     Sig_Among_1RM=table;
     Sig_Among_1RM.roi=all_roi;
-
     idx_sov=reg_match(sov,all_sources{n});
     postional_idx_sov=find(idx_sov);
-
     for m=1:numel(connectome_outputs)
         idx_connectome=reg_match(connectome,connectome_outputs{m});
         postional_idx_connectome=find(idx_connectome);
-
         temp_wrkdata=RM_1_results.ROI(connectome_idx==postional_idx_connectome & sov_idx==postional_idx_sov);
         Sig_Among_1RM.(connectome_outputs{m})=sum(all_roi==temp_wrkdata',2);
-
     end
     civm_write_table(Sig_Among_1RM,fullfile(save_cnt,strcat(strrep(all_sources{n},'_',''),'_Significant_Among_1_Remove.txt')));
 end
