@@ -387,52 +387,11 @@ if sum(reg_match(which_tests,'^(Connectome)$'))>0
 
             save(fullfile(save_cnt,'Pval_Paths.mat'),'Paths_Pval')
 
-            for n=1:numel(connectome_outputs)
-                total_comparisions = height(Paths_Pval.(connectome_outputs{n}));
-                for m=1:total_comparisions
-                    pval=civm_read_table(Paths_Pval.(connectome_outputs{n}).regional{m});
-                    specimen{m}=Paths_Pval.(connectome_outputs{n}).name{m};
 
-                    if m == 1
-                        %then this is the initial manova!
-                        [value,~,idx]=unique(pval.source_of_variation);
-                        logical_idx=idx==1:numel(value)';
-                    else
-                        for o=1:numel(value)
-                            logical_idx(:,o)=~cellfun(@isempty,regexpi(pval.source_of_variation,value{o}));
-                        end
-                    end
-                    for o=1:numel(value)
-                        value_adjust{o}=strrep(value{o},':','x');
-                        logical_idx_BH(:,o)=logical_idx(:,o) & (pval.pval_BH<=pval_threshold);
-                        logical_idx_raw(:,o)=logical_idx(:,o) & (pval.pval<=pval_threshold);
+            [Sig_Among_1RM_global] = global_one_remove_compile(save_cnt,connectome_outputs,Paths_Pval,pval_threshold);
+            [Sig_Among_1RM_regional] = regional_one_remove_compile(save_cnt,connectome_outputs,Paths_Pval,pval_threshold);
 
-                        keeproi_BH{n}{o}{m}=pval.ROI(logical_idx_BH(:,o));
-                        keeproi_raw{n}{o}{m}=pval.ROI(logical_idx_raw(:,o));
-                    end
-                    clear logical_idx logical_idx_BH logical_idx_raw pval
-                end
-                for o=1:numel(value)
-                    ROI_full_list_BH.(connectome_outputs{n}).(value_adjust{o})=vertcat(keeproi_BH{n}{o}{:});
-                    ROI_full_list_raw.(connectome_outputs{n}).(value_adjust{o})=vertcat(keeproi_raw{n}{o}{:});
-                end
-            end
-            save(fullfile(save_cnt,'1_Remove_Test.mat'),'connectome_outputs','specimen','ROI_full_list_BH','ROI_full_list_raw','keeproi_BH','keeproi_raw');
-            for o=1:numel(value)
-                Sig_Among_1RM=table;
-                Sig_Among_1RM.roi=[1:180,1000+(1:180)]';
-                [a,~,c]=unique(ROI_full_list_BH.Unscaled_Omni_Manova.(value_adjust{o}));
-                count_sig=sum(c==1:numel(a));
-                for n=1:numel(a)
-                    Sig_Among_1RM.count_sig_bh_unscaled(Sig_Among_1RM.roi==a(n))=count_sig(n);
-                end
-                [a,~,c]=unique(ROI_full_list_BH.BrainScaled_Omni_Manova.(value_adjust{o}));
-                count_sig=sum(c==1:numel(a));
-                for n=1:numel(a)
-                    Sig_Among_1RM.count_sig_bh_brainscaled(Sig_Among_1RM.roi==a(n))=count_sig(n);
-                end
-                civm_write_table(Sig_Among_1RM,fullfile(save_cnt,strcat(strrep(value_adjust{o},'_',''),'_Significant_Among_1_Remove.txt')));
-            end
+            
         end
     end
     %Gets a centroid to centroid comparision as we sort through the

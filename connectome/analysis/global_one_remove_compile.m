@@ -42,5 +42,4 @@ end
 
 civm_write_table(Sig_Among_1RM,fullfile(save_cnt,'Global_Significant_Among_1_Remove.txt'));
 
-
 end
