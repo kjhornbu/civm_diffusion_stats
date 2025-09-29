@@ -13,18 +13,18 @@ function [regional_paths, global_paths] = Zscore_Applied_to_ASE( ...
 
 %% Save ASE
 %save regional ase
-% out_name=sprintf('ASE_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
-% out_file=fullfile(save_dir,out_name);
-% regional_paths.ase=out_file;
-% writetable(ase_regional, out_file); %No need to reformat because already done -- save directly
-% 
-% %save global ase
-% out_name=sprintf('Global_ASE_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
-% out_file=fullfile(save_dir,out_name);
-% global_paths.ase=out_file;
-% writetable(ase_global, out_file); %No need to reformat because already done -- save directly
+out_name=sprintf('ASE_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
+out_file=fullfile(save_dir,out_name);
+regional_paths.ase=out_file;
+writetable(ase_regional, out_file); %No need to reformat because already done -- save directly
 
-% Setup Tensor ASE with Zscoring for the Dist calcuations
+%save global ase
+out_name=sprintf('Global_ASE_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
+out_file=fullfile(save_dir,out_name);
+global_paths.ase=out_file;
+writetable(ase_global, out_file); %No need to reformat because already done -- save directly
+
+%% Setup Tensor ASE with Zscoring for the Dist calcuations
 logical_X_idx=~cellfun(@isempty,regexpi(ase_regional.Properties.VariableNames,'^X'));
 positional_X_idx=find(logical_X_idx==1);
 
@@ -83,12 +83,34 @@ for roi=1:(height(ase_regional)/height(ase_global))/2
         eigen_Zscored_bilat_Regional(:,roi) =  [0 0];
     end
 
-%Make Global Dist on Standarized Data
+end
+%% LOOK THIS UP FOR FURTHER UNDERSTANDING
+    %Make Global Dist on Standarized Data -- We use the Regional??? but why use
+%that? 
+for length_n=1:height(ase_global)
+    for length_m=1:height(ase_global)
+        Dist_Global_Zscored_FromRegional(length_n,length_m)=norm(tensor_ase_zscored(:,:,length_n)-tensor_ase_zscored(:,:,length_m),'fro');
+    end
+end
+
+    logical_X_idx=~cellfun(@isempty,regexpi(ase_global.Properties.VariableNames,'^X'));
+    positional_X_idx=find(logical_X_idx==1);
+
+    tensor_ase_zscored=table2array(ase_global(:,positional_X_idx));
+
+    tensor_ase_zscored=reshape(tensor_ase_zscored,height(ase_global),1,[]);
+    tensor_ase_zscored=permute(tensor_ase_zscored,[3,2,1]);
+
+    nan_mask=isnan(tensor_ase_zscored);
+    tensor_ase_zscored(nan_mask)=0;
+
+    %Make Global Dist From the ASE_Global Response
 for length_n=1:height(ase_global)
     for length_m=1:height(ase_global)
         Dist_Global_Zscored(length_n,length_m)=norm(tensor_ase_zscored(:,:,length_n)-tensor_ase_zscored(:,:,length_m),'fro');
     end
 end
+
 
 %Make New Global MDS on Standardized Data
 [~,eigen_Global_Zscored_Full] = cmdscale(Dist_Global_Zscored);
@@ -135,21 +157,21 @@ regional_paths.perc_explained_bilat=out_file;
 out_name=sprintf('Global_PercentExplained_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
 out_file=fullfile(save_dir,out_name);
 percexplain_global_longform=eigen_Zscored_Global';
-[~] = format_embedded_data_file(dataframe,test_criteria,percexplain_global_longform,out_file,'globalnorepeat');
+format_embedded_data_file(dataframe,test_criteria,percexplain_global_longform,out_file,'globalnorepeat');
 global_paths.perc_explained=out_file;
 
-%% Save ASE
-%save regional ase
-out_name=sprintf('ASE_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
-out_file=fullfile(save_dir,out_name);
-regional_paths.ase=out_file;
-format_embedded_data_file(dataframe,test_criteria,ase_regional,out_file,'regional');
-
-%save global ase
-out_name=sprintf('Global_ASE_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
-out_file=fullfile(save_dir,out_name);
-global_paths.ase=out_file;
-format_embedded_data_file(dataframe,test_criteria,ase_global,out_file,'global');
+%% Save ASE -- Done earlier because already formatted We don't have a bilateral ASE!!!
+% %save regional ase
+% out_name=sprintf('ASE_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
+% out_file=fullfile(save_dir,out_name);
+% regional_paths.ase=out_file;
+% format_embedded_data_file(dataframe,test_criteria,ase_regional,out_file,'regional');
+% 
+% %save global ase
+% out_name=sprintf('Global_ASE_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
+% out_file=fullfile(save_dir,out_name);
+% global_paths.ase=out_file;
+% format_embedded_data_file(dataframe,test_criteria,ase_global,out_file,'global');
 
 %% Save MDS
 %For each data set convert into correct layout which is Specimen,Vertex x Vector Embedding
