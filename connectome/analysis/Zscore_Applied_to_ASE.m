@@ -89,7 +89,7 @@ end
 %that? 
 for length_n=1:height(ase_global)
     for length_m=1:height(ase_global)
-        Dist_Global_Zscored_FromRegional(length_n,length_m)=norm(tensor_ase_zscored(:,:,length_n)-tensor_ase_zscored(:,:,length_m),'fro');
+        Dist_Global_Zscored(length_n,length_m)=norm(tensor_ase_zscored(:,:,length_n)-tensor_ase_zscored(:,:,length_m),'fro');
     end
 end
 
@@ -107,10 +107,9 @@ end
     %Make Global Dist From the ASE_Global Response
 for length_n=1:height(ase_global)
     for length_m=1:height(ase_global)
-        Dist_Global_Zscored(length_n,length_m)=norm(tensor_ase_zscored(:,:,length_n)-tensor_ase_zscored(:,:,length_m),'fro');
+        Dist_Global_Zscored_FromGlobal(length_n,length_m)=norm(tensor_ase_zscored(:,:,length_n)-tensor_ase_zscored(:,:,length_m),'fro');
     end
 end
-
 
 %Make New Global MDS on Standardized Data
 [~,eigen_Global_Zscored_Full] = cmdscale(Dist_Global_Zscored);
