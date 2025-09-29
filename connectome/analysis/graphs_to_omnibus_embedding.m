@@ -204,8 +204,6 @@ errs=nnz(round(abs(U6(:,1:6)./U10(:,1:6)),7,'significant')<1)
 [U,D,~]=svds(omni,elb);
 ase_Regional=U*sqrt(D);
 
-
-
 if randomize_vertex_order
     % if we're randomizing order, fix ase_Regional data ordering to match input
     ase_Regional=reshape(ase_Regional,n_vertices,n_graphs,[]);
@@ -231,7 +229,7 @@ for roi=1:n_vertices/2
     for n=1:n_graphs
         for m=1:n_graphs
             % This is semipar which is a frobien norm distance
-            Dist_Regional_bilat(n,m,roi)=norm(tensor_ase(:,[roi roi+n_vertices/2],m)-tensor_ase(:,[roi roi+n_vertices/2],n),'fro');
+            Dist_Regional_bilat(n,m,roi)=norm(tensor_ase(:,[roi roi+n_vertices/2],m)-tensor_ase(:,[roi roi+n_vertices/2],n),'fro'); %no need to reshape but can think of as one.
         end
     end
     try
@@ -292,7 +290,7 @@ end
 %distances.... huh.... 
 
 V=sort(eig(sqrt(Dist_Global*transpose(Dist_Global))),'descend');
-elb=getElbows(V,3);
+elb=getElbows(V,3); %-- this doesn't have as much of the analysis
 
 [U,D,~]=svds(Dist_Global,elb(2)); 
 ase_Global=U*sqrt(D);

@@ -119,11 +119,31 @@ graphs=load_graph(dataframe);
     main_embedding_median_eigen, eigen_Global, eigen_regional, eigen_regional_bilat]...
     = graphs_to_omnibus_embedding(dataframe, graphs, do_binarize, do_mean_subtract, do_ptr, do_augment, set_scale);
 
+%% SAVING BLOCKS
 out_name=sprintf('Median_ASE_Model_Explains_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
 out_file=fullfile(save_dir,out_name);
 percexplain=main_embedding_median_eigen';
 [percexplain] = format_embedded_data_file(dataframe,test_criteria,percexplain,out_file,'globalnorepeat');
 regional_paths.median_ase_model_explains=out_file;
+
+%% Save Distance
+% save regional dist explained
+out_name=sprintf('Regional_Dist_%i%i%i%i.mat',do_binarize,do_mean_subtract,do_ptr,do_augment);
+out_file=fullfile(save_dir,out_name);
+save(out_file,'Dist_regional','dataframe')
+regional_paths.dist_explained=out_file;
+
+%save bilat dist explained
+out_name=sprintf('Regional_Bilateral_Dist_%i%i%i%i.mat',do_binarize,do_mean_subtract,do_ptr,do_augment);
+out_file=fullfile(save_dir,out_name);
+save(out_file,'Dist_regional_bilat','dataframe')
+regional_paths.bilat_dist_explained=out_file;
+
+%save global dist explained
+out_name=sprintf('Global_Dist_%i%i%i%i.mat',do_binarize,do_mean_subtract,do_ptr,do_augment);
+out_file=fullfile(save_dir,out_name);
+save(out_file,'Dist_global','dataframe')
+global_paths.dist_explained=out_file;
 
 %% Save Percent Explained
 % save regional percent explained
@@ -188,7 +208,7 @@ mds_global_longform=reshape( permute(mds_global,[3 1 2]),[size(mds_global,1)*siz
 out_name=sprintf('2D_Embedding_Plot_Global_MDS_%i%i%i%i',do_binarize,do_mean_subtract,do_ptr,do_augment);
 out_fig_prefix=fullfile(save_dir,out_name);
 saved_fig_paths=plot_mds(mds_global,test_criteria,out_fig_prefix);
-global_paths.mds_fig=saved_fig_paths;
+global_paths.mds_fig=saved_fig_paths; %BUT this isn't the same as the ASE that we use with the statsitical testing since we aren't doing the reduced coordinates
 
 %% Save Semipar Distance
 % save for jmp(ha)

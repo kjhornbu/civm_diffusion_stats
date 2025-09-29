@@ -47,7 +47,7 @@ for n=1:size(df,1)
             catch
                graphs(n,:,:)=-1*ones(360,360); % a flag for telling if the data is bad after loading... see if there are patterns to the badness
                
-               keyboard;
+               %keyboard;
             end
 
         case '.xlsx'

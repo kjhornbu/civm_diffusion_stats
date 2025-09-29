@@ -13,16 +13,16 @@ function [regional_paths, global_paths] = Zscore_Applied_to_ASE( ...
 
 %% Save ASE
 %save regional ase
-out_name=sprintf('ASE_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
-out_file=fullfile(save_dir,out_name);
-regional_paths.ase=out_file;
-writetable(ase_regional, out_file); %No need to reformat because already done -- save directly
-
-%save global ase
-out_name=sprintf('Global_ASE_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
-out_file=fullfile(save_dir,out_name);
-global_paths.ase=out_file;
-writetable(ase_global, out_file); %No need to reformat because already done -- save directly
+% out_name=sprintf('ASE_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
+% out_file=fullfile(save_dir,out_name);
+% regional_paths.ase=out_file;
+% writetable(ase_regional, out_file); %No need to reformat because already done -- save directly
+% 
+% %save global ase
+% out_name=sprintf('Global_ASE_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
+% out_file=fullfile(save_dir,out_name);
+% global_paths.ase=out_file;
+% writetable(ase_global, out_file); %No need to reformat because already done -- save directly
 
 % Setup Tensor ASE with Zscoring for the Dist calcuations
 logical_X_idx=~cellfun(@isempty,regexpi(ase_regional.Properties.VariableNames,'^X'));
@@ -60,31 +60,28 @@ for roi=1:(height(ase_regional)/height(ase_global))
     end
 end
 
+%Make Bilat Regional Dist on Standarized Data
+for roi=1:(height(ase_regional)/height(ase_global))/2
+    for length_n=1:height(ase_global)
+        for length_m=1:height(ase_global)
+            Dist_regional_bilat_Zscored(length_n,length_m,roi)=norm(tensor_ase_zscored(:,[roi roi+(height(ase_regional)/height(ase_global))/2 ],length_n)-tensor_ase_zscored(:,[roi roi+(height(ase_regional)/height(ase_global))/2],length_m),'fro');
+        end
+    end
 
-%% Save Percent Explained
-% save regional percent explained
-out_name=sprintf('Regional_PercentExplained_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
-out_file=fullfile(save_dir,out_name);
-percexplain_regional=eigen_Zscored_Regional';
-format_embedded_data_file(dataframe,test_criteria,percexplain_regional,out_file,'regionalnorepeat');
-regional_paths.perc_explained=out_file;
-
-regional_paths.perc_explained_bilat=[]; %No bilat file because didn't want to think hard.
-
-%             %save regional dist after zscoring
-%             out_name=sprintf('Regional_Semipar_Image_Zscore_%i%i%i%i.mat',do_binarize,do_mean_subtract,do_ptr,do_augment);
-%             out_file=fullfile(save_dir,out_name);
-%             format_distance_file_figure(dataframe,Dist_Regional_Zscored,eigen_Zscored_Regional,test_criteria,out_file,'plot');
-
-%james dist files bullshet here
-
-%save regional MDS After Zscoring
-out_name=sprintf('Regional_MDS_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
-out_file=fullfile(save_dir,out_name);
-regional_paths.mdsZscore=out_file;
-mds_Regional_Zscore_longform=reshape( permute( mds_Regional_Zscored,[3 1 2]),[size( mds_Regional_Zscored,1)*size( mds_Regional_Zscored,3),size( mds_Regional_Zscored,2)]);
-[mds_Regional_Zscore] = format_embedded_data_file(dataframe,test_criteria,mds_Regional_Zscore_longform,out_file,'regional');
-%Make these save with real names? more like repair at end for ASE because the issue with ASE needing gorup/subgroup
+    try
+        [~,temp_eign_bilat_Full]=cmdscale(Dist_regional_bilat_Zscored(:,:,roi));
+        [temp_bilat,temp_bilat_eign]=cmdscale(Dist_regional_bilat_Zscored(:,:,roi),2); %updated to remove the focusing on only the first! roi
+        if size(temp_bilat,2)>1
+            mds_Regional_bilat_Zscored(:,:,roi) = temp_bilat;
+            eigen_Zscored_bilat_Regional(:,roi)= temp_bilat_eign./sum(temp_eign_bilat_Full(temp_eign_bilat_Full>0)); %Calcuates the percent of variablity explained by eigen values
+        else
+            mds_Regional_bilat_Zscored(:,:,roi) = [temp_bilat zeros(size(temp_bilat))];
+            eigen_Zscored_bilat_Regional(:,roi) =  [temp_bilat_eign 0]./sum(temp_eign_bilat_Full(temp_eign_bilat_Full>0)); %Calcuates the percent of variablity explained by eigen values
+        end
+    catch
+        mds_Regional_bilat_Zscored(:,:,roi) = zeros(size(Dist_regional_bilat_Zscored,1),2);
+        eigen_Zscored_bilat_Regional(:,roi) =  [0 0];
+    end
 
 %Make Global Dist on Standarized Data
 for length_n=1:height(ase_global)
@@ -99,31 +96,88 @@ end
 
 eigen_Zscored_Global=eigen_Zscored_Global./sum(eigen_Global_Zscored_Full(eigen_Global_Zscored_Full>0));
 
+%% SAVING BLOCKS
+%% Save Distance
+% save regional dist explained
+out_name=sprintf('Regional_Dist_Zscore_%i%i%i%i.mat',do_binarize,do_mean_subtract,do_ptr,do_augment);
+out_file=fullfile(save_dir,out_name);
+save(out_file,'Dist_Regional_Zscored','dataframe')
+regional_paths.dist_explained=out_file;
+
+%save bilat dist explained
+out_name=sprintf('Regional_Bilateral_Dist_Zscore_%i%i%i%i.mat',do_binarize,do_mean_subtract,do_ptr,do_augment);
+out_file=fullfile(save_dir,out_name);
+save(out_file,'Dist_regional_bilat_Zscored','dataframe')
+regional_paths.bilat_dist_explained=out_file;
+
+%save global dist explained
+out_name=sprintf('Global_Dist_Zscore_%i%i%i%i.mat',do_binarize,do_mean_subtract,do_ptr,do_augment);
+out_file=fullfile(save_dir,out_name);
+save(out_file,'Dist_Global_Zscored','dataframe')
+global_paths.dist_explained=out_file;
+
+%% Save Percent Explained
+% save regional percent explained
+out_name=sprintf('Regional_PercentExplained_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
+out_file=fullfile(save_dir,out_name);
+percexplain_regional=eigen_Zscored_Regional';
+[~] = format_embedded_data_file(dataframe,test_criteria,percexplain_regional,out_file,'regionalnorepeat');
+regional_paths.perc_explained=out_file;
+
+%save bilat percent explained
+out_name=sprintf('Regional_Bilateral_PercentExplained_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
+out_file=fullfile(save_dir,out_name);
+percexplain_regional_bilat=eigen_Zscored_bilat_Regional';
+format_embedded_data_file(dataframe,test_criteria,percexplain_regional_bilat,out_file,'regional_bilatnorepeat');
+regional_paths.perc_explained_bilat=out_file;
+
 %save global percent explained
 out_name=sprintf('Global_PercentExplained_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
 out_file=fullfile(save_dir,out_name);
 percexplain_global_longform=eigen_Zscored_Global';
-format_embedded_data_file(dataframe,test_criteria,percexplain_global_longform,out_file,'globalnorepeat');
+[~] = format_embedded_data_file(dataframe,test_criteria,percexplain_global_longform,out_file,'globalnorepeat');
 global_paths.perc_explained=out_file;
 
-%             %save global dist after zscoring
-%             out_name=sprintf('Global_Semipar_Image_Zscore_%i%i%i%i.mat',do_binarize,do_mean_subtract,do_ptr,do_augment);
-%             out_file=fullfile(save_dir,out_name);
-%             format_distance_file_figure(dataframe,Dist_Global_Zscored,eigen_Zscored_Global,test_criteria,out_file,'plot');
+%% Save ASE
+%save regional ase
+out_name=sprintf('ASE_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
+out_file=fullfile(save_dir,out_name);
+regional_paths.ase=out_file;
+format_embedded_data_file(dataframe,test_criteria,ase_regional,out_file,'regional');
 
-%james dist files bullshet here???
+%save global ase
+out_name=sprintf('Global_ASE_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
+out_file=fullfile(save_dir,out_name);
+global_paths.ase=out_file;
+format_embedded_data_file(dataframe,test_criteria,ase_global,out_file,'global');
 
-%save global MDS After Zscoring
+%% Save MDS
+%For each data set convert into correct layout which is Specimen,Vertex x Vector Embedding
+%save regional MDS
+out_name=sprintf('Regional_MDS_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
+out_file=fullfile(save_dir,out_name);
+mds_regional_longform=reshape( permute(mds_Regional_Zscored,[3 1 2]),[size(mds_Regional_Zscored,1)*size(mds_Regional_Zscored,3),size(mds_Regional_Zscored,2)]);
+format_embedded_data_file(dataframe,test_criteria,mds_regional_longform,out_file,'regional');
+regional_paths.mds=out_file;
+
+%save bilat MDS
+out_name=sprintf('Regional_Bilateral_MDS_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
+out_file=fullfile(save_dir,out_name);
+mds_regional_bilat_longform=reshape( permute(mds_Regional_bilat_Zscored,[3 1 2]),[size(mds_Regional_bilat_Zscored,1)*size(mds_Regional_bilat_Zscored,3),size(mds_Regional_bilat_Zscored,2)]);
+format_embedded_data_file(dataframe,test_criteria,mds_regional_bilat_longform,out_file,'regional_bilat');
+regional_paths.mds_bilat=out_file;
+
+%save global MDS
 out_name=sprintf('Global_MDS_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
 out_file=fullfile(save_dir,out_name);
-global_paths.mdsZscore=out_file;
-mds_global_Zscore_longform=reshape( permute( mds_Global_Zscored,[3 1 2]),[size( mds_Global_Zscored,1)*size( mds_Global_Zscored,3),size( mds_Global_Zscored,2)]);
-[mds_global_Zscore] = format_embedded_data_file(dataframe,test_criteria,mds_global_Zscore_longform,out_file,'global');
-%Make these save with real names? more like repair at end for ASE because the issue with ASE needing gorup/subgroup
+global_paths.mds=out_file;
+mds_global_longform=reshape(permute(mds_Global_Zscored,[3 1 2]),[size(mds_Global_Zscored,1)*size(mds_Global_Zscored,3),size(mds_Global_Zscored,2)]);
+format_embedded_data_file(dataframe,test_criteria,mds_global_longform,out_file,'global');
 
-%save global MDS Plot After Zscoring
+%save global MDS Plot
 out_name=sprintf('2D_Embedding_Plot_Global_MDS_Zscore_%i%i%i%i',do_binarize,do_mean_subtract,do_ptr,do_augment);
-out_file=fullfile(save_dir,out_name);
-plot_mds(mds_global_Zscore,test_criteria,out_file);
+out_fig_prefix=fullfile(save_dir,out_name);
+saved_fig_paths=plot_mds(mds_global_Zscore,test_criteria,out_fig_prefix);
+global_paths.mds_fig=saved_fig_paths; %BUT this isn't the same as the ASE that we use with the statsitical testing since we aren't doing the reduced coordinates
 
 end
