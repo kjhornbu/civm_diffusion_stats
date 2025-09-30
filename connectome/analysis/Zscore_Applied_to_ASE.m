@@ -85,37 +85,46 @@ for roi=1:(height(ase_regional)/height(ase_global))/2
 
 end
 %% LOOK THIS UP FOR FURTHER UNDERSTANDING
-    %Make Global Dist on Standarized Data -- We use the Regional??? but why use
-%that? 
+%Make Global Dist on Standarized Data -- We use the Regional??? but why use
+%that?
 for length_n=1:height(ase_global)
     for length_m=1:height(ase_global)
         Dist_Global_Zscored(length_n,length_m)=norm(tensor_ase_zscored(:,:,length_n)-tensor_ase_zscored(:,:,length_m),'fro');
     end
 end
 
-    logical_X_idx=~cellfun(@isempty,regexpi(ase_global.Properties.VariableNames,'^X'));
-    positional_X_idx=find(logical_X_idx==1);
-
-    tensor_ase_zscored=table2array(ase_global(:,positional_X_idx));
-
-    tensor_ase_zscored=reshape(tensor_ase_zscored,height(ase_global),1,[]);
-    tensor_ase_zscored=permute(tensor_ase_zscored,[3,2,1]);
-
-    nan_mask=isnan(tensor_ase_zscored);
-    tensor_ase_zscored(nan_mask)=0;
-
-    %Make Global Dist From the ASE_Global Response
-for length_n=1:height(ase_global)
-    for length_m=1:height(ase_global)
-        Dist_Global_Zscored_FromGlobal(length_n,length_m)=norm(tensor_ase_zscored(:,:,length_n)-tensor_ase_zscored(:,:,length_m),'fro');
-    end
-end
 
 %Make New Global MDS on Standardized Data
 [~,eigen_Global_Zscored_Full] = cmdscale(Dist_Global_Zscored);
 [mds_Global_Zscored,eigen_Zscored_Global] = cmdscale(Dist_Global_Zscored,2);%Force 2D embedding This matches JHU
 
 eigen_Zscored_Global=eigen_Zscored_Global./sum(eigen_Global_Zscored_Full(eigen_Global_Zscored_Full>0));
+
+
+logical_X_idx=~cellfun(@isempty,regexpi(ase_global.Properties.VariableNames,'^X'));
+positional_X_idx=find(logical_X_idx==1);
+
+tensor_ase_zscored=table2array(ase_global(:,positional_X_idx));
+
+tensor_ase_zscored=reshape(tensor_ase_zscored,height(ase_global),1,[]);
+tensor_ase_zscored=permute(tensor_ase_zscored,[3,2,1]);
+
+nan_mask=isnan(tensor_ase_zscored);
+tensor_ase_zscored(nan_mask)=0;
+
+%Make Global Dist From the ASE_Global Response
+for length_n=1:height(ase_global)
+    for length_m=1:height(ase_global)
+        Dist_Global_Zscored_FromGlobalASE(length_n,length_m)=norm(tensor_ase_zscored(:,:,length_n)-tensor_ase_zscored(:,:,length_m),'fro');
+    end
+end
+
+
+%Make New Global MDS on Standardized Data
+[~,eigen_Global_Zscored_Full_FromGlobalASE] = cmdscale(Dist_Global_Zscored_FromGlobalASE);
+[mds_Global_Zscored_FromGlobalASE,eigen_Zscored_Global_FromGlobalASE] = cmdscale(Dist_Global_Zscored_FromGlobalASE,2);%Force 2D embedding This matches JHU
+
+eigen_Zscored_Global_FromGlobalASE=eigen_Zscored_Global_FromGlobalASE./sum(eigen_Global_Zscored_Full_FromGlobalASE(eigen_Global_Zscored_Full_FromGlobalASE>0));
 
 %% SAVING BLOCKS
 %% Save Distance
@@ -136,6 +145,11 @@ out_name=sprintf('Global_Dist_Zscore_%i%i%i%i.mat',do_binarize,do_mean_subtract,
 out_file=fullfile(save_dir,out_name);
 save(out_file,'Dist_Global_Zscored','dataframe')
 global_paths.dist_explained=out_file;
+
+%save global dist explained -- from Global ASE
+out_name=sprintf('Global_Dist_Zscore_FromGlobalASE_%i%i%i%i.mat',do_binarize,do_mean_subtract,do_ptr,do_augment);
+out_file=fullfile(save_dir,out_name);
+save(out_file,'Dist_Global_Zscored_FromGlobalASE','dataframe')
 
 %% Save Percent Explained
 % save regional percent explained
@@ -159,7 +173,13 @@ percexplain_global_longform=eigen_Zscored_Global';
 format_embedded_data_file(dataframe,test_criteria,percexplain_global_longform,out_file,'globalnorepeat');
 global_paths.perc_explained=out_file;
 
-%% Save ASE -- Done earlier because already formatted We don't have a bilateral ASE!!!
+%save global percent explained -- From Global Ase
+out_name=sprintf('Global_PercentExplained_Zscore_FromGlobalASE_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
+out_file=fullfile(save_dir,out_name);
+percexplain_global_longform=eigen_Zscored_Global_FromGlobalASE';
+format_embedded_data_file(dataframe,test_criteria,percexplain_global_longform,out_file,'globalnorepeat');
+
+%% Save ASE -- Done earlier because already formatted NOTE We don't have a bilateral ASE!!!
 % %save regional ase
 % out_name=sprintf('ASE_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
 % out_file=fullfile(save_dir,out_name);
@@ -198,7 +218,18 @@ format_embedded_data_file(dataframe,test_criteria,mds_global_longform,out_file,'
 %save global MDS Plot
 out_name=sprintf('2D_Embedding_Plot_Global_MDS_Zscore_%i%i%i%i',do_binarize,do_mean_subtract,do_ptr,do_augment);
 out_fig_prefix=fullfile(save_dir,out_name);
-saved_fig_paths=plot_mds(mds_global_Zscore,test_criteria,out_fig_prefix);
+saved_fig_paths=plot_mds(mds_Global_Zscored,test_criteria,out_fig_prefix);
 global_paths.mds_fig=saved_fig_paths; %BUT this isn't the same as the ASE that we use with the statsitical testing since we aren't doing the reduced coordinates
+
+%save global MDS -- From Global ASE
+out_name=sprintf('Global_MDS_Zscore_FromGlobalASE_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
+out_file=fullfile(save_dir,out_name);
+mds_global_longform=reshape(permute(mds_Global_Zscored_FromGlobalASE,[3 1 2]),[size(mds_Global_Zscored_FromGlobalASE,1)*size(mds_Global_Zscored_FromGlobalASE,3),size(mds_Global_Zscored_FromGlobalASE,2)]);
+format_embedded_data_file(dataframe,test_criteria,mds_global_longform,out_file,'global');
+
+%save global MDS Plot-- From Global ASE
+out_name=sprintf('2D_Embedding_Plot_Global_MDS_Zscore_FromGlobalASE_%i%i%i%i',do_binarize,do_mean_subtract,do_ptr,do_augment);
+out_fig_prefix=fullfile(save_dir,out_name);
+saved_fig_paths=plot_mds(mds_Global_Zscored_FromGlobalASE,test_criteria,out_fig_prefix);
 
 end

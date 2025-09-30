@@ -21,12 +21,17 @@ for VERTEX=1:check_vertex
         data_subset=data;
     end
 
+    try
+
     if size(test_criteria,1)>1
         [full_group_name,group_names,group_name_idx] = find_group_information_from_groupingcriteria(data_subset,test_criteria{2}{:});
     else
         [full_group_name,group_names,group_name_idx] = find_group_information_from_groupingcriteria(data_subset,test_criteria{1});
     end
 
+    catch
+        keyboard;
+    end
 %     for n=1:numel(group_names)
 % 
 %         xCenter(n)=mean(data_subset.X1(group_name_idx==n));
