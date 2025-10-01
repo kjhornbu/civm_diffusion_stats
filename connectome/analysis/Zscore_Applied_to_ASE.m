@@ -8,123 +8,96 @@ function [regional_paths, global_paths] = Zscore_Applied_to_ASE( ...
 % Find the mean and standard deviation values and compare to the
 % values... both regional and global.
 
-[ase_regional] = zscoring_finder_connectome(ase_regional, test_criteria, test_remove_criteria{:});
-[ase_global] = zscoring_finder_connectome(ase_global, test_criteria, test_remove_criteria{:});
+[ase_regional_zscore] = zscoring_finder_connectome(ase_regional, test_criteria, test_remove_criteria{:});
+[ase_global_zscore] = zscoring_finder_connectome(ase_global, test_criteria, test_remove_criteria{:});
 
 %% Save ASE
 %save regional ase
 out_name=sprintf('ASE_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
 out_file=fullfile(save_dir,out_name);
 regional_paths.ase=out_file;
-writetable(ase_regional, out_file); %No need to reformat because already done -- save directly
+writetable(ase_regional_zscore, out_file); %No need to reformat because already done -- save directly
 
 %save global ase
 out_name=sprintf('Global_ASE_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
 out_file=fullfile(save_dir,out_name);
 global_paths.ase=out_file;
-writetable(ase_global, out_file); %No need to reformat because already done -- save directly
+writetable(ase_global_zscore, out_file); %No need to reformat because already done -- save directly
 
-%% Setup Tensor ASE with Zscoring for the Dist calcuations
-logical_X_idx=~cellfun(@isempty,regexpi(ase_regional.Properties.VariableNames,'^X'));
-positional_X_idx=find(logical_X_idx==1);
+tensor_ase_zscored = select_data_in_EmbeddingFile(ase_regional_zscore,height(ase_global_zscore),height(ase_regional_zscore)/height(ase_global_zscore));
 
-tensor_ase_zscored=table2array(ase_regional(:,positional_X_idx));
-
-tensor_ase_zscored=reshape(tensor_ase_zscored,height(ase_global),height(ase_regional)/height(ase_global),[]);
-tensor_ase_zscored=permute(tensor_ase_zscored,[3,2,1]);
-
-nan_mask=isnan(tensor_ase_zscored);
-tensor_ase_zscored(nan_mask)=0;
-
-%Make Regional Dist on Standarized Data
-for roi=1:(height(ase_regional)/height(ase_global))
-    for length_n=1:height(ase_global)
-        for length_m=1:height(ase_global)
+%% Make Regional (Regular and Bilat) Dist from Standarized ASE Regional Data
+for roi=1:(height(ase_regional_zscore)/height(ase_global_zscore))
+    for length_n=1:height(ase_global_zscore)
+        for length_m=1:height(ase_global_zscore)
             Dist_Regional_Zscored(length_n,length_m,roi)=norm(tensor_ase_zscored(:,roi,length_n)-tensor_ase_zscored(:,roi,length_m),'fro');
+            if roi <= (height(ase_regional_zscore)/height(ase_global_zscore))/2
+                %% Make Bilat Regional Dist on Standarized ASE Regional Data
+                Dist_regional_bilat_Zscored(length_n,length_m,roi)=norm(tensor_ase_zscored(:,[roi roi+(height(ase_regional_zscore)/height(ase_global_zscore))/2 ],length_n)-tensor_ase_zscored(:,[roi roi+(height(ase_regional_zscore)/height(ase_global_zscore))/2],length_m),'fro');
+            end
         end
     end
-
-    try
-        [~,temp_eign_Full]=cmdscale(Dist_Regional_Zscored(:,:,roi));
-        [temp,temp_eign]=cmdscale(Dist_Regional_Zscored(:,:,roi),2); %updated to remove the focusing on only the first! roi
-        if size(temp,2)>1
-            mds_Regional_Zscored(:,:,roi) = temp;
-            eigen_Zscored_Regional(:,roi)= temp_eign./sum(temp_eign_Full(temp_eign_Full>0)); %Calcuates the percent of variablity explained by eigen values
-        else
-            mds_Regional_Zscored(:,:,roi) = [temp zeros(size(temp))];
-            eigen_Zscored_Regional(:,roi) =  [temp_eign 0]./sum(temp_eign_Full(temp_eign_Full>0)); %Calcuates the percent of variablity explained by eigen values
-        end
-    catch
-        mds_Regional_Zscored(:,:,roi) = zeros(size(Dist_Regional_Zscored,1),2);
-        eigen_Zscored_Regional(:,roi) =  [0 0];
+    [mds_Regional_Zscored(:,:,roi),eigen_Zscored_Regional(:,roi)] = find_MDS(Dist_Regional_Zscored(:,:,roi));
+    if roi <= (height(ase_regional_zscore)/height(ase_global_zscore))/2
+        [mds_Regional_bilat_Zscored(:,:,roi),eigen_Zscored_bilat_Regional(:,roi)] = find_MDS(Dist_regional_bilat_Zscored(:,:,roi));
     end
 end
 
-%Make Bilat Regional Dist on Standarized Data
-for roi=1:(height(ase_regional)/height(ase_global))/2
-    for length_n=1:height(ase_global)
-        for length_m=1:height(ase_global)
-            Dist_regional_bilat_Zscored(length_n,length_m,roi)=norm(tensor_ase_zscored(:,[roi roi+(height(ase_regional)/height(ase_global))/2 ],length_n)-tensor_ase_zscored(:,[roi roi+(height(ase_regional)/height(ase_global))/2],length_m),'fro');
-        end
-    end
-
-    try
-        [~,temp_eign_bilat_Full]=cmdscale(Dist_regional_bilat_Zscored(:,:,roi));
-        [temp_bilat,temp_bilat_eign]=cmdscale(Dist_regional_bilat_Zscored(:,:,roi),2); %updated to remove the focusing on only the first! roi
-        if size(temp_bilat,2)>1
-            mds_Regional_bilat_Zscored(:,:,roi) = temp_bilat;
-            eigen_Zscored_bilat_Regional(:,roi)= temp_bilat_eign./sum(temp_eign_bilat_Full(temp_eign_bilat_Full>0)); %Calcuates the percent of variablity explained by eigen values
-        else
-            mds_Regional_bilat_Zscored(:,:,roi) = [temp_bilat zeros(size(temp_bilat))];
-            eigen_Zscored_bilat_Regional(:,roi) =  [temp_bilat_eign 0]./sum(temp_eign_bilat_Full(temp_eign_bilat_Full>0)); %Calcuates the percent of variablity explained by eigen values
-        end
-    catch
-        mds_Regional_bilat_Zscored(:,:,roi) = zeros(size(Dist_regional_bilat_Zscored,1),2);
-        eigen_Zscored_bilat_Regional(:,roi) =  [0 0];
-    end
-
-end
-%% LOOK THIS UP FOR FURTHER UNDERSTANDING
-%Make Global Dist on Standarized Data -- We use the Regional??? but why use
-%that?
-for length_n=1:height(ase_global)
-    for length_m=1:height(ase_global)
-        Dist_Global_Zscored(length_n,length_m)=norm(tensor_ase_zscored(:,:,length_n)-tensor_ase_zscored(:,:,length_m),'fro');
+%% Make Global Dist from Standarized ASE Regional Data
+for length_n=1:height(ase_global_zscore)
+    for length_m=1:height(ase_global_zscore)
+        Dist_Global_FromRegionalZscored(length_n,length_m)=norm(tensor_ase_zscored(:,:,length_n)-tensor_ase_zscored(:,:,length_m),'fro');
     end
 end
 
+[mds_Global_Zscored,eigen_Zscored_Global] = find_MDS(Dist_Global_FromRegionalZscored);
 
-%Make New Global MDS on Standardized Data
-[~,eigen_Global_Zscored_Full] = cmdscale(Dist_Global_Zscored);
-[mds_Global_Zscored,eigen_Zscored_Global] = cmdscale(Dist_Global_Zscored,2);%Force 2D embedding This matches JHU
+%re=embedding Global from Regional Zscored ASE
+V=sort(eig(sqrt(Dist_Global_FromRegionalZscored*transpose(Dist_Global_FromRegionalZscored))),'descend');
+elb=getElbows(V,3); %-- this doesn't have as much of the analysis
 
-eigen_Zscored_Global=eigen_Zscored_Global./sum(eigen_Global_Zscored_Full(eigen_Global_Zscored_Full>0));
+[U,D,~]=svds(Dist_Global_FromRegionalZscored,elb(2)); 
+ase_GlobalReembed_FromRegionalZscore=U*sqrt(D);
+ase_GlobalReembed_FromRegionalZscore=(fliplr(ase_GlobalReembed_FromRegionalZscore));
 
+ase_GlobalReembed_FromRegionalZscore_table=ase_global_zscore;
+ase_GlobalReembed_FromRegionalZscore_table.X1=ase_GlobalReembed_FromRegionalZscore(:,1);
+ase_GlobalReembed_FromRegionalZscore_table.X2=ase_GlobalReembed_FromRegionalZscore(:,2);
+%ase_GlobalReembed_FromRegionalZscore_table.X3=ase_GlobalReembed_FromRegionalZscore(:,3);
 
-logical_X_idx=~cellfun(@isempty,regexpi(ase_global.Properties.VariableNames,'^X'));
-positional_X_idx=find(logical_X_idx==1);
-
-tensor_ase_zscored=table2array(ase_global(:,positional_X_idx));
-
-tensor_ase_zscored=reshape(tensor_ase_zscored,height(ase_global),1,[]);
-tensor_ase_zscored=permute(tensor_ase_zscored,[3,2,1]);
-
-nan_mask=isnan(tensor_ase_zscored);
-tensor_ase_zscored(nan_mask)=0;
+tensor_ase_GlobalReembed_FromRegionalZscore = select_data_in_EmbeddingFile(ase_GlobalReembed_FromRegionalZscore_table,height(ase_GlobalReembed_FromRegionalZscore_table),1);
 
 %Make Global Dist From the ASE_Global Response
-for length_n=1:height(ase_global)
-    for length_m=1:height(ase_global)
-        Dist_Global_Zscored_FromGlobalASE(length_n,length_m)=norm(tensor_ase_zscored(:,:,length_n)-tensor_ase_zscored(:,:,length_m),'fro');
+for length_n=1:height(ase_global_zscore)
+    for length_m=1:height(ase_global_zscore)
+        Dist_GlobalReembed_FromRegionalZscored(length_n,length_m)=norm(tensor_ase_GlobalReembed_FromRegionalZscore(:,:,length_n)-tensor_ase_GlobalReembed_FromRegionalZscore(:,:,length_m),'fro');
     end
 end
 
+[mds_GlobalReembed_FromRegionalZscored,eigen_GlobalReembed_FromRegionalZscored] = find_MDS(Dist_GlobalReembed_FromRegionalZscored);
 
-%Make New Global MDS on Standardized Data
-[~,eigen_Global_Zscored_Full_FromGlobalASE] = cmdscale(Dist_Global_Zscored_FromGlobalASE);
-[mds_Global_Zscored_FromGlobalASE,eigen_Zscored_Global_FromGlobalASE] = cmdscale(Dist_Global_Zscored_FromGlobalASE,2);%Force 2D embedding This matches JHU
 
-eigen_Zscored_Global_FromGlobalASE=eigen_Zscored_Global_FromGlobalASE./sum(eigen_Global_Zscored_Full_FromGlobalASE(eigen_Global_Zscored_Full_FromGlobalASE>0));
+[ase_Zscore_GlobalReembed_FromRegionalZscore_table] = zscoring_finder_connectome(ase_GlobalReembed_FromRegionalZscore_table, test_criteria, test_remove_criteria{:});
+tensor_ase_Zscore_GlobalReembed_FromRegionalZscore = select_data_in_EmbeddingFile(ase_Zscore_GlobalReembed_FromRegionalZscore_table,height(ase_Zscore_GlobalReembed_FromRegionalZscore_table),1);
+
+%Make Global Dist From the ASE_Global Response
+for length_n=1:height(ase_global_zscore)
+    for length_m=1:height(ase_global_zscore)
+        Dist_Global_Zscore_GlobalReembed_FromRegionalZscore(length_n,length_m)=norm(tensor_ase_Zscore_GlobalReembed_FromRegionalZscore(:,:,length_n)-tensor_ase_Zscore_GlobalReembed_FromRegionalZscore(:,:,length_m),'fro');
+    end
+end
+
+[mds_Global_Zscore_GlobalReembed_FromRegionalZscore,eigen_Global_Zscore_GlobalReembed_FromRegionalZscore] = find_MDS(Dist_Global_Zscore_GlobalReembed_FromRegionalZscore);
+
+tensor_ase_global = select_data_in_EmbeddingFile(ase_global_zscore,height(ase_global_zscore),1);
+%Make Global Dist From the ASE_Global Response
+for length_n=1:height(ase_global_zscore)
+    for length_m=1:height(ase_global_zscore)
+        Dist_Global_FromGlobalZscored(length_n,length_m)=norm(tensor_ase_global(:,:,length_n)-tensor_ase_global(:,:,length_m),'fro');
+    end
+end
+
+[mds_Global_FromGlobalZscored,eigen_Global_FromGlobalZscored] = find_MDS(Dist_Global_FromGlobalZscored);
 
 %% SAVING BLOCKS
 %% Save Distance
@@ -213,7 +186,7 @@ out_name=sprintf('Global_MDS_Zscore_%i%i%i%i.csv',do_binarize,do_mean_subtract,d
 out_file=fullfile(save_dir,out_name);
 global_paths.mds=out_file;
 mds_global_longform=reshape(permute(mds_Global_Zscored,[3 1 2]),[size(mds_Global_Zscored,1)*size(mds_Global_Zscored,3),size(mds_Global_Zscored,2)]);
-format_embedded_data_file(dataframe,test_criteria,mds_global_longform,out_file,'global');
+[mds_Global_Zscored] = format_embedded_data_file(dataframe,test_criteria,mds_global_longform,out_file,'global');
 
 %save global MDS Plot
 out_name=sprintf('2D_Embedding_Plot_Global_MDS_Zscore_%i%i%i%i',do_binarize,do_mean_subtract,do_ptr,do_augment);
@@ -225,7 +198,7 @@ global_paths.mds_fig=saved_fig_paths; %BUT this isn't the same as the ASE that w
 out_name=sprintf('Global_MDS_Zscore_FromGlobalASE_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
 out_file=fullfile(save_dir,out_name);
 mds_global_longform=reshape(permute(mds_Global_Zscored_FromGlobalASE,[3 1 2]),[size(mds_Global_Zscored_FromGlobalASE,1)*size(mds_Global_Zscored_FromGlobalASE,3),size(mds_Global_Zscored_FromGlobalASE,2)]);
-format_embedded_data_file(dataframe,test_criteria,mds_global_longform,out_file,'global');
+[mds_Global_Zscored_FromGlobalASE] = format_embedded_data_file(dataframe,test_criteria,mds_global_longform,out_file,'global');
 
 %save global MDS Plot-- From Global ASE
 out_name=sprintf('2D_Embedding_Plot_Global_MDS_Zscore_FromGlobalASE_%i%i%i%i',do_binarize,do_mean_subtract,do_ptr,do_augment);

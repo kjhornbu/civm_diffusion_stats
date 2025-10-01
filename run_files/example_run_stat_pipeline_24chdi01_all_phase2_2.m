@@ -7,16 +7,11 @@ HOME_DIR=BD;
 studyID='24.chdi.01';
 project_dir=fullfile(HOME_DIR,studyID);
 
-%google_doc=fullfile(project_dir,'google_sheet_caps', '24.chdi.01 - MRI record for phase I-2025-08-25.tsv');
-google_doc=fullfile(project_dir,'google_sheet_caps', '24.chdi.01 - MRI record for phase II-2025-09-08.tsv');
-%cleaned_google_doc_path=fullfile(project_dir,'google_sheet_caps',strcat('Edited_GoogleSheet_',char(datetime('today')),'6m15m.txt'));
-%cleaned_google_doc_path=fullfile(project_dir,'google_sheet_caps',strcat('Edited_GoogleSheet_',char(datetime('today')),'12m.txt'));
-% this one has the two separate google_doc rows cleaned and concatenated
-% together. use this to compare all chdi datasets
-google_doc=fullfile(project_dir,'google_sheet_caps', 'manual_Edited_GoogleSheet_22-Sep-20256m12m15m.txt');
-cleaned_google_doc_path=fullfile(project_dir,'google_sheet_caps',strcat('Edited_GoogleSheet_',char(datetime('today')),'6m12m15m.txt'));
+google_doc_dir=fullfile(BD,'Projects',studyID,'google_sheet_caps');
+google_doc=fullfile(google_doc_dir,'24.chdi.01 - MRI record for phase II-2025-09-30.tsv');
+cleaned_google_doc_path=fullfile(google_doc_dir,strcat('Edited_GoogleSheet_',char(datetime('today')),'.txt'));
 
-dataframe_path=fullfile(project_dir, [studyID '_DataFrame_Windows_20250923-WM_only.txt']);
+dataframe_path=fullfile(project_dir, [studyID '_DataFrame_Windows_20251001-2month.txt']);
 % if empty string, script will make you a new setup file
 % or, pass it an existing one
 setup_file='';
@@ -29,7 +24,7 @@ atlas_ontology_path=fullfile(getenv("WORKSTATION_HOME"),'static_data','atlas','s
 pval_threshold=0.05;
 pval_cols=list2cell('pval_BH pval');
 user='Harrison Mansour ';
-save_dir=fullfile(project_dir,'stats_20250922_TestScalarConnectomev2-WM_only');
+save_dir=fullfile(project_dir,'stats_20251001-2month');
 
 %% uncomment to allow which part of pipeline desired to run. 
 %which_tests=list2cell('Scalar'); %does only scalar stats

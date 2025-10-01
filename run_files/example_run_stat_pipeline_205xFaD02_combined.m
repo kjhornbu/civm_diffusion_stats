@@ -19,8 +19,8 @@ project_dir=fullfile(HOME_DIR,studyID);
 
 google_doc="Z:\All_Staff\20.5xFAD.02\20.5xFAD.02_DataFrame_Combined_20250904_ChangedGenotypeGroups.txt";
 cleaned_google_doc_path=fullfile(project_dir,'google_sheet_caps',strcat('Edited_GoogleSheet_combined_',char(datetime('today')),'.txt'));
-dataframe_path="Z:\All_Staff\20.5xFAD.02\20.5xFAD.02_DataFrame_Combined_20250904_ChangedGenotypeGroups.txt";
-setup_file="Z:\All_Staff\20.5xFAD.02\stats_Combined_Phase1Phase2_from205xFAD02_20250908_olddataframe_withoutPhaseScanner_as_Effects\20.5xFAD.02_DataFrame_Combined_20250908_setup.mat";
+dataframe_path="Z:\All_Staff\20.5xFAD.02\20.5xFAD.02_DataFrame_Combined_20251001_ChangedGenotypeGroups.txt";
+setup_file="Z:\All_Staff\20.5xFAD.02\stats_Combined_Phase1Phase2_from205xFAD02_20251001_olddataframe_woPS\20.5xFAD.02_DataFrame_Combined_20251001_setup.mat";
 polished_sheets=fullfile(project_dir,'polished_sheets');
 
 %For polishing this looks in these two possible locations to pull the data
@@ -34,7 +34,7 @@ atlas_ontology_path=fullfile('C:/workstation/','static_data','atlas','symmetric1
 pval_threshold=0.05;
 pval_cols=list2cell('pval_BH pval');
 user='Kathryn Hornburg';
-save_dir=fullfile(project_dir,'stats_Combined_Phase1Phase2_from205xFAD02_20250908_olddataframe_withoutPhaseScanner_as_Effects');
+save_dir=fullfile(project_dir,'stats_Combined_Phase1Phase2_from205xFAD02_20251001_olddataframe_woPS');
 
 
 %% uncomment to allow which part of pipeline desired to run. 
