@@ -1,5 +1,5 @@
 function [figure_entries] = plot_difference_plot(directory,difference_criteria,vertex,selection_pull,matrix_2_print_onlyKeyRegions,LUT,ontology_Order,positional_idx_regions)
-width=12; %width=2*3.3; -- What width do you want the figures to be.
+width=6; %width=2*3.3; -- What width do you want the figures to be.
 if ~exist(directory,'dir')
     mkdir(directory)
 end

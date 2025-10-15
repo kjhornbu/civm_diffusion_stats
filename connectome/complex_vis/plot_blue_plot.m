@@ -1,5 +1,5 @@
 function [figure_entries,Top_idx_10pct_noUncharted_inOntologyOrder,make_Left_Axis] = plot_blue_plot(directory,vertex,matrix_2_print,matrix_Criteria,selection_pull,data_y_labels,ontology_Order,make_Left_Axis,idx_vertex_10pct_noUncharted_inOntologyOrder)
-width=12;%width=2*3.3; -- what width do you want the figures to be. 
+width=6;%width=2*3.3; -- what width do you want the figures to be. 
 %% Preliminary Setups
 if ispc
      printfactor=(72/96);
