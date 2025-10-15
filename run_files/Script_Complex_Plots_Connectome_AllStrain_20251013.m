@@ -36,14 +36,14 @@ selection_group_idx=ones(height(dataframe),1);
 output_connectome=vertcat(output_connectome{:});
 
 %selection_pull=list2cell('B6-5XFAD AD-BXD77 AD-BXD65b AD-BXD60 AD-BXD40 AD-BXD102 AD-BXD65 AD-BXD32');
-selection_pull=list2cell('All AD-BXD77 AD-BXD60 AD-BXD65 AD-BXD32');
+selection_pull=list2cell('All');
 compare_group_A='nTG';
 compare_group_B='FAD';
 
 [output_difference] = create_difference_metric_for_connectome(output_connectome,selection_pull,compare_group_A,compare_group_B);
 
 %% Generate Plots -- basically do this unit over and over again to make figures with different selection pull and different directories.
-directory="Z:\All_Staff\20.5xFAD.02\StrainStrat+All_Img_Generation_20251013_width_test";
+directory="Z:\All_Staff\20.5xFAD.02\StrainStrat+All_Img_Generation_20251014_width_minus45pixels";
 make_Left_Axis=1;
 make_LUT_img=1;
 

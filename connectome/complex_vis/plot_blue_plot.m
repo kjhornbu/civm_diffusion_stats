@@ -1,12 +1,15 @@
 function [figure_entries,Top_idx_10pct_noUncharted_inOntologyOrder,make_Left_Axis] = plot_blue_plot(directory,vertex,matrix_2_print,matrix_Criteria,selection_pull,data_y_labels,ontology_Order,make_Left_Axis,idx_vertex_10pct_noUncharted_inOntologyOrder)
+width=12;%width=2*3.3; -- what width do you want the figures to be. 
 %% Preliminary Setups
 if ispc
      printfactor=(72/96);
      print_num=96;
- end
+     alt_print_num=72;
+end
  if ismac
      printfactor=1;
      print_num=72;
+     alt_print_num=72; % you are most likely going to be viewing this on a mac in our lab, so you don't need to figure out pixels in pc
  end
 
  figure_entries=table;
@@ -33,7 +36,6 @@ if ~exist(fullfile(directory,'edge_strength_plot'),'dir')
 end
 
 
-
 %% Where to put the Figure's X Label Things
 select_ROI=[100 180.5 1100];
 
@@ -44,7 +46,7 @@ select_ipsilateral_contra={'ipsilateral','','contralateral'};
 
 %% Make output plots -- Average Mean Plots (Blue)
 f=figure;
-set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 2 (selection_Number)/6]*3.3*printfactor);
+set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 width 3.3*(selection_Number)/6]*printfactor);
 
 imagesc(matrix_2_print);
 
@@ -81,8 +83,8 @@ close all;
 
 %% Make output plots -- Average Mean Plots (Blue) -- ANNOTATIONS Labels.
 f2=figure;
-set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 6.6 0.6]*0.905*printfactor,'InnerPosition',[check_size(1) check_size(2) 320 80]);
-
+set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 width-((45/alt_print_num)/0.775) 0.5]*printfactor,'InnerPosition',[check_size(1) check_size(2) 320 80]); %*0.80625 for 4 inches
+%0.905
 N=15; %How many labels to put on graph
 
 positioning=linspace(0,360,N+1);

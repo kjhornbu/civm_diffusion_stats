@@ -1,5 +1,5 @@
 function [figure_entries] = plot_difference_plot(directory,difference_criteria,vertex,selection_pull,matrix_2_print_onlyKeyRegions,LUT,ontology_Order,positional_idx_regions)
-
+width=12; %width=2*3.3; -- What width do you want the figures to be.
 if ~exist(directory,'dir')
     mkdir(directory)
 end
@@ -26,7 +26,7 @@ selection_Number=size(matrix_2_print_onlyKeyRegions,1); %selection number is the
 
 %% Figures
 f=figure;
-set(gcf,'Units', 'inches','PaperUnits', 'inches','PaperPosition',[0 0 2 0.5*(selection_Number/6)]*3.3*printfactor,'Position',[0 0 2 0.5*(selection_Number/6)]*3.3*printfactor);
+set(gcf,'Units', 'inches','PaperUnits', 'inches','PaperPosition',[0 0 width 0.5*3.3*(selection_Number/6)]*printfactor,'Position',[0 0 width 0.5*3.3*(selection_Number/6)]*printfactor);
 hold on
 
 f.PaperPosition(4)=f.PaperPosition(4)+0.4;
