@@ -24,16 +24,18 @@ set(gca,'YLim',[0 (height(dataframe)+1)+5])
 
 for n=1:numel(data.BrainScaled_Omni_Manova)
     if data.BrainScaled_Omni_Manova(n)>0
-        text(n-1,data.BrainScaled_Omni_Manova(n)+10,num2str(data.BrainScaled_Omni_Manova(n)),'HorizontalAlignment','center','FontSize',3,'FontName','Arial');
+        text(n,data.BrainScaled_Omni_Manova(n)+10,num2str(data.BrainScaled_Omni_Manova(n)),'HorizontalAlignment','center','FontSize',3,'FontName','Arial');
     end
 end
+
+ylim([0,round(max(data.BrainScaled_Omni_Manova+10)*1.1)]);
 
 xlabel('Sources of Variation');
 ylabel('# of Significant 1-Remove Tests');
 
 set(gca, 'fontsize',6,'FontName','Arial');
 
-save_figure_file=fullfile(save_path,'Global_OneRemove.svg');
+save_figure_file=fullfile(save_path,'Global_OneRemove-BrainScaled.svg');
 print(f,save_figure_file,'-dsvg','-vector');
 
 end

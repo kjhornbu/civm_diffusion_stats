@@ -17,15 +17,14 @@ if ~istable(dataframe)
     dataframe=civm_read_table(temp_dataframe);
 end
 
-[~,~,c]=unique(data.BrainScaled_Omni_Manova);
 set_data_size=height(dataframe)+1;
-set_data=sum(c==1:set_data_size);
+set_data=sum(data.BrainScaled_Omni_Manova==0:set_data_size);
 
 f=figure;
 box on;
 set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 1 1]*3.3*printfactor);
-bar((1:set_data_size)-1,set_data)
-set(gca,'XLim',[-2 set_data_size+2])
+bar((0:set_data_size),set_data)
+set(gca,'XLim',[-1 set_data_size+1])
 set(gca,'YLim',[0 360+20])
 
 for n=1:numel(set_data)
@@ -34,12 +33,25 @@ for n=1:numel(set_data)
     end
 end
 
+if round(max(set_data+10)*1.1) > 360+20 %if the maximal set of data is seemingly greater than the atlas number plus headroom
+    ylim([0,round(max(set_data+10)*1.1)]);
+end
+
 ylabel('Number of Significant Regions');
 xlabel('Number of 1-Remove Tests');
 
 set(gca, 'fontsize',6,'FontName','Arial');
 
-save_figure_file=fullfile(save_path,strcat(sov{1},'_Source_Regional_OneRemove.svg'));
+A=(0:set_data_size);
+
+while numel(A)>10
+    A=A(1:2:end);
+end
+
+xticks(A);
+xticklabels(num2str(A'));
+
+save_figure_file=fullfile(save_path,strcat(sov{1},'_Source_Regional_OneRemove-BrainScaled.svg'));
 print(f,save_figure_file,'-dsvg','-vector');
 
 end
