@@ -43,8 +43,7 @@ xlabel('Number of 1-Remove Tests');
 set(gca, 'fontsize',6,'FontName','Arial');
 
 A=(0:set_data_size);
-
-while numel(A)>10
+while numel(A)>10 %while numel A > 10 keep reducing the number of terms in data placement A in 2's
     A=A(1:2:end);
 end
 

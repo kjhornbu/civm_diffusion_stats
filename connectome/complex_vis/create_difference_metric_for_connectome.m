@@ -1,5 +1,6 @@
 function [output_difference] = create_difference_metric_for_connectome(output,selection_pull,groupA,groupB)
-
+% A is the control group
+% B is the treatement group
 output_difference=table;
 count = 1;
 

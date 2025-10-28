@@ -1,18 +1,21 @@
 function [figure_entries,Top_idx_10pct_noUncharted_inOntologyOrder,make_Left_Axis] = plot_blue_plot(directory,vertex,matrix_2_print,matrix_Criteria,selection_pull,data_y_labels,ontology_Order,make_Left_Axis,idx_vertex_10pct_noUncharted_inOntologyOrder)
-width=6;%width=2*3.3; -- what width do you want the figures to be. 
+width=6;%width=2*3.3; -- what width do you want the figures to be.
+fontsize=12;
+
 %% Preliminary Setups
 if ispc
-     printfactor=(72/96);
-     print_num=96;
-     alt_print_num=72;
+    printfactor=(72/96);
+    print_num=96;
+    alt_print_num=72;
 end
- if ismac
-     printfactor=1;
-     print_num=72;
-     alt_print_num=72; % you are most likely going to be viewing this on a mac in our lab, so you don't need to figure out pixels in pc
- end
+if ismac
+    printfactor=1;
+    print_num=72;
+    alt_print_num=72; % you are most likely going to be viewing this on a mac in our lab, so you don't need to figure out pixels in pc
+end
 
- figure_entries=table;
+
+figure_entries=table;
 
 Structure_Temp=strsplit(ontology_Order.Structure{ontology_Order.L_Vertex==vertex},'_');
 Structure=strjoin(Structure_Temp(1:end-1),'_'); %Get the structure name to put in the file name
@@ -22,6 +25,13 @@ selection_Number=size(matrix_2_print,1)/2; %selection number is the number of re
 %These are the count and positions of the top regions in ontology ordering
 count_vertex_10pct_noUncharted=sum(idx_vertex_10pct_noUncharted_inOntologyOrder);
 positional_idx_10pct_noUncharted_inOntologyOrder=find(idx_vertex_10pct_noUncharted_inOntologyOrder);
+
+% Width compare label width to label area neededed
+EntryA=(width-((45/alt_print_num)/0.775));
+Label_Annotations=((fontsize*3*2)/alt_print_num)*count_vertex_10pct_noUncharted;
+if EntryA < Label_Annotations
+    width=Label_Annotations+((45/alt_print_num)/0.775);
+end
 
 if ~exist(directory,'dir')
     mkdir(directory)
@@ -46,7 +56,11 @@ select_ipsilateral_contra={'ipsilateral','','contralateral'};
 
 %% Make output plots -- Average Mean Plots (Blue)
 f=figure;
-set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 width 3.3*(selection_Number)/6]*printfactor);
+EntryA=width*printfactor;
+%EntryB=3.3*(selection_Number/24)*printfactor;
+EntryB=3.3*((fontsize*2)/alt_print_num)*selection_Number*printfactor;
+
+set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB]);
 
 imagesc(matrix_2_print);
 
@@ -77,13 +91,21 @@ for m=1:selection_Number
 end
 
 check_size=f.InnerPosition;
-set(gca,'FontSize',4.5,'FontName','Arial','TickDir','out');
+set(gca,'FontSize',fontsize,'FontName','Arial','TickDir','out');
 print(f, fullfile(directory,'edge_strength_plot',strcat('ROI_',num2str(vertex(1,1)),'_',Structure,'_Means.svg')),'-dsvg','-vector');
 close all;
 
 %% Make output plots -- Average Mean Plots (Blue) -- ANNOTATIONS Labels.
 f2=figure;
-set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 width-((45/alt_print_num)/0.775) 0.5]*printfactor,'InnerPosition',[check_size(1) check_size(2) 320 80]); %*0.80625 for 4 inches
+EntryA=(width-((45/alt_print_num)/0.775))*printfactor;
+
+if EntryA < ((fontsize*3*2)/alt_print_num)*count_vertex_10pct_noUncharted
+
+end
+
+EntryB=0.5*printfactor;
+
+set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'InnerPosition',[check_size(1) check_size(2) EntryA*print_num EntryB*print_num]); %*0.80625 for 4 inches
 %0.905
 N=15; %How many labels to put on graph
 
@@ -110,13 +132,13 @@ for vertex_set=1:numel(sort_position)
     if sort_position(vertex_set)>180
         if ~isempty(ontology_Order.GN_Symbol{sort_position(vertex_set)-180})
             name_temp=strsplit(ontology_Order.GN_Symbol{sort_position(vertex_set)-180},{'-B','-L','-R'});
-            text(positioning(vertex_set),0.9,name_temp{1},'HorizontalAlignment','center','FontSize',4.5,'FontName','FixedWidth');
+            text(positioning(vertex_set),0.9,name_temp{1},'HorizontalAlignment','center','FontSize',fontsize,'FontName','FixedWidth');
             line([sort_position(vertex_set),positioning(vertex_set)],[0 0.8]);
         end
     else
         if ~isempty(ontology_Order.GN_Symbol{sort_position(vertex_set)})
             name_temp=strsplit(ontology_Order.GN_Symbol{sort_position(vertex_set)},{'-B','-L','-R'});
-            text(positioning(vertex_set),0.9,name_temp{1},'HorizontalAlignment','center','FontSize',4.5,'FontName','FixedWidth');
+            text(positioning(vertex_set),0.9,name_temp{1},'HorizontalAlignment','center','FontSize',fontsize,'FontName','FixedWidth');
             line([sort_position(vertex_set),positioning(vertex_set)],[0 0.8]);
         end
     end
@@ -132,9 +154,13 @@ close all;
 
 if make_Left_Axis
     make_Left_Axis=false;
+    EntryA=3.3*printfactor;
+    %EntryB=(selection_Number/24)*3.3*printfactor;
+    EntryB=3.3*((fontsize*2)/alt_print_num)*selection_Number*printfactor;
+
     %% Make output plots -- Average Mean Plots (Blue) -- Left Super labels for Y axis.
     f3=figure;
-    set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 1 ((selection_Number)/6)]*3.3*printfactor,'InnerPosition',[check_size(1) check_size(2) 80 ((selection_Number)/6)*3.3*print_num]);
+    set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'InnerPosition',[check_size(1) check_size(2) EntryA*print_num EntryB*print_num]);
 
     rectangle("Position",[0 0.5 0.5 2*(selection_Number)+0.5],"FaceColor",[1 1 1],"EdgeColor",[1 1 1])
     axis([0 0.5 0.5 2*(selection_Number)+0.5]);
@@ -143,7 +169,7 @@ if make_Left_Axis
     positioning(positioning>2*(selection_Number))=[];
 
     for n=1:(selection_Number)
-        text(0.25,positioning(n),strcat(selection_pull{n},'{'),'HorizontalAlignment','right','VerticalAlignment','middle','FontSize',4.5,'FontName','Arial');
+        text(0.25,positioning(n),strcat(selection_pull{n},'{'),'HorizontalAlignment','right','VerticalAlignment','middle','FontSize',fontsize,'FontName','Arial');
 
     end
 
@@ -157,7 +183,7 @@ if make_Left_Axis
 
     %% Make output plots -- Average Mean Plots (Blue) -- Left Super labels for Y axis.
     f3=figure;
-    set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 1 ((selection_Number)/6)]*3.3*printfactor,'InnerPosition',[check_size(1) check_size(2) 80 ((selection_Number)/6)*3.3*print_num]);
+    set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'InnerPosition',[check_size(1) check_size(2) EntryA*print_num EntryB*print_num]);
 
     rectangle("Position",[0 0.5 0.5 2*(selection_Number)+0.5],"FaceColor",[1 1 1],"EdgeColor",[1 1 1])
     axis([0 0.5 0.5 2*(selection_Number)+0.5]);
@@ -166,7 +192,7 @@ if make_Left_Axis
     positioning(positioning>2*(selection_Number))=[];
 
     for n=1:(selection_Number)
-        text(0.25,positioning(n),strcat(selection_pull{n}),'HorizontalAlignment','right','VerticalAlignment','middle','FontSize',4.5,'FontName','Arial');
+        text(0.25,positioning(n),strcat(selection_pull{n}),'HorizontalAlignment','right','VerticalAlignment','middle','FontSize',fontsize,'FontName','Arial');
     end
 
     xticks(0);
@@ -179,7 +205,7 @@ if make_Left_Axis
 
     %% Make output plots -- Average Mean Plots (Blue) -- Left Super labels for Y axis.
     f3=figure;
-    set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 1 ((selection_Number)/6)]*3.3*printfactor,'InnerPosition',[check_size(1) check_size(2) 80 ((selection_Number)/6)*3.3*print_num]);
+    set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'InnerPosition',[check_size(1) check_size(2) EntryA*print_num EntryB*print_num]);
 
     rectangle("Position",[0 0.5 0.5 2*(selection_Number)+0.5],"FaceColor",[1 1 1],"EdgeColor",[1 1 1])
     axis([0 0.5 0.5 2*(selection_Number)+0.5]);
@@ -188,7 +214,7 @@ if make_Left_Axis
     positioning(positioning>2*(selection_Number))=[];
 
     for n=1:(selection_Number)
-        text(0.25,positioning(n),strcat(selection_pull{n}),'HorizontalAlignment','right','VerticalAlignment','middle','FontSize',4.5,'FontName','Arial');
+        text(0.25,positioning(n),strcat(selection_pull{n}),'HorizontalAlignment','right','VerticalAlignment','middle','FontSize',fontsize,'FontName','Arial');
 
         line([0.25,0.3],[positioning(n),positioning(n)-0.5])
         line([0.25,0.3],[positioning(n),positioning(n)+0.5])

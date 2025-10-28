@@ -1,5 +1,7 @@
 function [figure_entries] = plot_difference_plot(directory,difference_criteria,vertex,selection_pull,matrix_2_print_onlyKeyRegions,LUT,ontology_Order,positional_idx_regions)
 width=6; %width=2*3.3; -- What width do you want the figures to be.
+fontsize=12;
+
 if ~exist(directory,'dir')
     mkdir(directory)
 end
@@ -11,13 +13,22 @@ end
 %% Preliminary Setups
 if ispc
     printfactor=(72/96);
+    print_num=96;
+    alt_print_num=72;
+
 
 end
 if ismac
     printfactor=1;
+    print_num=72;
+    alt_print_num=72;
 end
 
- figure_entries=table;
+if width < ((fontsize*3*2)/alt_print_num)*numel(positional_idx_regions)
+    width=((fontsize*3*2)/alt_print_num)*numel(positional_idx_regions);
+end
+
+figure_entries=table;
 
 Structure_Temp=strsplit(ontology_Order.Structure{ontology_Order.L_Vertex==vertex},'_');
 Structure=strjoin(Structure_Temp(1:end-1),'_'); %Get the structure name to put in the file name
@@ -26,7 +37,10 @@ selection_Number=size(matrix_2_print_onlyKeyRegions,1); %selection number is the
 
 %% Figures
 f=figure;
-set(gcf,'Units', 'inches','PaperUnits', 'inches','PaperPosition',[0 0 width 0.5*3.3*(selection_Number/6)]*printfactor,'Position',[0 0 width 0.5*3.3*(selection_Number/6)]*printfactor);
+EntryA=width*printfactor;
+EntryB=3.3*((fontsize*2)/alt_print_num)*selection_Number*printfactor;
+
+set(gcf,'Units', 'inches','PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'Position',[0 0 EntryA EntryB]);
 hold on
 
 f.PaperPosition(4)=f.PaperPosition(4)+0.4;
@@ -73,6 +87,7 @@ else
     select_ROI=mean(0.5+[1:numel(positional_idx_regions)]);
     select_ipsilateral_contra={'ipsilateral'};
 end
+
 %% Add x axis things to plot
 ax=gca;
 ax.Units='inches';
@@ -80,11 +95,11 @@ rangeX=xlim;
 innerax=ax.InnerPosition;
 
 for vertex_set=1:numel(positional_idx_regions)
-    text(innerax(3)*((select_location(vertex_set)-rangeX(1))/(rangeX(2)-rangeX(1))),-0.05,select_region{vertex_set},'FontSize',4.5,'FontName','FixedWidth','Units','inches','HorizontalAlignment','center');
+    text(innerax(3)*((select_location(vertex_set)-rangeX(1))/(rangeX(2)-rangeX(1))),-0.05,select_region{vertex_set},'FontSize',fontsize,'FontName','FixedWidth','Units','inches','HorizontalAlignment','center');
 end
 
 for ROI_set=1:numel(select_ROI)
-    text(innerax(3)*((select_ROI(ROI_set)-rangeX(1))/(rangeX(2)-rangeX(1))),-0.15,select_ipsilateral_contra{ROI_set},'FontSize',4.5,'FontName','Arial','Units','inches','HorizontalAlignment','center');
+    text(innerax(3)*((select_ROI(ROI_set)-rangeX(1))/(rangeX(2)-rangeX(1))),-0.15,select_ipsilateral_contra{ROI_set},'FontSize',fontsize,'FontName','Arial','Units','inches','HorizontalAlignment','center');
 end
 
 %% Add dummy Legend to scale things
@@ -106,7 +121,7 @@ set(gca,'position',ax_pos + [ 0 fig_shift(2) 0 0 ]);
 
 yticks(((1/selection_Number)/2)+0:1/selection_Number:1)
 yticklabels(selection_pull)
-set(gca,'FontSize',4.5,'FontName','Arial');
+set(gca,'FontSize',fontsize,'FontName','Arial');
 
 xticks(0);
 xticklabels("");
