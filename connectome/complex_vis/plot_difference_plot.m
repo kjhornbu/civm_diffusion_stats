@@ -40,7 +40,7 @@ selection_Number=size(matrix_2_print_onlyKeyRegions,1); %selection number is the
 %% Figures
 f=figure;
 EntryA=width*printfactor; %width
-EntryB=3.3*((fontsize*2)/alt_print_num)*selection_Number*printfactor; %height
+EntryB=((fontsize*1.5)/alt_print_num)*selection_Number*printfactor; %height
 
 set(gcf,'Units', 'inches','PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'Position',[0 0 EntryA EntryB]);
 hold on

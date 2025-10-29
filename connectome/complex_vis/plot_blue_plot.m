@@ -65,7 +65,7 @@ select_ipsilateral_contra={'ipsilateral','','contralateral'};
 f=figure;
 EntryA=width*printfactor; %width
 %EntryB=3.3*(selection_Number/24)*printfactor;
-EntryB=3.3*((fontsize*2)/alt_print_num)*selection_Number*printfactor; %height
+EntryB=((fontsize*2)/alt_print_num)*2*selection_Number*printfactor; %height
 
 set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB]);
 
@@ -159,7 +159,7 @@ if make_Left_Axis
     make_Left_Axis=false;
     EntryA=3.3*printfactor;
     %EntryB=(selection_Number/24)*3.3*printfactor;
-    EntryB=3.3*((fontsize*2)/alt_print_num)*selection_Number*printfactor;
+    EntryB=((fontsize*2)/alt_print_num)*2*selection_Number*printfactor;
 
     %% Make output plots -- Average Mean Plots (Blue) -- Left Super labels for Y axis.
     f3=figure;
