@@ -1,6 +1,7 @@
 function [figure_entries,Top_idx_10pct_noUncharted_inOntologyOrder,make_Left_Axis] = plot_blue_plot(directory,vertex,matrix_2_print,matrix_Criteria,selection_pull,data_y_labels,ontology_Order,make_Left_Axis,idx_vertex_10pct_noUncharted_inOntologyOrder)
 width=6;%width=2*3.3; -- what width do you want the figures to be.
 fontsize=12;
+%12 pt font couriernew is ~ 0.1 wide by 0.2 tall -> 12/72 is not 0.1!!! 
 
 %% Preliminary Setups
 if ispc
@@ -26,9 +27,15 @@ selection_Number=size(matrix_2_print,1)/2; %selection number is the number of re
 count_vertex_10pct_noUncharted=sum(idx_vertex_10pct_noUncharted_inOntologyOrder);
 positional_idx_10pct_noUncharted_inOntologyOrder=find(idx_vertex_10pct_noUncharted_inOntologyOrder);
 
+N=15; %How many labels to put on graph
+if count_vertex_10pct_noUncharted > N
+    num_labels=N;
+else
+    num_labels=count_vertex_10pct_noUncharted;
+end
 % Width compare label width to label area neededed
 EntryA=(width-((45/alt_print_num)/0.775));
-Label_Annotations=((fontsize*3*2)/alt_print_num)*count_vertex_10pct_noUncharted;
+Label_Annotations=((fontsize*(3+1))/alt_print_num)*num_labels;
 if EntryA < Label_Annotations
     width=Label_Annotations+((45/alt_print_num)/0.775);
 end
@@ -56,9 +63,9 @@ select_ipsilateral_contra={'ipsilateral','','contralateral'};
 
 %% Make output plots -- Average Mean Plots (Blue)
 f=figure;
-EntryA=width*printfactor;
+EntryA=width*printfactor; %width
 %EntryB=3.3*(selection_Number/24)*printfactor;
-EntryB=3.3*((fontsize*2)/alt_print_num)*selection_Number*printfactor;
+EntryB=3.3*((fontsize*2)/alt_print_num)*selection_Number*printfactor; %height
 
 set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB]);
 
@@ -97,17 +104,11 @@ close all;
 
 %% Make output plots -- Average Mean Plots (Blue) -- ANNOTATIONS Labels.
 f2=figure;
-EntryA=(width-((45/alt_print_num)/0.775))*printfactor;
-
-if EntryA < ((fontsize*3*2)/alt_print_num)*count_vertex_10pct_noUncharted
-
-end
-
-EntryB=0.5*printfactor;
+EntryA=(width-((45/alt_print_num)/0.775))*printfactor; %width
+EntryB=0.5*printfactor; %height
 
 set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'InnerPosition',[check_size(1) check_size(2) EntryA*print_num EntryB*print_num]); %*0.80625 for 4 inches
 %0.905
-N=15; %How many labels to put on graph
 
 positioning=linspace(0,360,N+1);
 positioning=positioning+(positioning(2)-positioning(1))/2;
@@ -128,18 +129,20 @@ end
 rectangle("Position",[0.5 0 360.5,1],"FaceColor",[1 1 1],"EdgeColor",[1 1 1])
 axis([0.5 360.5 0 1]);
 
+line([0,0],[0 1],'Color','w');
+
 for vertex_set=1:numel(sort_position)
     if sort_position(vertex_set)>180
         if ~isempty(ontology_Order.GN_Symbol{sort_position(vertex_set)-180})
             name_temp=strsplit(ontology_Order.GN_Symbol{sort_position(vertex_set)-180},{'-B','-L','-R'});
-            text(positioning(vertex_set),0.9,name_temp{1},'HorizontalAlignment','center','FontSize',fontsize,'FontName','FixedWidth');
-            line([sort_position(vertex_set),positioning(vertex_set)],[0 0.8]);
+            text_value=text(positioning(vertex_set),0.9,name_temp{1},'HorizontalAlignment','center','FontSize',fontsize,'FontName','FixedWidth');
+            line([sort_position(vertex_set),positioning(vertex_set)],[0 0.8-((fontsize-4.5)/alt_print_num)]);%round((text_value.Extent(2))*0.9,1)]);
         end
     else
         if ~isempty(ontology_Order.GN_Symbol{sort_position(vertex_set)})
             name_temp=strsplit(ontology_Order.GN_Symbol{sort_position(vertex_set)},{'-B','-L','-R'});
-            text(positioning(vertex_set),0.9,name_temp{1},'HorizontalAlignment','center','FontSize',fontsize,'FontName','FixedWidth');
-            line([sort_position(vertex_set),positioning(vertex_set)],[0 0.8]);
+            text_value=text(positioning(vertex_set),0.9,name_temp{1},'HorizontalAlignment','center','FontSize',fontsize,'FontName','FixedWidth');
+            line([sort_position(vertex_set),positioning(vertex_set)],[0 0.8-((fontsize-4.5)/alt_print_num)]);
         end
     end
 end

@@ -10,12 +10,11 @@ if ~exist(fullfile(directory,difference_criteria),'dir')
     mkdir(fullfile(directory,difference_criteria))
 end
 
-%% Preliminary Setups
+%% Preliminary Setups -- set font factors
 if ispc
     printfactor=(72/96);
     print_num=96;
     alt_print_num=72;
-
 
 end
 if ismac
@@ -24,8 +23,11 @@ if ismac
     alt_print_num=72;
 end
 
-if width < ((fontsize*3*2)/alt_print_num)*numel(positional_idx_regions)
-    width=((fontsize*3*2)/alt_print_num)*numel(positional_idx_regions);
+%check width with annotation size
+EntryA=(width-((45/alt_print_num)/0.775));
+Label_Annotations=((fontsize*(3+1))/alt_print_num)*numel(positional_idx_regions);
+if EntryA < Label_Annotations
+    width=Label_Annotations+((45/alt_print_num)/0.775);
 end
 
 figure_entries=table;
@@ -37,8 +39,8 @@ selection_Number=size(matrix_2_print_onlyKeyRegions,1); %selection number is the
 
 %% Figures
 f=figure;
-EntryA=width*printfactor;
-EntryB=3.3*((fontsize*2)/alt_print_num)*selection_Number*printfactor;
+EntryA=width*printfactor; %width
+EntryB=3.3*((fontsize*2)/alt_print_num)*selection_Number*printfactor; %height
 
 set(gcf,'Units', 'inches','PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'Position',[0 0 EntryA EntryB]);
 hold on
@@ -95,11 +97,11 @@ rangeX=xlim;
 innerax=ax.InnerPosition;
 
 for vertex_set=1:numel(positional_idx_regions)
-    text(innerax(3)*((select_location(vertex_set)-rangeX(1))/(rangeX(2)-rangeX(1))),-0.05,select_region{vertex_set},'FontSize',fontsize,'FontName','FixedWidth','Units','inches','HorizontalAlignment','center');
+    text(innerax(3)*((select_location(vertex_set)-rangeX(1))/(rangeX(2)-rangeX(1))),-(fontsize/print_num),select_region{vertex_set},'FontSize',fontsize,'FontName','FixedWidth','Units','inches','HorizontalAlignment','center');
 end
 
 for ROI_set=1:numel(select_ROI)
-    text(innerax(3)*((select_ROI(ROI_set)-rangeX(1))/(rangeX(2)-rangeX(1))),-0.15,select_ipsilateral_contra{ROI_set},'FontSize',fontsize,'FontName','Arial','Units','inches','HorizontalAlignment','center');
+    text(innerax(3)*((select_ROI(ROI_set)-rangeX(1))/(rangeX(2)-rangeX(1))),-2.25*(fontsize/print_num),select_ipsilateral_contra{ROI_set},'FontSize',fontsize,'FontName','Arial','Units','inches','HorizontalAlignment','center');
 end
 
 %% Add dummy Legend to scale things
