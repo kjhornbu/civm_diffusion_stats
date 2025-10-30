@@ -1,13 +1,13 @@
 function [figure_entries,Top_idx_10pct_noUncharted_inOntologyOrder,make_Left_Axis] = plot_blue_plot(directory,vertex,matrix_2_print,matrix_Criteria,selection_pull,data_y_labels,ontology_Order,make_Left_Axis,idx_vertex_10pct_noUncharted_inOntologyOrder)
-width=6;%width=2*3.3; -- what width do you want the figures to be.
-fontsize=12;
-%12 pt font couriernew is ~ 0.1 wide by 0.2 tall -> 12/72 is not 0.1!!! 
+width=3;%width=2*3.3;  -- What width do you want the figures to be (at minimum -- if the font doesn't fit on the graph it will make it bigger).
+fontsize=8; %apparent final font size in the figure (typically viewed on mac)
 
 %% Preliminary Setups
 if ispc
     printfactor=(72/96);
     print_num=96;
     alt_print_num=72;
+    fontsize=fontsize*printfactor;
 end
 if ismac
     printfactor=1;

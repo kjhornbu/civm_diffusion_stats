@@ -1,6 +1,6 @@
 function [figure_entries] = plot_difference_plot(directory,difference_criteria,vertex,selection_pull,matrix_2_print_onlyKeyRegions,LUT,ontology_Order,positional_idx_regions)
-width=6; %width=2*3.3; -- What width do you want the figures to be.
-fontsize=12;
+width=3; %width=2*3.3; -- What width do you want the figures to be (at minimum -- if the font doesn't fit on the graph it will make it bigger).
+fontsize=8; %apparent final font size in the figure (typically viewed on mac)
 
 if ~exist(directory,'dir')
     mkdir(directory)
@@ -15,6 +15,7 @@ if ispc
     printfactor=(72/96);
     print_num=96;
     alt_print_num=72;
+    fontsize=fontsize*printfactor;
 
 end
 if ismac
