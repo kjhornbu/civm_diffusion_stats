@@ -29,10 +29,10 @@ clear save_path;
 [connectome,~,connectome_idx]=unique(RM_1_results.connectome_factor);
 [sov,~,sov_idx]=unique(RM_1_results.source_of_variation);
 
-for n=1:numel(all_sources)
+for n=1:numel(sov)
     Sig_Among_1RM=table;
     Sig_Among_1RM.roi=all_roi;
-    idx_sov=reg_match(sov,all_sources{n});
+    idx_sov=reg_match(all_sources,strcat('^(',sov{n},')$'));
     postional_idx_sov=find(idx_sov);
     for m=1:numel(connectome_outputs)
         idx_connectome=reg_match(connectome,connectome_outputs{m});
@@ -40,8 +40,9 @@ for n=1:numel(all_sources)
         temp_wrkdata=RM_1_results.ROI(connectome_idx==postional_idx_connectome & sov_idx==postional_idx_sov);
         Sig_Among_1RM.(connectome_outputs{m})=sum(all_roi==temp_wrkdata',2);
     end
-    save_path{n}=fullfile(save_cnt,strcat(strrep(all_sources{n},'_',''),'_Significant_Among_1_Remove.txt'));
+    save_path{n}=fullfile(save_cnt,strcat(strrep(strrep(sov{n},'_',''),':','x'),'_Significant_Among_1_Remove.txt'));
     civm_write_table(Sig_Among_1RM,save_path{n});
 end
 
 end
+

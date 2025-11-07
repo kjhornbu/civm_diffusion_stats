@@ -32,8 +32,8 @@ clear save_path;
 Sig_Among_1RM=table;
 Sig_Among_1RM.source_of_variation=all_sources;
 
-for n=1:numel(all_sources)
-    idx_sov=reg_match(sov,all_sources{n});
+for n=1:numel(sov)
+    idx_sov=reg_match(all_sources,strcat('^(',sov{n},')$'));
     postional_idx_sov=find(idx_sov);
     for m=1:numel(connectome_outputs)
         idx_connectome=reg_match(connectome,connectome_outputs{m});
