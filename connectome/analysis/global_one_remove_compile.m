@@ -1,4 +1,9 @@
 function [save_path] = global_one_remove_compile(save_cnt,connectome_outputs,Paths_Pval,pval_threshold)
+save_cnt=fullfile(save_cnt,'OneRemove');
+
+if ~exist(save_cnt,'dir')
+    mkdir(save_cnt)
+end
 
 count=1;
 for n=1:numel(connectome_outputs)
@@ -41,6 +46,7 @@ for n=1:numel(sov)
         Sig_Among_1RM.(connectome_outputs{m})(postional_idx_sov)=sum((connectome_idx==postional_idx_connectome & sov_idx==postional_idx_sov));
     end
 end
+
 
 save_path=fullfile(save_cnt,'Global_Significant_Among_1_Remove.txt');
 civm_write_table(Sig_Among_1RM,save_path);

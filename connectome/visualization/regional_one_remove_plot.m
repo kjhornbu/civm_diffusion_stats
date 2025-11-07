@@ -1,4 +1,5 @@
 function [] = regional_one_remove_plot(save_path,dataframe,data)
+file_extension={'png','svg'};
 
 if ispc
      printfactor=(72/96);
@@ -29,7 +30,7 @@ set(gca,'YLim',[0 360+20])
 
 for n=1:numel(set_data)
     if set_data(n)>0
-        text(n-1,set_data(n)+10,num2str(set_data(n)),'HorizontalAlignment','center','FontSize',3,'FontName','Arial');
+        text(n-1,set_data(n)+10,num2str(set_data(n)),'HorizontalAlignment','center','FontSize',3*printfactor,'FontName','Arial');
     end
 end
 
@@ -40,7 +41,7 @@ end
 ylabel('Number of Significant Regions');
 xlabel('Number of 1-Remove Tests');
 
-set(gca, 'fontsize',6,'FontName','Arial');
+set(gca, 'fontsize',6*printfactor,'FontName','Arial');
 
 A=(0:set_data_size);
 while numel(A)>10 %while numel A > 10 keep reducing the number of terms in data placement A in 2's
@@ -50,7 +51,7 @@ end
 xticks(A);
 xticklabels(num2str(A'));
 
-save_figure_file=fullfile(save_path,strcat(sov{1},'_Source_Regional_OneRemove-BrainScaled.svg'));
-print(f,save_figure_file,'-dsvg','-vector');
+file_name=strcat(sov{1},'_Regional_OneRemove-BrainScaled');
+saveMultiOutFigure(f,fullfile(save_path,'OneRemove'),file_name,file_extension)
 
 end

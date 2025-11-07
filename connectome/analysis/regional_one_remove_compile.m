@@ -1,5 +1,11 @@
 function [save_path] = regional_one_remove_compile(save_cnt,connectome_outputs,Paths_Pval,pval_threshold)
 
+save_cnt=fullfile(save_cnt,'OneRemove');
+
+if ~exist(save_cnt,'dir')
+    mkdir(save_cnt)
+end
+
 count=1;
 for n=1:numel(connectome_outputs)
     total_comparisions = height(Paths_Pval.(connectome_outputs{n}));
@@ -25,6 +31,7 @@ RM_1_results=vertcat(output_save_table{:});
 
 save_path=fullfile(save_cnt,'Regional_1_Remove_Test.txt');
 civm_write_table(RM_1_results,save_path);
+
 clear save_path;
 [connectome,~,connectome_idx]=unique(RM_1_results.connectome_factor);
 [sov,~,sov_idx]=unique(RM_1_results.source_of_variation);
