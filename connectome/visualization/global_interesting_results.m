@@ -48,11 +48,7 @@ xticklabels({'Significant Pvalue'; 'Signficant Pvalue +\newlineLarge Effect'});
 
 
 set(gca, 'fontsize',3,'FontName','Arial');
-save_figure_file=fullfile(save_path,'Global_SignificantSource_Significant+LargeEffectSource');
 file_name='Global_SignificantSource_Significant+LargeEffectSource';
-file_extension=[]
- saveMultiOutFigure(f,save_path,file_name,file_extension)
-
-print(f,save_figure_file,'-dsvg','-vector');
+saveMultiOutFigure(f,save_path,file_name,file_extension)
 
 end
