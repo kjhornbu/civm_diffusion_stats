@@ -1,10 +1,9 @@
-function [slidedata] = make_regional_pval_summary(ppt,global_pval_table,regional_pval_table,threshold_type,pval_threshold)
+function [slidedata] = make_regional_pval_summary(ppt,studymodel,regional_pval_table,threshold_type,pval_threshold)
 import mlreportgen.ppt.*;
 
-All_Sources_In_System=unique(global_pval_table.source_of_variation,'stable');
+All_Sources_In_System=strsplit(studymodel,'+');
 
-model=strjoin(global_pval_table.source_of_variation,'+');
-title=strjoin({'Regional: ',model},'');
+title=strjoin({'Regional: ',studymodel},'');
 large_effect_cohenF2 = 0.35;
 
 summary_table=table;

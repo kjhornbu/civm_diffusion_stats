@@ -6,6 +6,7 @@ studyID='24.chdi.01';
 project_dir='Z:\All_Staff\24.chdi.01_testing';
 google_doc=fullfile(project_dir,'google_sheet_caps', '24.chdi.01 - MRI record for phase II-2025-09-08.tsv');
 cleaned_google_doc_path=fullfile(project_dir,'google_sheet_caps',strcat('Edited_GoogleSheet_',char(datetime('today')),'.txt'));
+cleaned_google_doc_path="Z:\All_Staff\24.chdi.01_testing\google_sheet_caps\Edited_GoogleSheet_18-Sep-2025.txt";
 %if the day has changed since you ran this you want to make sure you set this to the fixed path!!!
 
 dataframe_path=fullfile(project_dir, [studyID '_DataFrame_Windows_20250918.txt']);
@@ -22,12 +23,12 @@ atlas_ontology_path=fullfile(getenv("WORKSTATION_HOME"),'static_data','atlas','s
 pval_threshold=0.05;
 pval_cols=list2cell('pval_BH pval');
 user='Harrison Mansour ';
-save_dir=fullfile(project_dir,'stats_testing_20250918');
+save_dir=fullfile(project_dir,'stats_testing_2025_11_7');
 
 %% uncomment to allow which part of pipeline desired to run. 
 %which_tests=list2cell('Scalar'); %does only scalar stats
-%which_tests=list2cell('Connectome'); %does only connectome stats
-which_tests=list2cell('Scalar Connectome'); %does both scalar and connectome stats
+which_tests=list2cell('Connectome'); %does only connectome stats
+%which_tests=list2cell('Scalar Connectome'); %does both scalar and connectome stats
 
 optional_suffix=false;
 suffix='';

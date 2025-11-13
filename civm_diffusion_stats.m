@@ -408,6 +408,8 @@ oneRM_done=0;
 
     %% TO DO: Summary PPt for Connectomes
 
+   %generate_summary_ppts_manova(Path_table,project_id,user,connectome_type,pval_threshold,study_model)
+
 end
 end
 
