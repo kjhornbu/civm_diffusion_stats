@@ -113,8 +113,10 @@ stats_test_scalar=struct;
 stats_test_scalar.name=configuration_struct.scalar_name;
 stats_test_scalar.effect_type_group=group_random_vector;
 stats_test_scalar.group_name=group;
-stats_test_scalar.effect_type_subgroup=subgroup_random_vector;
-stats_test_scalar.subgroup_name=subgroup;
+if ~isempty(subgroup)
+    stats_test_scalar.effect_type_subgroup=subgroup_random_vector;
+    stats_test_scalar.subgroup_name=subgroup;
+end
 stats_test_scalar.matrix{1}=matrix;
 stats_test_scalar.pval_threshold=pval_threshold;
 
@@ -122,8 +124,10 @@ stats_test_manova=struct;
 stats_test_manova.name=configuration_struct.manova_name;
 stats_test_manova.effect_type_group=group_random_vector;
 stats_test_manova.group_name=group;
-stats_test_manova.effect_type_subgroup=subgroup_random_vector;
-stats_test_manova.subgroup_name=subgroup;
+if ~isempty(subgroup)
+    stats_test_manova.effect_type_subgroup=subgroup_random_vector;
+    stats_test_manova.subgroup_name=subgroup;
+end
 stats_test_manova.matrix{1}=matrix;
 stats_test_manova.pval_threshold=pval_threshold;
 

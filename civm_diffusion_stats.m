@@ -258,7 +258,16 @@ if sum(reg_match(which_tests,'^(Connectome)$'))>0
         mkdir(fullfile(save_dir,'Connectomics'))
     end
 
-    name_augment=strcat(strjoin(strrep(stats_test_manova.group_name,'_',''),'_'),'_',strjoin(strrep(stats_test_manova.subgroup_name,'_',''),'_'));
+    check_names=fieldnames(stats_test_manova);
+    idx_subgroup=~cellfun(@isempty,regexpi(check_names,'^(subgroup_name)$'));
+    positional_idx_subgroup=find(idx_subgroup);
+
+    if ~isempty(positional_idx_subgroup)
+        name_augment=strcat(strjoin(strrep(stats_test_manova.group_name,'_',''),'_'),'_',strjoin(strrep(stats_test_manova.subgroup_name,'_',''),'_'));
+    else
+        name_augment=strcat(strjoin(strrep(stats_test_manova.group_name,'_',''),'_'));
+    end
+    
     if strcmp(stats_test_manova.name,'omnimanova_defined_matrix')
         temp_testname=strsplit(stats_test_manova.name,'_');
         temp_turned_matrix=stats_test_manova.matrix{:}';
@@ -408,7 +417,7 @@ oneRM_done=0;
 
     %% TO DO: Summary PPt for Connectomes
 
-   %generate_summary_ppts_manova(Path_table,project_id,user,connectome_type,pval_threshold,study_model)
+   %generate_summary_ppts_manova(save_cnt,Paths_Pval,studyID,user,connectome_outputs,pval_threshold,studymodel,configuration_struct)
 
 end
 end
