@@ -10,7 +10,13 @@ end
 
 if ~istable(data)
     temp_data=data;
-    data=civm_read_table(temp_data);
+    try
+        data=civm_read_table(temp_data);
+    catch
+        data=readtable(temp_data);
+        data(:,2)=data(:,1);
+        data=data(2:end,:);
+    end
 end
 if ~istable(dataframe)
     temp_dataframe=dataframe;

@@ -267,7 +267,7 @@ if sum(reg_match(which_tests,'^(Connectome)$'))>0
     else
         name_augment=strcat(strjoin(strrep(stats_test_manova.group_name,'_',''),'_'));
     end
-    
+
     if strcmp(stats_test_manova.name,'omnimanova_defined_matrix')
         temp_testname=strsplit(stats_test_manova.name,'_');
         temp_turned_matrix=stats_test_manova.matrix{:}';
@@ -397,10 +397,12 @@ oneRM_done=0;
             fprintf('One remove actually took, %g minutes estimate was %g minutes\n',t_oneremove/60,total_est_time_1rm);
 
             save(fullfile(save_cnt,'Pval_Paths.mat'),'Paths_Pval')
-
+try
             [Sig_Among_1RM_global_paths] = global_one_remove_compile(save_cnt,connectome_outputs,Paths_Pval,pval_threshold);
             [Sig_Among_1RM_regional_paths] = regional_one_remove_compile(save_cnt,connectome_outputs,Paths_Pval,pval_threshold);
-
+catch
+    keyboard;
+end
             global_one_remove_plot(save_cnt,dataframe,Sig_Among_1RM_global_paths);
             for n=1:numel(Sig_Among_1RM_regional_paths)
                 regional_one_remove_plot(save_cnt,dataframe,Sig_Among_1RM_regional_paths{n});

@@ -36,6 +36,10 @@ clear save_path;
 
 Sig_Among_1RM=table;
 Sig_Among_1RM.source_of_variation=all_sources;
+%preallocate the number of hits to zeros
+for m=1:numel(connectome_outputs) 
+    Sig_Among_1RM.(connectome_outputs{m})=zeros(size(all_sources));
+end
 
 for n=1:numel(sov)
     idx_sov=reg_match(all_sources,strcat('^(',sov{n},')$'));

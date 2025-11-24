@@ -14,8 +14,8 @@ for n=1:numel(connectome_outputs)
         specimen{m}=Paths_Pval.(connectome_outputs{n}).name{m};
 
         if m==1
-           all_sources=unique(pval.source_of_variation);
-           all_roi=unique(pval.ROI);
+            all_sources=unique(pval.source_of_variation);
+            all_roi=unique(pval.ROI);
         end
 
         temp_pval=pval(pval.pval_BH<=pval_threshold,:);
@@ -35,6 +35,16 @@ civm_write_table(RM_1_results,save_path);
 clear save_path;
 [connectome,~,connectome_idx]=unique(RM_1_results.connectome_factor);
 [sov,~,sov_idx]=unique(RM_1_results.source_of_variation);
+
+%In the case that we have nothign going on the in regional data just make
+%it loop but give nothing to put into the table.
+if isempty(sov)
+    sov=all_sources;
+end
+
+if isempty(connectome)
+    connectome=connectome_outputs;
+end
 
 for n=1:numel(sov)
     Sig_Among_1RM=table;

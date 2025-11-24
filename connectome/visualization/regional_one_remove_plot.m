@@ -9,7 +9,13 @@ if ispc
  end
  
  temp_data=data;
- data=civm_read_table(temp_data);
+
+ try
+     data=civm_read_table(temp_data);
+ catch
+     data=readtable(temp_data);
+ end
+
  valf=dir(temp_data);
  sov=strsplit(valf.name,'_');
 
