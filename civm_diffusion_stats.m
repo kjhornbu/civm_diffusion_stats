@@ -104,7 +104,16 @@ if sum(reg_match(which_tests,'^(Scalar)$'))>0
         mkdir(fullfile(save_dir,'Scalar_and_Volume'))
     end
 
-    name_augment=strcat(strjoin(strrep(stats_test_scalar.group_name,'_',''),'_'),'_',strjoin(strrep(stats_test_scalar.subgroup_name,'_',''),'_'));
+    check_names=fieldnames(stats_test_scalar);
+    idx_subgroup=~cellfun(@isempty,regexpi(check_names,'^(subgroup_name)$'));
+    positional_idx_subgroup=find(idx_subgroup);
+
+    if ~isempty(positional_idx_subgroup)
+        name_augment=strcat(strjoin(strrep(stats_test_scalar.group_name,'_',''),'_'),'_',strjoin(strrep(stats_test_scalar.subgroup_name,'_',''),'_'));
+    else
+        name_augment=strcat(strjoin(strrep(stats_test_scalar.group_name,'_',''),'_'));
+    end
+
     if strcmp(stats_test_scalar.name,'anovan_defined_matrix')
         temp_testname=strsplit(stats_test_scalar.name,'_');
         temp_turned_matrix=stats_test_scalar.matrix{:}';
