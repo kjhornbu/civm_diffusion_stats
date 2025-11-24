@@ -22,7 +22,6 @@ if sum(~cellfun(@isempty,hemifind))==0
         
         data_total_volume_table.(vol_regional_column)(n)=sum(temp.(vol_regional_column));
     end
-
 else
     try
         %Rob version of RCCF Atlas Polished
@@ -36,13 +35,17 @@ else
 
     data_total_volume_table=data_table(logical_bilat_brain,:);
 
+
 end
 
 [specimen_total_vol_name,~,specimen_total_vol_idx]=unique(data_total_volume_table.(unique_column),'stable');
 [specimen_name,~,specimen_idx]=unique(data_table.(unique_column),'stable');
 
 for n=1:numel(specimen_name)
-    %Double check that specimen match
+    %Double check that specimen match and are unique in identification --
+    %if this is broken you probably need to find a better column as a
+    %unique identifier of the data. (when defining specimen near the top of scalar
+    %processing main)
     check_name_match=regexpi(specimen_name{n},specimen_total_vol_name{specimen_total_vol_idx==n});
 
     if check_name_match~=1

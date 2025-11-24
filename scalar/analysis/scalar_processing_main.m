@@ -50,20 +50,35 @@ for o=1:numel(voxel_wise)
     elseif nnz(idx)>1
         error('There is more than one thing selected');
     end
+    clear idx;
 
     %% Adjust specimen V runno Subgrouping column heading to consistent specimen
     idx=column_find(dataframe,'^specimen$',1);
     if ~nnz(idx)
-        % IF there is not an exact specimen column, try harder
-        idx=reg_match(dataframe.Properties.VariableNames,'^(CIVM_ID|specimen|runno|scan|civm_specimen_id)$');
+        % IF there is not an exact specimen column, try harder -- this is
+        % some unique identifier across all the data entries. 
+        idx=reg_match(dataframe.Properties.VariableNames,'^(civm_scan_id|CIVM_ID|specimen|runno|scan|civm_specimen_id)$');
+    end
+    %create an iteration to find the unique across all the properties
+    %specimen name
+    pos_idx=find(idx,nnz(idx));
+    for n=1:nnz(idx)
+        terms=unique(dataframe.(pos_idx(n)));
+       if height(dataframe)==numel(terms)
+           idx=false(size(idx));
+           idx(pos_idx(n))=true;
+           break;
+       end
     end
     if nnz(idx)==1
+        %accept 1
         dataframe.Properties.VariableNames{idx}='specimen';
     elseif nnz(idx)>1
         error('There is more than one thing selected');
     elseif nnz(idx)==0
         error('Missing Specimen Identifier');
     end
+    clear idx;
 
     %% assign group/subgroup specified to dataframe, and convert the columns that might accidently be non-strings to strings
     [dataframe] = clean_df_to_general_entries(group,subgroup,dataframe);
