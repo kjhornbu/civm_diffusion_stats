@@ -9,6 +9,10 @@ if isempty( column_find(dataframe,'^stat_path_erode$') )
     warning('There are NO Erode Stat Paths Specified -- NO Erode Region Data Summaries will be Generated');
     pause(3);
     voxel_wise{2}=[];
+    voxel_wise_keys{2}=[];
+
+    voxel_wise = voxel_wise(~cellfun('isempty',voxel_wise)) ;
+    voxel_wise_keys = voxel_wise_keys(~cellfun('isempty',voxel_wise_keys)) ;
 end
 
 %% Check if too many input groupings
@@ -99,8 +103,11 @@ for o=1:numel(voxel_wise)
 
 
     %% Pull Data from Stat Files
+    try
     [big_table, User_Defined_big_table]=build_study_table(dataframe,voxel_wise_keys{o});
-
+    catch
+        keyboard;
+    end
     %Fix the uint64 issue here just in case for doing the further
     %processing.
     big_table.voxels=double(big_table.voxels);

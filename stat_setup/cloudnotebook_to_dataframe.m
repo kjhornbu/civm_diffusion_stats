@@ -71,10 +71,14 @@ parfor n=1:numel(df_connectome_obj)
     if ~file_time_check(polished_stats, 'newer', temp_connectome_data.stats)
         stats_polisher(temp_connectome_data.stats,fullAtlasOntology,polished_stats); %,project_research_archive
     end
-    if ~file_time_check(polished_e1stats, 'newer', temp_connectome_data.e1_stats)
-        stats_polisher(temp_connectome_data.e1_stats,fullAtlasOntology,polished_e1stats);
+    if ~isempty(temp_connectome_data.e1_stats)
+        if ~file_time_check(polished_e1stats, 'newer', temp_connectome_data.e1_stats)
+            stats_polisher(temp_connectome_data.e1_stats,fullAtlasOntology,polished_e1stats);
+        end
     end
 end
+
+count_noerode=false(height(dataFrame),1);
 for n=1:height(dataFrame)
     temp_connectome_data=dataFrame.connectome_obj{n};
     polished_stats=dataFrame.stat_path{n};
@@ -83,8 +87,13 @@ for n=1:height(dataFrame)
     % have to use the new check because if the file does not exist we
     % return false.
     have_stats_been_polished = file_time_check(polished_stats, 'newer', temp_connectome_data.stats );
-    have_e1stats_polished = file_time_check(polished_e1stats, 'newer', temp_connectome_data.e1_stats );
-
+    if ~isempty(temp_connectome_data.e1_stats)
+        have_e1stats_polished = file_time_check(polished_e1stats, 'newer', temp_connectome_data.e1_stats );
+    else
+        count_noerode(n)=1;
+        have_e1stats_polished=true; %just so we can pass through the check condition
+    end
+        
     stat_ready=(have_stats_been_polished+have_e1stats_polished)/2;
     failures=failures+(1-stat_ready);
     if stat_ready < 1
@@ -92,7 +101,15 @@ for n=1:height(dataFrame)
     end
     dataFrame.label_path{n}=temp_connectome_data.labels;
 end
+
+   % T2 = removevars(T1, vars);
+
 dataFrame.connectome_obj=[];
+
+%remove eroded stats if any are not found
+if nnz(count_noerode)>0
+    dataFrame=removevars(dataFrame,'stat_path_erode');
+end
 
 %% drop data frame entries which were not populated,
 % THIS IS NOT TYPICAL BEHAVIOR.
@@ -121,6 +138,9 @@ function [archive_idx,temp_connectome_data] = check_connectome_directory(m,n,pro
 %is saved.
 if iscell(project_research_archive)
     temp_connectome_data=connectome_dir(project_research_archive{m},[cloud_notebook.(unique_column){n} 'NLSAM'],'optional_suffix',optional_suffix,'suffix',suffix);
+    if isempty(temp_connectome_data.labels)%If not NLSAMed then it is without
+        temp_connectome_data=connectome_dir(project_research_archive{m},[cloud_notebook.(unique_column){n}],'optional_suffix',optional_suffix,'suffix',suffix);
+    end
     archive_idx=m;
 
     if ~exist(temp_connectome_data.results,'dir')
@@ -132,6 +152,9 @@ if iscell(project_research_archive)
     end
 else
     temp_connectome_data=connectome_dir(project_research_archive,[cloud_notebook.(unique_column){n} 'NLSAM'],'optional_suffix',optional_suffix,'suffix',suffix);
+    if isempty(temp_connectome_data.labels) %If not NLSAMed then it is without
+        temp_connectome_data=connectome_dir(project_research_archive,[cloud_notebook.(unique_column){n}],'optional_suffix',optional_suffix,'suffix',suffix);
+    end
     archive_idx = 1;
 end
 end

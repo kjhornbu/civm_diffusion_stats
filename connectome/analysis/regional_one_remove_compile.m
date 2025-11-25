@@ -42,7 +42,7 @@ if isempty(sov)
     sov=all_sources;
 end
 
-if isempty(connectome)
+if isempty(connectome) || numel(connectome)<2 %if either there is no entry or the unique value size is not 2
     connectome=connectome_outputs;
 end
 
@@ -55,7 +55,11 @@ for n=1:numel(sov)
         idx_connectome=reg_match(connectome,connectome_outputs{m});
         postional_idx_connectome=find(idx_connectome);
         temp_wrkdata=RM_1_results.ROI(connectome_idx==postional_idx_connectome & sov_idx==postional_idx_sov);
-        Sig_Among_1RM.(connectome_outputs{m})=sum(all_roi==temp_wrkdata',2);
+        if ~isempty(temp_wrkdata) %if the data is empty (no connectome and no sov at that point then just put zeros there)
+            Sig_Among_1RM.(connectome_outputs{m})=sum(all_roi==temp_wrkdata',2);
+        else
+            Sig_Among_1RM.(connectome_outputs{m})=zeros(size(all_roi));
+        end
     end
     save_path{n}=fullfile(save_cnt,strcat(strrep(strrep(sov{n},'_',''),':','x'),'_Significant_Among_1_Remove.txt'));
     civm_write_table(Sig_Among_1RM,save_path{n});
