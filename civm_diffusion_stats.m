@@ -165,9 +165,10 @@ if sum(reg_match(which_tests,'^(Scalar)$'))>0
     for pt=pval_cols
         pvalue_type=pt{1};
         % need to assign to temp to prevent handling pval different from pval_BH
-        Generate_PairwiseSheet_Plotting( output_paths_table, compare_criteria, pvalue_type, pval_threshold, {plot_criteria}); %output_paths_with_compare=
+        output_paths_with_compare=Generate_PairwiseSheet_Plotting( output_paths_table, compare_criteria, pvalue_type, pval_threshold, {plot_criteria}); %
     end
-    %output_paths_table=output_paths_with_compare;
+    output_paths_table=output_paths_with_compare;
+
     %% TO DO: Put complex figure generation here
     % they are so dependant for ordering to put together but at least getting
     % the components  here would be a good thing.
@@ -195,7 +196,6 @@ end
 col_names=group_stat_table.Properties.VariableNames;
     %}
     col_types={'cohenD','percent_change'};
-
     column_setup = {
         'pvalue_extended', 'pval'
         'pvalue', 'pval_BH'
@@ -221,7 +221,9 @@ col_names=group_stat_table.Properties.VariableNames;
             %if nnz(n_idx)==1
             %    column_setup(end+1,:)={col_types{col_type_idx},col_names{n_idx}};
             %end
-            column_setup(end+1,:)={col_types{col_type_idx},sprintf('%s_%s',col_types{col_type_idx},name_code{n})};
+            % WARNING: ONLY the neutral works right now, make james fix the color
+            % table junk (or replace the whole thing with something smart(er/ish)).
+            column_setup(end+1,:)={sprintf('%s_WN',col_types{col_type_idx}), sprintf('%s_%s',col_types{col_type_idx},name_code{n})};
         end
     end
 
