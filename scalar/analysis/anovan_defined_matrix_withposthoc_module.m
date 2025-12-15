@@ -238,7 +238,7 @@ for d_idx=1:numel(data_idx)
                 'random', random_positional_idx,...
                 'display','off');
         catch
-            keyboard;
+           % keyboard;
             %I modified a lot within here (the if else checking on data lengths) to go and add NaN data into the
             %table but that is causing an error outside of this function so
             %that we can't do bilat/left/right data... I need to figure out

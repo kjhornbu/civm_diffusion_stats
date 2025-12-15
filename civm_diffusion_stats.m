@@ -255,13 +255,15 @@ if sum(reg_match(which_tests,'^(Connectome)$'))>0
         A=memory;
         number_of_leafs=360;
         single_array_data_sizeByte=8;
-        max_specimen=sqrt(A.MaxPossibleArrayBytes/single_array_data_sizeByte)/number_of_leafs;
+        double_array_data_sizeByte=single_array_data_sizeByte^2;
+        max_specimen=sqrt(A.MaxPossibleArrayBytes/double_array_data_sizeByte)/number_of_leafs;
         max_specimen=floor(max_specimen);
     catch
         max_specimen=300; % my person mac is like 250
         number_of_leafs=360;
         single_array_data_sizeByte=8;
-        A.MaxPossibleArrayBytes=single_array_data_sizeByte*(max_specimen*number_of_leafs)^2; 
+        double_array_data_sizeByte=single_array_data_sizeByte^2;
+        A.MaxPossibleArrayBytes=double_array_data_sizeByte*(max_specimen*number_of_leafs)^2; 
     end
 
 
@@ -326,8 +328,7 @@ if sum(reg_match(which_tests,'^(Connectome)$'))>0
 
             set_scale=n-1;
             [regional_paths,global_paths]=full_omni_manova_process(dataframe_path,o_dir,group, subgroup,test_criteria,test_remove_criteria,stats_test_manova,do_binarize, do_mean_subtract, do_ptr, do_augment, find_scale, set_scale);
-           
-            
+          
             global_interesting_results(o_dir,global_paths.pval,pval_threshold);
             regional_interesting_results(o_dir,regional_paths.pval,pval_threshold);
 
@@ -355,10 +356,8 @@ if sum(reg_match(which_tests,'^(Connectome)$'))>0
 
     %max_array_size -- use pval because bigger. 
     %max_data_size=520 + sum(pval_check.pval < pval_threshold)*num_specimen*8; 
-
-
-    dataLimit=(A.MaxPossibleArrayBytes/single_array_data_sizeByte)-((number_of_leafs*num_specimen)^2)*num_specimen; %only works in windows machines
-
+    dataLimit=(A.MaxPossibleArrayBytes/double_array_data_sizeByte)-((number_of_leafs*num_specimen)^2)*num_specimen; %only works in windows machines
+    max_1rm=((A.MaxPossibleArrayBytes/double_array_data_sizeByte)/(number_of_leafs)^2)^(1/3);
     %approx_specimenspace_remaining=max_specimen-2*(num_specimen+(num_specimen-1)^2); %total specimen possible based on memory - (2x because scaled/unscale) (specimen in inital omni  + all the one remove at the same time (so just )^2)
 %its really related to how many entries need to keep to hold the data...
 %which is more related to how many significant terms are we keeping
@@ -377,7 +376,7 @@ oneRM_done=0;
                     removed_specimen{s}=remove1_dataframe.CIVM_Scan_ID{s};
                     remove1_dataframe(s,:)=[];
                     updated_dataframe_path=fullfile(newDF_dir, strcat(removed_specimen{s},'_removed_DataFrame.txt'));
-                    writetable(remove1_dataframe, updated_dataframe_path);
+                    writetable(remove1_dataframe, updated_dataframe_path,'Delimiter', '\t'); %added  tab deliminator
 
                     o_dir=fullfile(save_cnt,connectome_outputs{n},'OneRemoveTesting',strcat(removed_specimen{s},'_removed'));
                     if ~exist(o_dir,'dir')
@@ -421,6 +420,8 @@ oneRM_done=0;
         end
 
         oneRM_done=1;
+    else
+        fprintf('Not Doing 1 Remove Testing of Omni-Manova -- Too many specimen to do analysis (Have %d, Can Only Do %d)\n',num_specimen,floor(max_1rm));
     end
     %% TO DO: Put complex figure generation here for Connectomes
     % they are so dependant for ordering to put together but at least getting

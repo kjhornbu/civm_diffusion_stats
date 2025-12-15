@@ -3,7 +3,7 @@ function [graphs] = load_graph(df)
 % should only be used as an override on request.
 % IF we've already baked it into our dataframe(which is the plan) we avoid
 % reloading by cleverly checking if we've loaded before.
-atlas_lookup_path=fullfile(getenv('WORKSTATION_DATA'),'atlas','symmetric15um','labels','RCCF','symmetric15um_RCCF_labels_lookup.txt');
+%atlas_lookup_path=fullfile(getenv('WORKSTATION_DATA'),'atlas','symmetric15um','labels','RCCF','symmetric15um_RCCF_labels_lookup.txt');
 
 %{
 look_up_table=civm_read_table(atlas_label_lookup);
@@ -60,5 +60,5 @@ for n=1:size(df,1)
     end
 end
 disp('Loading finished')
-
+graphs=double(graphs);
 end
