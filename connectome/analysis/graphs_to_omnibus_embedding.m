@@ -51,6 +51,7 @@ if scale==1
     % do whatever desired brain volume scaling
     for n=1:n_graphs
         A(n,:,:)=df.scale(n)*squeeze(graphs(n,:,:));
+        graphs(n,:,:)=df.scale(n)*squeeze(graphs(n,:,:));
     end
 else
     % or not

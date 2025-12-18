@@ -198,7 +198,7 @@ col_names=group_stat_table.Properties.VariableNames;
     col_types={'cohenD','percent_change'};
     column_setup = {
         'pvalue_extended', 'pval'
-        'pvalue', 'pval_BH'
+        'pvalue_extended', 'pval_BH'
         };
     % indicies of the summary criteria, we dont use summary criterais because
     % its not as well connected to what we want.

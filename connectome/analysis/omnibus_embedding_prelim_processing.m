@@ -41,6 +41,8 @@ function [regional_paths, global_paths, dataframe] = omnibus_embedding_prelim_pr
 
 % Import Data
 dataframe=civm_read_table(dataframe_path);
+dataframe.("utilization_index")(:)=1:height(dataframe);
+dataframe=column_reorder(dataframe,'utilization_index');
 
 % sort based on study groupings
 col_names=dataframe.Properties.VariableNames;
@@ -118,6 +120,11 @@ graphs=load_graph(dataframe);
     Dist_global, Dist_regional, Dist_regional_bilat,...
     main_embedding_median_eigen, eigen_Global, eigen_regional, eigen_regional_bilat]...
     = graphs_to_omnibus_embedding(dataframe, graphs, do_binarize, do_mean_subtract, do_ptr, do_augment, set_scale);
+
+%% SAVE OUTPUT CONNECTOMES
+out_name=sprintf('Combined_Connectome_Graphs_%i%i%i%i.mat',do_binarize,do_mean_subtract,do_ptr,do_augment);
+out_file=fullfile(save_dir,out_name);
+save(out_file,'graphs','dataframe')
 
 %% SAVING BLOCKS
 out_name=sprintf('Median_ASE_Model_Explains_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
