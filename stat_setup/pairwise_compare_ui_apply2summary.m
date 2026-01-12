@@ -22,19 +22,22 @@ SUBGROUP_positional_idx=find(SUBGROUP_logical_idx);
 
 only_interesting_col_names=vertcat(configuration_struct.test_criteria.Column_Names(GROUP_positional_idx(idxGROUP)),configuration_struct.test_criteria.Column_Names(SUBGROUP_positional_idx(idxSUBGROUP)));
 
-%Check and remove things in the zscoring or stratification entries
+%Check and remove things in the zscoring or stratification entries --- Does
+%not work together because none is not and effective name with the string
+%join  -- REMEMBER ONLY 1 column can stratify or zscore on
+    
 if any(~strcmp(configuration_struct.zscore,'none') | ~strcmp(configuration_struct.stratification,'none'))
-    idx_zscore=reg_match(only_interesting_col_names,strjoin(configuration_struct.zscore,'|'));
+    idx_zscore=reg_match(only_interesting_col_names, configuration_struct.zscore);
     idx_strat=reg_match(only_interesting_col_names,configuration_struct.stratification);
     idx = idx_zscore | idx_strat;
     only_interesting_col_names(idx)=[];
 end
+
 %% Start the ui for figure generation
 fig=uifigure('Position',[100 100 2150 1100]);
 main_grid = uigridlayout(fig,[2,1]); % Have two grids one with all the info in it and another which holds the next button
 main_grid.ColumnWidth = {'1x'};
 main_grid.RowHeight = {'1x',65};
-
 
 %% Begin with any Reasonable Group Pairwise Comparison (those from the james algorithm)
 Categorical_Entries=struct;

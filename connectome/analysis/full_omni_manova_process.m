@@ -1,6 +1,6 @@
-function [regional_paths, global_paths] = full_omni_manova_process( ...
+function [regional_paths, global_paths,stratified] = full_omni_manova_process( ...
     dataframe_path, save_dir, group, subgroup, test_criteria, zscore_configuration, stats_test_manova, ...
-    do_binarize, do_mean_subtract, do_ptr, do_augment, find_scale, set_scale)
+    do_binarize, do_mean_subtract, do_ptr, do_augment, find_scale, set_scale,pval_threshold)
 
 %Determine stratificaiton
 straified_dim=1;
@@ -127,9 +127,15 @@ if stratified
 
         regional_paths.ase=temp_regional;
         global_paths.ase=temp_global;
+
+        global_interesting_results(ase_path,global_paths.pval,pval_threshold); % These do the summary plotting in the case that we stratifiy
+        regional_interesting_results(ase_path,regional_paths.pval,pval_threshold); % These do the summary plotting in the case that we stratifiy 
     end
 else
     [regional_paths,global_paths] = run_manova_in_R(save_dir,group, subgroup,test_criteria, stats_test_manova,regional_paths,global_paths,'');
+
+     global_interesting_results(save_dir,global_paths.pval,pval_threshold); % These do the summary plotting in the case that we stratifiy
+     regional_interesting_results(save_dir,regional_paths.pval,pval_threshold); % These do the summary plotting in the case that we stratifiy
 end
 
 end

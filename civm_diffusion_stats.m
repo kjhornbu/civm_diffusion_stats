@@ -198,7 +198,7 @@ col_names=group_stat_table.Properties.VariableNames;
     col_types={'cohenD','percent_change'};
     column_setup = {
         'pvalue_extended', 'pval'
-        'pvalue_extended', 'pval_BH'
+        'pvalue_extended', 'pval_BH'%This was pvalue regular before but as rob loves getting all the exact pvalues, I did more
         };
     % indicies of the summary criteria, we dont use summary criterais because
     % its not as well connected to what we want.
@@ -327,10 +327,14 @@ if sum(reg_match(which_tests,'^(Connectome)$'))>0
             end
 
             set_scale=n-1;
-            [regional_paths,global_paths]=full_omni_manova_process(dataframe_path,o_dir,group, subgroup,test_criteria,test_remove_criteria,stats_test_manova,do_binarize, do_mean_subtract, do_ptr, do_augment, find_scale, set_scale);
+            [regional_paths,global_paths]=full_omni_manova_process(dataframe_path,o_dir,group, subgroup,test_criteria,test_remove_criteria,stats_test_manova,do_binarize, do_mean_subtract, do_ptr, do_augment, find_scale, set_scale,pval_threshold);
           
-            global_interesting_results(o_dir,global_paths.pval,pval_threshold);
-            regional_interesting_results(o_dir,regional_paths.pval,pval_threshold);
+            %placed back inside the full_omni_manova process -- to allow
+            %for stratification summarizing
+           % global_interesting_results(o_dir,global_paths.pval,pval_threshold); % These are doing the summary plottign here
+           % regional_interesting_results(o_dir,regional_paths.pval,pval_threshold); % These are doing the summary plottign here 
+
+            % Need to figure out how this is done for the scalar data...
 
             Paths_Pval.(connectome_outputs{n}).name{1}='All';
             Paths_Pval.(connectome_outputs{n}).regional{1}=regional_paths.pval;
