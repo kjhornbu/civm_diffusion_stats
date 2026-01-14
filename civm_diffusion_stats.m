@@ -151,6 +151,8 @@ if sum(reg_match(which_tests,'^(Scalar)$'))>0
 
     % limit the plotted data-sets according to limit vars set at beginning.
     % (james likes to only plot bilateral non-erode to save some time)
+    % In theory to plot more just modify plotting_sheet_types and
+    % plotting_hemispheres to whatever you want. 
     px=sprintf('^%s$',strjoin(plotting_sheet_types,'|'));
     st_idx=row_find(output_paths_table,'voxel_wise',px,1);
     h_idx=any( row_find(output_paths_table,'hemisphere',plotting_hemispheres,1), 2);
@@ -176,7 +178,7 @@ if sum(reg_match(which_tests,'^(Scalar)$'))>0
     % need to select the proper row of the output_paths_table
     n=1;
     if height(output_paths_table) > 1
-        warning('Unexpected more than one output line, james lazyily coded this to only one. You need to select the correct row, or add a loop here.')
+        warning('Unexpected more than one output line, james lazyily coded this to only one. You need to select the correct row, or add a loop here -- ie if you make post processing > 1 then you need this worked on.')
         keyboard;
     end
     group_stats_file=output_paths_table.StatsResults{n};

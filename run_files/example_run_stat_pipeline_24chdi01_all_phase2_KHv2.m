@@ -1,0 +1,37 @@
+clear all;close all;
+clear variables;
+
+%% Preliminaries
+BD='B:\24.chdi.01-PHASE2';
+HOME_DIR=BD;
+studyID='24.chdi.01';
+project_dir=fullfile(HOME_DIR,studyID);
+
+google_doc_dir=fullfile(BD,'KH_Google_Sheet_Caps');
+google_doc=fullfile(google_doc_dir,'24.chdi.01 - MRI record for Phase II-2026-01-10.tsv');
+cleaned_google_doc_path=fullfile(google_doc_dir,strcat('Edited_GoogleSheet_',char(datetime('today')),'.txt'));
+
+dataframe_path=fullfile(HOME_DIR,'stats',[studyID '_DataFrame_Windows_20260112_KH.txt']);
+% if empty string, script will make you a new setup file
+% or, pass it an existing one
+setup_file='';
+
+polished_sheets=fullfile(HOME_DIR,'polished_sheets');
+% point this to somewhere else
+project_research_archive=fullfile('A:/',studyID,'research');
+atlas_ontology_path=fullfile(getenv("WORKSTATION_HOME"),'static_data','atlas','symmetric15um','labels','RCCF','symmetric15um_RCCF_labels_lookup.txt'); 
+
+pval_threshold=0.05;
+pval_cols=list2cell('pval_BH pval');
+user='Kathryn Hornburg ';
+save_dir=fullfile('Z:\All_Staff\24.chdi.01_testing','Hornburg_Stat_Run_20260113');
+
+%% uncomment to allow which part of pipeline desired to run. 
+which_tests=list2cell('Scalar'); %does only scalar stats
+%which_tests=list2cell('Connectome'); %does only connectome stats
+%which_tests=list2cell('Scalar Connectome'); %does both scalar and connectome stats
+
+optional_suffix=false;
+suffix='';
+
+civm_diffusion_stats(user,studyID,google_doc,cleaned_google_doc_path,dataframe_path,setup_file, polished_sheets,project_research_archive,atlas_ontology_path,pval_cols,pval_threshold,save_dir,which_tests,optional_suffix,suffix);

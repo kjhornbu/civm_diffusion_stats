@@ -1,4 +1,4 @@
-function [figure_entries,Top_idx_10pct_noUncharted_inOntologyOrder,make_Left_Axis] = plot_blue_plot(directory,vertex,matrix_2_print,matrix_Criteria,selection_pull,data_y_labels,ontology_Order,make_Left_Axis,idx_vertex_10pct_noUncharted_inOntologyOrder)
+function [figure_entries,Top_idx_10pct_noUncharted_inOntologyOrder,make_Left_Axis,name_entries] = plot_blue_plot(directory,vertex,matrix_2_print,matrix_Criteria,selection_pull,data_y_labels,ontology_Order,make_Left_Axis,idx_vertex_10pct_noUncharted_inOntologyOrder)
 width=3;%width=2*3.3;  -- What width do you want the figures to be (at minimum -- if the font doesn't fit on the graph it will make it bigger).
 fontsize=8; %apparent final font size in the figure (typically viewed on mac)
 
@@ -131,20 +131,37 @@ axis([0.5 360.5 0 1]);
 
 line([0,0],[0 1],'Color','w');
 
+name_entries=table;
 for vertex_set=1:numel(sort_position)
     if sort_position(vertex_set)>180
         if ~isempty(ontology_Order.GN_Symbol{sort_position(vertex_set)-180})
             name_temp=strsplit(ontology_Order.GN_Symbol{sort_position(vertex_set)-180},{'-B','-L','-R'});
+            try
+                name_entries.ROI(vertex_set)=ontology_Order.ROI(sort_position(vertex_set)-180);
+                name_entries.Structure{vertex_set}=ontology_Order.Structure{sort_position(vertex_set)-180};
+                name_entries.GN_Symbol{vertex_set}=ontology_Order.GN_Symbol{sort_position(vertex_set)-180};
+                name_entries.Hemisphere{vertex_set}='contralateral';
+            catch
+                keyboard;
+            end
+
             text_value=text(positioning(vertex_set),0.9,name_temp{1},'HorizontalAlignment','center','FontSize',fontsize,'FontName','FixedWidth');
             line([sort_position(vertex_set),positioning(vertex_set)],[0 0.8-((fontsize-4.5)/alt_print_num)]);%round((text_value.Extent(2))*0.9,1)]);
         end
     else
         if ~isempty(ontology_Order.GN_Symbol{sort_position(vertex_set)})
             name_temp=strsplit(ontology_Order.GN_Symbol{sort_position(vertex_set)},{'-B','-L','-R'});
+
+            name_entries.ROI(vertex_set)=ontology_Order.ROI(sort_position(vertex_set));
+            name_entries.Structure{vertex_set}=ontology_Order.Structure{sort_position(vertex_set)};
+            name_entries.GN_Symbol{vertex_set}=ontology_Order.GN_Symbol{sort_position(vertex_set)};
+            name_entries.Hemisphere{vertex_set}='ipsilateral';
+
             text_value=text(positioning(vertex_set),0.9,name_temp{1},'HorizontalAlignment','center','FontSize',fontsize,'FontName','FixedWidth');
             line([sort_position(vertex_set),positioning(vertex_set)],[0 0.8-((fontsize-4.5)/alt_print_num)]);
         end
     end
+    
 end
 
 xticks(0);

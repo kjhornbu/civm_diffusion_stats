@@ -1,4 +1,4 @@
-function [figure_entries,Top_idx_10pct_noUncharted_inOntologyOrder,make_Left_Axis] = place_data_in_matrix_blue_plot(directory,vertex,selection_pull,compare_group_A,compare_group_B,data,ontology_Order,total_Ordering,make_Left_Axis)
+function [figure_entries,Top_idx_10pct_noUncharted_inOntologyOrder,make_Left_Axis,name_entries] = place_data_in_matrix_blue_plot(directory,vertex,selection_pull,compare_group_A,compare_group_B,data,ontology_Order,total_Ordering,make_Left_Axis)
 
 %Doing math to lay into matrix for printing and assigning the data labels
 %of the y axis.
@@ -23,6 +23,6 @@ idx_vertex_10pct_noUncharted_inOntologyOrder=(matrix_Criteria./max(matrix_Criter
 
 %actually plotting and creating assignment for the left axis, top x axis as
 %needed.
-[figure_entries,Top_idx_10pct_noUncharted_inOntologyOrder,make_Left_Axis] = plot_blue_plot(directory,vertex,matrix_2_print,matrix_Criteria,selection_pull,data_y_labels,ontology_Order,make_Left_Axis,idx_vertex_10pct_noUncharted_inOntologyOrder);
+[figure_entries,Top_idx_10pct_noUncharted_inOntologyOrder,make_Left_Axis,name_entries] = plot_blue_plot(directory,vertex,matrix_2_print,matrix_Criteria,selection_pull,data_y_labels,ontology_Order,make_Left_Axis,idx_vertex_10pct_noUncharted_inOntologyOrder);
 
 end

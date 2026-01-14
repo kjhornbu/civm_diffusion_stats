@@ -93,7 +93,7 @@ try
     % Maybe we should write two copies? one for us, and one for R?
      
     % civm_write_table(embedded_data, output_file);
-    writetable(embedded_data, output_file);
+    writetable(embedded_data, output_file,'QuoteStrings',true);
 
 %     [path,file_name,extension]=fileparts(output_file);
 %     temp_file_name=strsplit(file_name,'_');

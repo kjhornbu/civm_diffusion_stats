@@ -17,7 +17,8 @@ end
 
 %% Check if too many input groupings
 if numel(test_conditions)>1
-    error('We don''t currently support multiple stats test in 1 go. You need to call scalar processing main multiple times yourself.');
+    %error('We don''t currently support multiple stats test in 1 go. You need to call scalar processing main multiple times yourself.');
+    error('Scalar Processing doesn''t currently support stratification. Connectomics does. If you need stratification in scalar, please improve this.');
 end
 %Defining output path table
 output_path_table=table;
