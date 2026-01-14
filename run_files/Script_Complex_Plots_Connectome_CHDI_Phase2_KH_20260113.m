@@ -45,7 +45,7 @@ compare_group_B='WILD';
 %% Generate Plots -- basically do this unit over and over again to make figures with different selection pull and different directories.
 directory="B:\24.chdi.01-PHASE2\stats\Hornburg_Stat_Run_20260112_Overall\All+AgeGroup_BluePlots";
 make_Left_Axis=1;
-make_LUT_img=1;
+
 
 %pull the signficant regions to get the vertices to try here.
 pval_table=civm_read_table("B:\24.chdi.01-PHASE2\stats\Hornburg_Stat_Run_20260112_Overall\Connectomics\omnimanova_100010001\AgeofTerminationmonths_Genotype_Sex\BrainScaled_Omni_Manova\Pval_sorted_from_ASE_0000.csv");
@@ -76,6 +76,9 @@ for n=1:numel(all_sig_pvalues)
 
     %We need the top idx pushed into the next set...
     [figure_entries,make_LUT_img] = place_data_in_matrix_difference_plot(directory,all_sig_pvalues(n),selection_pull,Top_idx_10pct_noUncharted_inOntologyOrder,'cohenD_difference',output_difference,ontology_Order,total_Ordering,make_LUT_img); %'percent_difference' %'cohenD_difference'
+    if n==1
+        make_LUT_img=1;
+    end
     [figure_entries,make_LUT_img] = place_data_in_matrix_difference_plot(directory,all_sig_pvalues(n),selection_pull,Top_idx_10pct_noUncharted_inOntologyOrder,'percent_difference',output_difference,ontology_Order,total_Ordering,make_LUT_img); %'percent_difference' %'cohenD_difference'
 end
 
