@@ -3,7 +3,7 @@ function Path_table = Generate_PairwiseSheet_Plotting(Path_table,pairwise_compar
 %pairwise_comparisons: control v. treatment comparisions we wish to
 %investigate
 
-assert(numel(pairwise_comparisons)==1,'We don''t currently support multiple stats test in 1 go. You need to call scalar processing main multiple times yourself.');
+assert(numel(pairwise_comparisons)==1,'We don''t currently support multiple stats test in 1 go -- for scalar stats. You need to call scalar processing main multiple times yourself --- connectomics can do stratified.');
 
 if strcmp(pvalue_type,'pval_BH')
     fig_dir_name='figures';
