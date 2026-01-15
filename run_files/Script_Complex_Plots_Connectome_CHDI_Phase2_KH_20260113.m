@@ -37,15 +37,15 @@ output_connectome=vertcat(output_connectome{:});
 
 %selection_pull=list2cell('All Two Six Ten Twelve Fifteen');
 selection_pull=list2cell('All Fifteen Twelve Ten Six Two');
-compare_group_A='HET';
-compare_group_B='WILD';
+compare_group_A='WILD'; %CONTROL GROUP
+compare_group_B='HET'; %TREATED GROUP
 
 [output_difference] = create_difference_metric_for_connectome(output_connectome,selection_pull,compare_group_A,compare_group_B);
 
 %% Generate Plots -- basically do this unit over and over again to make figures with different selection pull and different directories.
 directory="B:\24.chdi.01-PHASE2\stats\Hornburg_Stat_Run_20260112_Overall\All+AgeGroup_BluePlots";
 make_Left_Axis=1;
-
+make_LUT_img=1;
 
 %pull the signficant regions to get the vertices to try here.
 pval_table=civm_read_table("B:\24.chdi.01-PHASE2\stats\Hornburg_Stat_Run_20260112_Overall\Connectomics\omnimanova_100010001\AgeofTerminationmonths_Genotype_Sex\BrainScaled_Omni_Manova\Pval_sorted_from_ASE_0000.csv");
