@@ -1,11 +1,12 @@
 
 close all;
 clear all;
+working_folder="B:\24.chdi.01-PHASE2\stats\Hornburg_Stat_20260115_overall";
 
 ontology_Order=civm_read_table("Ontology_Order_EdgeStrengthPlots.csv");
 %Keep this in the folder as a LUT??? this shouldn't change per run??
 
-dataframe_path="B:\24.chdi.01-PHASE2\stats\24.chdi.01_DataFrame_Windows_20260112_KH.txt";
+dataframe_path="B:\24.chdi.01-PHASE2\stats\24.chdi.01_DataFrame_Windows_20260115_KH.txt";
 dataframe=civm_read_table(dataframe_path);
 
 graphs=load_graph(dataframe);
@@ -37,18 +38,20 @@ output_connectome=vertcat(output_connectome{:});
 
 %selection_pull=list2cell('All Two Six Ten Twelve Fifteen');
 selection_pull=list2cell('All Fifteen Twelve Ten Six Two');
+
 compare_group_A='WILD'; %CONTROL GROUP
 compare_group_B='HET'; %TREATED GROUP
 
 [output_difference] = create_difference_metric_for_connectome(output_connectome,selection_pull,compare_group_A,compare_group_B);
 
 %% Generate Plots -- basically do this unit over and over again to make figures with different selection pull and different directories.
-directory="B:\24.chdi.01-PHASE2\stats\Hornburg_Stat_Run_20260112_Overall\All+AgeGroup_BluePlots";
+
+directory=fullfile(working_folder,"All+AgeGroupStratified_BluePlots_EffectPlots");
 make_Left_Axis=1;
 make_LUT_img=1;
 
 %pull the signficant regions to get the vertices to try here.
-pval_table=civm_read_table("B:\24.chdi.01-PHASE2\stats\Hornburg_Stat_Run_20260112_Overall\Connectomics\omnimanova_100010001\AgeofTerminationmonths_Genotype_Sex\BrainScaled_Omni_Manova\Pval_sorted_from_ASE_0000.csv");
+pval_table=civm_read_table(fullfile(working_folder,"Connectomics\omnimanova_100010001\Genotype_AgeofTerminationmonths_Sex\BrainScaled_Omni_Manova\Pval_sorted_from_ASE_0000.csv"));
 source_idx=~cellfun(@isempty,regexpi(pval_table.source_of_variation,'Genotype'));
 pval_idx=pval_table.pval_BH<0.05;
 all_sig_pvalues=pval_table.ROI(and(source_idx,pval_idx));
@@ -56,7 +59,6 @@ all_sig_pvalues=pval_table.ROI(and(source_idx,pval_idx));
 all_sig_pvalues(all_sig_pvalues>1000)=all_sig_pvalues(all_sig_pvalues>1000)-1000;
 all_sig_pvalues=unique(all_sig_pvalues);
 
-%all_sig_pvalues=9;
 output_plot_LUT=table;
 for n=1:numel(all_sig_pvalues)
 
@@ -64,13 +66,17 @@ for n=1:numel(all_sig_pvalues)
     out_height=height(output_plot_LUT);
 
     output_plot_LUT.ROI_Node(out_height+[1:height(name_entries)])=repmat(all_sig_pvalues(n),height(name_entries),1);
-    output_plot_LUT.Structure_Node(out_height+[1:height(name_entries)])={ontology_Order.Structure{ontology_Order.ROI==all_sig_pvalues(n)}};
-    output_plot_LUT.GN_Symbol_Node(out_height+[1:height(name_entries)])={ontology_Order.GN_Symbol{ontology_Order.ROI==all_sig_pvalues(n)}};
+    temp_split=strsplit(ontology_Order.Structure{ontology_Order.ROI==all_sig_pvalues(n)},'_');
+    output_plot_LUT.Structure_Node(out_height+[1:height(name_entries)])={strjoin(temp_split(1:numel(temp_split)-1),'_')};
+    temp_split=strsplit(ontology_Order.GN_Symbol{ontology_Order.ROI==all_sig_pvalues(n)},'-');
+    output_plot_LUT.GN_Symbol_Node(out_height+[1:height(name_entries)])={strjoin(temp_split(1:numel(temp_split)-1),'_')};
     
     for m=1:height(name_entries)
         output_plot_LUT.ROI_Vertex(out_height+m)=name_entries.ROI(m);
-        output_plot_LUT.Structure_Vertex(out_height+m)=name_entries.Structure(m);
-        output_plot_LUT.GN_Symbol_Vertex(out_height+m)=name_entries.GN_Symbol(m);
+        temp_split=strsplit(name_entries.Structure{m},'_');
+        output_plot_LUT.Structure_Vertex(out_height+m)={strjoin(temp_split(1:numel(temp_split)-1),'_')};
+        temp_split=strsplit(name_entries.GN_Symbol{m},'-');
+        output_plot_LUT.GN_Symbol_Vertex(out_height+m)={strjoin(temp_split(1:numel(temp_split)-1),'_')};
         output_plot_LUT.Hemisphere_Vertex(out_height+m)=name_entries.Hemisphere(m);
     end
 
@@ -82,4 +88,4 @@ for n=1:numel(all_sig_pvalues)
     [figure_entries,make_LUT_img] = place_data_in_matrix_difference_plot(directory,all_sig_pvalues(n),selection_pull,Top_idx_10pct_noUncharted_inOntologyOrder,'percent_difference',output_difference,ontology_Order,total_Ordering,make_LUT_img); %'percent_difference' %'cohenD_difference'
 end
 
-civm_write_table(output_plot_LUT,'B:\24.chdi.01-PHASE2\stats\Hornburg_Stat_Run_20260112_Overall\Top_15_Vertices_ForEach_Significant_Node_OverallModel.csv');
+civm_write_table(output_plot_LUT,fullfile(working_folder,"All+AgeGroupStratified_BluePlots_EffectPlots","Top_15_Vertices_ForEach_Significant_Node_inOverallModel_20260115.csv"));
