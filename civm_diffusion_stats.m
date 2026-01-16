@@ -1,5 +1,7 @@
 function [ ] = civm_diffusion_stats(user, studyID, google_doc, cleaned_google_doc_path,...
-    dataframe_path, setup_file, polished_sheets, project_research_archive, atlas_ontology_path, pval_cols, pval_threshold, save_dir,which_tests,optional_suffix,suffix)
+    dataframe_path, setup_file, polished_sheets, project_research_archive, ...
+    atlas_ontology_path, pval_cols, pval_threshold, save_dir, which_tests, ...
+    optional_suffix, suffix, varargin)
 % Expected that google_doc is a file which civm_read_table will load
 % will save updated copy to cleaned_google_doc_path
 % from cleaned googledoc, will build and save dataframe sheet to dataframe.
@@ -18,6 +20,12 @@ function [ ] = civm_diffusion_stats(user, studyID, google_doc, cleaned_google_do
 % user, google_doc, project_research_archive, atlas_ontolgoy_path,
 % pval_cols, pval_threshold, save_dir, cleaned_google_doc_path,
 % dataframe_path
+
+assert(numel(varargin)==0 || strcmp(user,'jjc29'),...
+    'Only james knows why varargin is there and has options in it.');
+% pretend we've parsed options, and found an assume nlsam option.
+opts=struct;
+opts.assumeNLSAM=true;
 
 if ~exist(save_dir,'dir')
     mkdir(save_dir);
@@ -38,14 +46,83 @@ if exist(dataframe_path,'file')
     end
 end
 if ~keep_last_dataframe
-    %Do standard metadata cleanup
-    extendedStudyColumns={};
-    cloud_notebook=civm_read_table(google_doc);
-    cloud_notebook=column2text(cloud_notebook,cloud_notebook.Properties.VariableNames);
+    if ~exist(cleaned_google_doc_path,'file')
+        %Do standard metadata cleanup
+        extendedStudyColumns={};
+        warning('james is playing with this :D');
+        % warning: james is playing with this :D
+        % I'm looking to combine(smartly?) any mostly-compatible googlesheet...
+        % not that I know how to tell if they're mostly compatible.
+        % The use case is; a project which has more than one sheet, most of
+        % the columns exist in both. I think I'll use blanks for fields which are
+        % not present in both.
+        if iscell(google_doc) && 1 < numel(google_doc)
+            warning('%s\n\t%s\n','experimental conjoining of data sheets.','THESE MUST BE HIGHLY COMPATIBLE FOR THIS TO WORK');
+            % should I enter auto-debug for any thing requiring user intervention with
+            % helpful suggestions?
+            db_inplace(mfilename,'auto-debug for experimental feature. DO NOT provide cell arrays of sheets if you dont want this.');
+            % load all, get column headings into cell of struct
+            docs=cell([numel(google_doc),1]);
+            fields=cell([numel(google_doc),1]);
+            field_matching_required=zeros(size(google_doc),'logical');
+            colname_match_data=cell([numel(google_doc),1]);
+            for idx_d=1:numel(google_doc)
+                docs{idx_d}=civm_read_table(google_doc{idx_d});
+                % force all columns to be treated as text.
+                docs{idx_d}=column2text(docs{idx_d},docs{idx_d}.Properties.VariableNames);
+                fields{idx_d}=docs{idx_d}.Properties.VariableNames;
+                [not_uniform,idx_1,idx_n]=setxor(fields{1},fields{idx_d},'stable');
+                if numel( not_uniform )
+                    field_matching_required(idx_d)=true;
+                    colname_match_data(idx_d)={{idx_1,idx_n}};
+                end
+            end
+            % allow user to somehow pick which columns could conjoin...
+            if any(field_matching_required)
+                all_columns=unique([fields{:}],'stable');
+                non_matching=cell2table(cell([0,numel(all_columns)]),'VariableNames',all_columns);
+                for idx_d=1:numel(google_doc)
+                    %[columns_to_add,idx_all]=setxor(all_columns,fields{idx_d},'stable');
+                    [common_column_names,idx_all,idx_n]=intersect(all_columns,fields{idx_d},'stable');
+                    %[idx_1,idx_n]=colname_match_data{idx_d}{:}
+                    row_dat=zeros([1,numel(all_columns)],'logical');
+                    row_dat(idx_all)=true;
+                    non_matching(idx_d,:)=num2cell(row_dat);
 
-    cloud_notebook = civm_metadata_cleanup(cloud_notebook,extendedStudyColumns);
-    %do visualization to do final cleanup of cloudnotebook
-    cloudnotebook_table_ui(cloud_notebook,cleaned_google_doc_path);
+                    % just invent columns as empties :-p
+                    idx_all=find(~row_dat);
+                    for idx_a=idx_all
+                        col_name=all_columns{idx_a};
+                        %fprintf('\t%s',col_name);
+                        docs{idx_d}.(col_name)=repmat({''},[height(docs{idx_d}),1]);
+                    end
+                end
+
+            end
+            cloud_notebook=concat_tables({},docs{:});
+            clear docs fields field_matching_required colname_match_data idx_d idx_all idx_a idx_n col_name non_matching idx_1 all_columns not_uniform;
+        elseif iscell(google_doc)
+            google_doc=uncell(google_doc);
+        end
+        if ~exist('cloud_notebook','var')
+            % if we've not loaded a bunch of notebooks and combined them
+            % already, load the notebook now.
+            cloud_notebook=civm_read_table(google_doc);
+            % force all columns to be treated as text.
+            cloud_notebook=column2text(cloud_notebook,cloud_notebook.Properties.VariableNames);
+        end
+
+        cloud_notebook = civm_metadata_cleanup(cloud_notebook,extendedStudyColumns);
+        if opts.assumeNLSAM
+            % alternative options, tryNLSAM where we would at some later point
+            % try with and without NLSAM, although James doesnt like that due to the ambiguouity.
+            cloud_notebook.CIVM_Scan_ID=cellfun(@(x) sprintf('%sNLSAM',x),cloud_notebook.CIVM_Scan_ID,'UniformOutput',false);
+        end
+
+        %do visualization to do final cleanup of cloudnotebook
+        cloudnotebook_table_ui(cloud_notebook,cleaned_google_doc_path);
+    end
+
     % take cloudnotebook and convert into a dataframe
     cloudnotebook_to_dataframe('CIVM_Scan_ID',cleaned_google_doc_path,atlas_ontology_path,polished_sheets,dataframe_path,project_research_archive,optional_suffix,suffix)
 end
