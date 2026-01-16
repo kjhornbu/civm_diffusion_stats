@@ -18,7 +18,6 @@ Data_global_overall=civm_read_table(fullfile(working_folder,"Connectomics\omnima
 Data_regional=civm_read_table(fullfile(working_folder,"Connectomics\omnimanova_100010001\Genotype_AgeofTerminationmonths_Sex\BrainScaled_Omni_Manova\Regional_MDS_0000.csv"));
 [output_regional, s_regional] = centroid_2_centroid(Data_regional,list2cell('group1'),list2cell('group2'));
 
-
 pval_table=civm_read_table(fullfile(working_folder,"Connectomics\omnimanova_100010001\Genotype_AgeofTerminationmonths_Sex\BrainScaled_Omni_Manova\Pval_sorted_from_ASE_0000.csv"));
 source_idx=~cellfun(@isempty,regexpi(pval_table.source_of_variation,'Genotype'));
 pval_idx=pval_table.pval_BH<0.05;
@@ -57,10 +56,10 @@ for n=1:numel(values_T)
 
     hold off
 
-    axis([-12 12 -12 12]);
+    axis([-9 9 -9 9]);
 
-    xticks([-12, -9, -6, -3, 0, 3, 6, 9, 12]);
-    yticks([-12, -9, -6, -3, 0, 3, 6, 9, 12]);
+    xticks([-9, -6, -3, 0, 3, 6, 9]);
+    yticks([-9, -6, -3, 0, 3, 6, 9]);
 
     xlabel('Dimension 1','FontSize',4.5,'FontName','Arial')
     ylabel('Dimension 2','FontSize',4.5,'FontName','Arial')
@@ -102,9 +101,9 @@ f=figure;
     plot([temp_out.scaled_X1_mean(1) temp_out.scaled_X1_mean(2)],[temp_out.scaled_X2_mean(1) temp_out.scaled_X2_mean(2)],'-k','LineWidth',1);
     hold off
 
-    axis([-6 6 -6 6]);
-    xticks([-6, -3, 0, 3, 6]);
-    yticks([-6, -3, 0, 3, 6]);
+    axis([-3 3 -3 3]);
+    xticks([-3, -1.5, 0, 1.5, 3]);
+    yticks([-3, -1.5, 0, 1.5, 3]);
 
     xlabel('Dimension 1','FontSize',4.5,'FontName','Arial')
     ylabel('Dimension 2','FontSize',4.5,'FontName','Arial')
@@ -140,9 +139,9 @@ f=figure;
 
         hold off
 
-        axis([-6 6 -6 6]);
-        xticks([-6, -3, 0, 3, 6]);
-        yticks([-6, -3, 0, 3, 6]);
+        axis([-3 3 -3 3]);
+        xticks([-3, -1.5, 0, 1.5, 3]);
+        yticks([-3, -1.5, 0, 1.5, 3]);
 
         xlabel('Dimension 1','FontSize',4.5,'FontName','Arial')
         ylabel('Dimension 2','FontSize',4.5,'FontName','Arial')
