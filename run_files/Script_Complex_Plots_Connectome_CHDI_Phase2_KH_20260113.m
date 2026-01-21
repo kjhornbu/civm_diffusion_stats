@@ -79,7 +79,7 @@ for n=1:numel(all_sig_pvalues)
         output_plot_LUT.GN_Symbol_Vertex(out_height+m)={strjoin(temp_split(1:numel(temp_split)-1),'_')};
         output_plot_LUT.Hemisphere_Vertex(out_height+m)=name_entries.Hemisphere(m);
     end
-
+    % Add some power or effect size measurement???
     %We need the top idx pushed into the next set...
     [figure_entries,make_LUT_img] = place_data_in_matrix_difference_plot(directory,all_sig_pvalues(n),selection_pull,Top_idx_10pct_noUncharted_inOntologyOrder,'cohenD_difference',output_difference,ontology_Order,total_Ordering,make_LUT_img); %'percent_difference' %'cohenD_difference'
     if n==1
