@@ -60,6 +60,8 @@ all_sig_pvalues(all_sig_pvalues>1000)=all_sig_pvalues(all_sig_pvalues>1000)-1000
 all_sig_pvalues=unique(all_sig_pvalues);
 
 output_plot_LUT=table;
+all_sig_pvalues=[47];
+
 for n=1:numel(all_sig_pvalues)
 
     [figure_entries,Top_idx_10pct_noUncharted_inOntologyOrder,make_Left_Axis,name_entries] = place_data_in_matrix_blue_plot(directory,all_sig_pvalues(n),selection_pull,compare_group_A,compare_group_B,output_connectome,ontology_Order,total_Ordering,make_Left_Axis);

@@ -13,10 +13,10 @@ green=[0.4660 0.6740 0.1880];
 purple=[0.4940 0.1840 0.5560];
 
 Data_global_overall=civm_read_table(fullfile(working_folder,"Connectomics\omnimanova_100010001\Genotype_AgeofTerminationmonths_Sex\BrainScaled_Omni_Manova\Global_ASE_0000.csv"));
-[output_global_overall,s_global] = specimen_2_specimen(Data_global_overall);
+[output_global_overall,s_global] = centroid_2_centroid(Data_global_overall);
 
 Data_regional=civm_read_table(fullfile(working_folder,"Connectomics\omnimanova_100010001\Genotype_AgeofTerminationmonths_Sex\BrainScaled_Omni_Manova\ASE_0000.csv"));
-[output_regional, s_regional] = specimen_2_specimen(Data_regional);
+[output_regional, s_regional] = centroid_2_centroid(Data_regional);
 
 pval_table=civm_read_table(fullfile(working_folder,"Connectomics\omnimanova_100010001\Genotype_AgeofTerminationmonths_Sex\BrainScaled_Omni_Manova\Pval_sorted_from_ASE_0000.csv"));
 source_idx=~cellfun(@isempty,regexpi(pval_table.source_of_variation,'Genotype'));

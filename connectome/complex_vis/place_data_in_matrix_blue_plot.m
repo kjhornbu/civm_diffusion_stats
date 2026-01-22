@@ -19,6 +19,14 @@ for m=1:numel(selection_pull)
 end
 
 matrix_Criteria=mean(matrix_2_print);
+% Trying to figure out a way to modify the data ordering that would grab
+% more of the middle signal this grabs it but it doesn't stay because on
+% sorting we stay with the top signal response and not the biggest change.
+% I would need to be double checking on the percent change, cohenD or raw
+% difference response to grab the "most meaningful changes" rather than jus
+% the phenotypic parts of the node. 
+%[a,b]=ecdf(matrix_Criteria);
+%idx_vertex_10pct_noUncharted_inOntologyOrder=matrix_Criteria>b(abs(a-0.3)<1e-6) & [~cellfun(@isempty,ontology_Order.GN_Symbol);~cellfun(@isempty,ontology_Order.GN_Symbol)]';
 idx_vertex_10pct_noUncharted_inOntologyOrder=(matrix_Criteria./max(matrix_Criteria))>0.1 & [~cellfun(@isempty,ontology_Order.GN_Symbol);~cellfun(@isempty,ontology_Order.GN_Symbol)]';
 
 %actually plotting and creating assignment for the left axis, top x axis as
