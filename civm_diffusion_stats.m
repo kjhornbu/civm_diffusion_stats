@@ -116,7 +116,11 @@ if ~keep_last_dataframe
         if opts.assumeNLSAM
             % alternative options, tryNLSAM where we would at some later point
             % try with and without NLSAM, although James doesnt like that due to the ambiguouity.
-            cloud_notebook.CIVM_Scan_ID=cellfun(@(x) sprintf('%sNLSAM',x),cloud_notebook.CIVM_Scan_ID,'UniformOutput',false);
+            % assumes nlsam is not part of runno, and adds it.
+            %cloud_notebook.CIVM_Scan_ID=cellfun(@(x) sprintf('%sNLSAM',x),cloud_notebook.CIVM_Scan_ID,'UniformOutput',false);
+            % forces nlsam at end of runno, but doesnt accidentially add it
+            % when it already exists.
+            cloud_notebook.CIVM_Scan_ID=cellfun(@(x) regexprep(x,'^(.*?)(NLSAM)?$',"$1NLSAM"),cloud_notebook.CIVM_Scan_ID,'UniformOutput',false);
         end
 
         %do visualization to do final cleanup of cloudnotebook
