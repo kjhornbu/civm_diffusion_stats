@@ -17,7 +17,7 @@ if data_scaling
 end
 
 [ontology_Order,total_Ordering] = find_proper_ontology_order(ontology_Order,size(graphs,2)/2);
-
+%civm_write_table(ontology_Order,'Ordering_For_Plotting_Connectomes_inRCCF_20260126.csv');
 
 compare='Genotype';
 [compare_group,~,compare_group_idx]=unique(dataframe.(compare));
@@ -26,6 +26,7 @@ selection=list2cell('Age_of_Termination_months');
 
 for n=1:numel(selection)
     [selection_group,~,selection_group_idx]=unique(dataframe.(selection{n}));
+
     [output_connectome{n}] = create_contralateral_ipsilateral(graphs,selection_group,selection_group_idx,compare_group,compare_group_idx);
 end
 
@@ -60,9 +61,11 @@ all_sig_pvalues(all_sig_pvalues>1000)=all_sig_pvalues(all_sig_pvalues>1000)-1000
 all_sig_pvalues=unique(all_sig_pvalues);
 
 output_plot_LUT=table;
-all_sig_pvalues=[47];
+%all_sig_pvalues=[47];
 
 for n=1:numel(all_sig_pvalues)
+% FIND ME THE ROI I WANT IN THE PLOT HIGHLIGHTED
+
 
     [figure_entries,Top_idx_10pct_noUncharted_inOntologyOrder,make_Left_Axis,name_entries] = place_data_in_matrix_blue_plot(directory,all_sig_pvalues(n),selection_pull,compare_group_A,compare_group_B,output_connectome,ontology_Order,total_Ordering,make_Left_Axis);
     out_height=height(output_plot_LUT);

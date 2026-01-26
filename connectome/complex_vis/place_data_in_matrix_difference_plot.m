@@ -6,7 +6,6 @@ end
 % Re order matrix into ontology ordering
 matrix_2_print=matrix_2_print(:,total_Ordering);
 
-
 %% Re order matrix and Find only Key Regions
 %the positional_idx_region is in the order of strength of difference? 
 % Filter out Zero idxs
