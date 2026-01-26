@@ -138,10 +138,11 @@ if found_stats
         df_stat_path_erode=cell(size(df_stat_path));
     end
     parfor n=1:numel(df_connectome_obj)
+
         temp_connectome_data=df_connectome_obj{n};
         polished_stats=df_stat_path{n};
         polished_e1stats=df_stat_path_erode{n};
-        if ~exist(temp_connectome_data.stats,'file')
+        if isempty(temp_connectome_data) || ~exist(temp_connectome_data.stats,'file')
             % if no input file, cannot polish. This can happen on if we do not have an archived connectome dir, OR re-run if
             % archive were disconnected. Someplace else we should address re-run.
             continue;
@@ -164,12 +165,12 @@ if found_stats
         polished_stats=dataFrame.stat_path{n};
         % Have to use the newer check because if the file does not exist we
         % return false.
-        have_stats_been_polished = file_time_check(polished_stats, 'newer', temp_connectome_data.stats );
+        have_stats_been_polished = ~isempty(temp_connectome_data) && file_time_check(polished_stats, 'newer', temp_connectome_data.stats );
         if ~found_e1stats
             stat_ready=have_stats_been_polished;
         else
             polished_e1stats=dataFrame.stat_path_erode{n};
-            if ~isempty(temp_connectome_data.e1_stats)
+            if ~isempty(temp_connectome_data) && ~isempty(temp_connectome_data.e1_stats)
                 have_e1stats_polished = file_time_check(polished_e1stats, 'newer', temp_connectome_data.e1_stats );
             else
                 missing_erode_stats_idx(n)=1;
