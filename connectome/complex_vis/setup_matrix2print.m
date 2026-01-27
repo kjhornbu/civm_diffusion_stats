@@ -1,4 +1,4 @@
-function [matrix_2_print,data_y_labels] = set_up_matrix2print(data,selection_pull,vertex,total_Ordering,plot_type,difference_criteria,compare_group_A,compare_group_B)
+function [matrix_2_print,data_y_labels] = setup_matrix2print(data,selection_pull,vertex,total_Ordering,plot_type,difference_criteria,compare_group_A,compare_group_B)
 %creates the matrix2print for both plot types
 switch plot_type
     case "blue"

@@ -69,60 +69,28 @@ output_plot_LUT=table;
 
 for n=1:numel(all_sig_pvalues)
 
-    [matrix_2_print_blue,data_y_labels] = set_up_matrix2print(output_connectome,selection_pull,all_sig_pvalues(n),total_Ordering,'blue','',compare_group_A,compare_group_B);
-    [matrix_2_print_cohenD,~] = set_up_matrix2print(output_difference,selection_pull,all_sig_pvalues(n),total_Ordering,'effect','cohenD_difference','','');
-    [matrix_2_print_percent,~] = set_up_matrix2print(output_difference,selection_pull,all_sig_pvalues(n),total_Ordering,'effect','percent_difference','','');
+    [matrix_2_print_blue,data_y_labels] = setup_matrix2print(output_connectome,selection_pull,all_sig_pvalues(n),total_Ordering,'blue','',compare_group_A,compare_group_B);
+    [matrix_2_print_cohenD,~] = setup_matrix2print(output_difference,selection_pull,all_sig_pvalues(n),total_Ordering,'effect','cohenD_difference','','');
+    [matrix_2_print_percent,~] = setup_matrix2print(output_difference,selection_pull,all_sig_pvalues(n),total_Ordering,'effect','percent_difference','','');
 
     matrix_2_print={matrix_2_print_blue;matrix_2_print_cohenD;matrix_2_print_percent};
     matrix_2_print_names={'blue','cohenD','percent'};
 
     [idx_10pct_noUncharted_inOntologyOrder_Top15] = find_key_vertices(matrix_2_print,matrix_2_print_names,ontology_Order);
 
+    [~,Top_idx_10pct_noUncharted_inOntologyOrder,make_Left_Axis,name_entries] = setup_blue_plot(directory,vertex,selection_pull,matrix_2_print,data_y_labels,logical_idx_vertex,ontology_Order,make_Left_Axis);
+    [~,make_LUT_img] = setup_difference_plot(directory,all_sig_pvalues(n),selection_pull,matrix_2_print_cohenD,idx_10pct_noUncharted_inOntologyOrder_Top15,'cohenD_difference',ontology_Order,make_LUT_img);
+    if n==1
+        make_LUT_img=1;
+    end
+    [~,make_LUT_img] = setup_difference_plot(directory,all_sig_pvalues(n),selection_pull,matrix_2_print_percent,idx_10pct_noUncharted_inOntologyOrder_Top15,'percent_difference',ontology_Order,make_LUT_img);
+
     blue_mean_data=mean(matrix_2_print_blue);
+
     logical_idx_all=reg_match(selection_pull,'All');
     positional_idx_all=find(logical_idx_all);
-
-    cohenD_All_data=matrix_2_print_cohenD(positional_idx_all,:);
     percent_All_data=matrix_2_print_percent(positional_idx_all,:);
-% 
-%     idx_10pct_noUncharted_inOntologyOrder=(blue_mean_data./max(blue_mean_data))>0.1 & [~cellfun(@isempty,ontology_Order.GN_Symbol);~cellfun(@isempty,ontology_Order.GN_Symbol)]';
-%     pos_idx_10pct_noUncharted_inOntologyOrder=find(idx_10pct_noUncharted_inOntologyOrder);
-% 
-%     %Find top 15 ROI
-%     if sum(idx_10pct_noUncharted_inOntologyOrder)>15
-%         [a,b]=sort(blue_mean_data(idx_10pct_noUncharted_inOntologyOrder),'descend');
-%         idx_10pct_noUncharted_inOntologyOrder_Top15=zeros(size(idx_10pct_noUncharted_inOntologyOrder));
-%         idx_10pct_noUncharted_inOntologyOrder_Top15(pos_idx_10pct_noUncharted_inOntologyOrder(b(1:15)))=1;
-% 
-%         idx_10pct_noUncharted_inOntologyOrder_Top15=idx_10pct_noUncharted_inOntologyOrder_Top15>0;
-%     else
-%        idx_10pct_noUncharted_inOntologyOrder_Top15=idx_10pct_noUncharted_inOntologyOrder;
-%     end
 
-%     f=figure;
-%     set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 2 2]*3.3*(72/96));
-%     
-%     semilogy(cohenD_All_data,blue_mean_data,'.');
-%     xlabel('All - CohenD Effect')
-%     ylabel('Log 10 of Mean Connectome Value')
-%     hold on
-%     semilogy(cohenD_All_data(idx_10pct_noUncharted_inOntologyOrder),blue_mean_data(idx_10pct_noUncharted_inOntologyOrder),'m.')    
-%     semilogy(cohenD_All_data(idx_10pct_noUncharted_inOntologyOrder_Top15),blue_mean_data(idx_10pct_noUncharted_inOntologyOrder_Top15),'r.')
-%     
-%     idx_large_effect=abs(cohenD_All_data)>0.8;
-%     semilogy(cohenD_All_data(idx_large_effect),blue_mean_data(idx_large_effect),'o','Color',green);
-%     %print(f, fullfile("B:\24.chdi.01-PHASE2\stats\Hornburg_Stat_20260115_overall",'Effect_v_MeanConnectome',strcat('CohenD_v_MeanConnectome_vertex_',num2str(all_sig_pvalues(n)),'.png')),'-dpng','-r600');
-% 
-%      f=figure;
-%     set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 2 2]*3.3*(72/96));
-%     
-%     semilogy(100*percent_All_data,blue_mean_data,'.');
-%     xlabel('All - Percent Change')
-%     ylabel('Log 10 of Mean Connectome Value')
-%     hold on
-%     semilogy(100*percent_All_data(idx_10pct_noUncharted_inOntologyOrder),blue_mean_data(idx_10pct_noUncharted_inOntologyOrder),'m.')    
-%     semilogy(100*percent_All_data(idx_10pct_noUncharted_inOntologyOrder_Top15),blue_mean_data(idx_10pct_noUncharted_inOntologyOrder_Top15),'r.')
-%     
     idx_large_effect=abs(percent_All_data)>1;
 
     if exist('out_data_keeper', 'var')
@@ -137,9 +105,4 @@ for n=1:numel(all_sig_pvalues)
         out_data_keeper=blue_mean_data(idx_large_effect);
         out_outside_keeper=blue_mean_data(~idx_large_effect);
     end
-
-    %semilogy(100*percent_All_data(idx_large_effect),blue_mean_data(idx_large_effect),'o','Color',green);
-    %print(f, fullfile("B:\24.chdi.01-PHASE2\stats\Hornburg_Stat_20260115_overall",'Effect_v_MeanConnectome',strcat('Percent_v_MeanConnectome_vertex_',num2str(all_sig_pvalues(n)),'.png')),'-dpng','-r600');
-
-    %close all;
 end

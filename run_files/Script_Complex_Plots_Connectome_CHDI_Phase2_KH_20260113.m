@@ -38,7 +38,8 @@ selection_group_idx=ones(height(dataframe),1);
 output_connectome=vertcat(output_connectome{:});
 
 %selection_pull=list2cell('All Two Six Ten Twelve Fifteen');
-selection_pull=list2cell('All Fifteen Twelve Ten Six Two');
+%selection_pull=list2cell('All Fifteen Twelve Ten Six Two');
+selection_pull=list2cell('All Fifteen Ten Six Two');
 
 compare_group_A='WILD'; %CONTROL GROUP
 compare_group_B='HET'; %TREATED GROUP
@@ -47,7 +48,7 @@ compare_group_B='HET'; %TREATED GROUP
 
 %% Generate Plots -- basically do this unit over and over again to make figures with different selection pull and different directories.
 
-directory=fullfile(working_folder,"All+AgeGroupStratified_BluePlots_EffectPlots");
+directory=fullfile(working_folder,"All+AgeGroupStratified_BluePlots_EffectPlots"); %_no12mo
 make_Left_Axis=1;
 make_LUT_img=1;
 
@@ -62,12 +63,12 @@ all_sig_pvalues=unique(all_sig_pvalues);
 
 output_plot_LUT=table;
 %all_sig_pvalues=[47];
+all_sig_pvalues=[9 15 111];
 
 for n=1:numel(all_sig_pvalues)
 % FIND ME THE ROI I WANT IN THE PLOT HIGHLIGHTED
 
-
-    [figure_entries,Top_idx_10pct_noUncharted_inOntologyOrder,make_Left_Axis,name_entries] = place_data_in_matrix_blue_plot(directory,all_sig_pvalues(n),selection_pull,compare_group_A,compare_group_B,output_connectome,ontology_Order,total_Ordering,make_Left_Axis);
+    [figure_entries,Top_positional_idx_10pct_noUncharted_inOntologyOrder,make_Left_Axis,name_entries] = place_data_in_matrix_blue_plot(directory,all_sig_pvalues(n),selection_pull,compare_group_A,compare_group_B,output_connectome,ontology_Order,total_Ordering,make_Left_Axis);
     out_height=height(output_plot_LUT);
 
     output_plot_LUT.ROI_Node(out_height+[1:height(name_entries)])=repmat(all_sig_pvalues(n),height(name_entries),1);
@@ -86,11 +87,12 @@ for n=1:numel(all_sig_pvalues)
     end
     % Add some power or effect size measurement???
     %We need the top idx pushed into the next set...
-    [figure_entries,make_LUT_img] = place_data_in_matrix_difference_plot(directory,all_sig_pvalues(n),selection_pull,Top_idx_10pct_noUncharted_inOntologyOrder,'cohenD_difference',output_difference,ontology_Order,total_Ordering,make_LUT_img); %'percent_difference' %'cohenD_difference'
+    [figure_entries,make_LUT_img] = place_data_in_matrix_difference_plot(directory,all_sig_pvalues(n),selection_pull,Top_positional_idx_10pct_noUncharted_inOntologyOrder,'cohenD_difference',output_difference,ontology_Order,total_Ordering,make_LUT_img); %'percent_difference' %'cohenD_difference'
     if n==1
         make_LUT_img=1;
     end
-    [figure_entries,make_LUT_img] = place_data_in_matrix_difference_plot(directory,all_sig_pvalues(n),selection_pull,Top_idx_10pct_noUncharted_inOntologyOrder,'percent_difference',output_difference,ontology_Order,total_Ordering,make_LUT_img); %'percent_difference' %'cohenD_difference'
+    [figure_entries,make_LUT_img] = place_data_in_matrix_difference_plot(directory,all_sig_pvalues(n),selection_pull,Top_positional_idx_10pct_noUncharted_inOntologyOrder,'percent_difference',output_difference,ontology_Order,total_Ordering,make_LUT_img); %'percent_difference' %'cohenD_difference'
 end
 
-civm_write_table(output_plot_LUT,fullfile(working_folder,"All+AgeGroupStratified_BluePlots_EffectPlots","Top_15_Vertices_ForEach_Significant_Node_inOverallModel_20260115.csv"));
+%civm_write_table(output_plot_LUT,fullfile(working_folder,"All+AgeGroupStratified_BluePlots_EffectPlots","Top_15_Vertices_ForEach_Significant_Node_inOverallModel_20260115.csv"));
+civm_write_table(output_plot_LUT,fullfile(working_folder,"All+AgeGroupStratified_BluePlots_EffectPlots","Top_15_Vertices_ForEach_Significant_Node_inOverallModel_20260127.csv"));

@@ -17,7 +17,7 @@ matrix_2_print_onlyKeyRegions=matrix_2_print(:,idx_vertex_10pct_noUncharted_inOn
 matrix_2_print_onlyKeyRegions=matrix_2_print_onlyKeyRegions(:,positional_idx_regions_sorted); %reordering teh matrix to the correct position
 
 positional_idx_regions=idx_vertex_10pct_noUncharted_inOntologyOrder(positional_idx_regions_sorted); %now putting into the proper ordering
-[LUT,make_lut_img] = make_percentChange_LUT(directory,difference_criteria,matrix_2_print_onlyKeyRegions,make_lut_img);
+[LUT,make_lut_img] = make_effectplot_LUT(directory,difference_criteria,matrix_2_print_onlyKeyRegions,make_lut_img);
 
 [figure_entries] = plot_difference_plot(directory,difference_criteria,vertex,selection_pull,matrix_2_print_onlyKeyRegions,LUT,ontology_Order,positional_idx_regions);
 
