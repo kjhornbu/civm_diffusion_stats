@@ -78,7 +78,7 @@ for n=1:numel(all_sig_pvalues)
 
     [idx_10pct_noUncharted_inOntologyOrder_Top15] = find_key_vertices(matrix_2_print,matrix_2_print_names,ontology_Order);
 
-    [~,Top_idx_10pct_noUncharted_inOntologyOrder,make_Left_Axis,name_entries] = setup_blue_plot(directory,vertex,selection_pull,matrix_2_print,data_y_labels,logical_idx_vertex,ontology_Order,make_Left_Axis);
+    [~,make_Left_Axis,name_entries] = setup_blue_plot(directory,all_sig_pvalues(n),selection_pull,matrix_2_print,data_y_labels,idx_10pct_noUncharted_inOntologyOrder_Top15,ontology_Order,make_Left_Axis);
     [~,make_LUT_img] = setup_difference_plot(directory,all_sig_pvalues(n),selection_pull,matrix_2_print_cohenD,idx_10pct_noUncharted_inOntologyOrder_Top15,'cohenD_difference',ontology_Order,make_LUT_img);
     if n==1
         make_LUT_img=1;
