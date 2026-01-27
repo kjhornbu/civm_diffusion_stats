@@ -31,6 +31,6 @@ idx_vertex_10pct_noUncharted_inOntologyOrder=(matrix_Criteria./max(matrix_Criter
 
 %actually plotting and creating assignment for the left axis, top x axis as
 %needed.
-[figure_entries,Top_idx_10pct_noUncharted_inOntologyOrder,make_Left_Axis,name_entries] = plot_blue_plot(directory,vertex,matrix_2_print,matrix_Criteria,selection_pull,data_y_labels,ontology_Order,make_Left_Axis,idx_vertex_10pct_noUncharted_inOntologyOrder);
+[figure_entries,Top_idx_10pct_noUncharted_inOntologyOrder,make_Left_Axis,name_entries] = plot_blue_plot_assign_key_vertex(directory,vertex,matrix_2_print,matrix_Criteria,selection_pull,data_y_labels,ontology_Order,make_Left_Axis,idx_vertex_10pct_noUncharted_inOntologyOrder);
 
 end

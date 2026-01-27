@@ -1,4 +1,4 @@
-function [figure_entries,Top_idx_10pct_noUncharted_inOntologyOrder,make_Left_Axis,name_entries] = plot_blue_plot(directory,vertex,matrix_2_print,matrix_Criteria,selection_pull,data_y_labels,ontology_Order,make_Left_Axis,idx_vertex_10pct_noUncharted_inOntologyOrder)
+function [figure_entries,make_Left_Axis] = plot_blue_plot_get_key_vertex_details(directory,vertex,matrix_2_print,selection_pull,data_y_labels,ontology_Order,make_Left_Axis,idx_inOntologyOrder)
 width=3;%width=2*3.3;  -- What width do you want the figures to be (at minimum -- if the font doesn't fit on the graph it will make it bigger).
 fontsize=8; %apparent final font size in the figure (typically viewed on mac)
 
@@ -15,17 +15,16 @@ if ismac
     alt_print_num=72; % you are most likely going to be viewing this on a mac in our lab, so you don't need to figure out pixels in pc
 end
 
-
 figure_entries=table;
 
 Structure_Temp=strsplit(ontology_Order.Structure{ontology_Order.L_Vertex==vertex},'_');
-Structure=strjoin(Structure_Temp(1:end-1),'_'); %Get the structure name to put in the file name
+Structure=strjoin(Structure_Temp(1:end-1),'_'); %Get the structure name to put in the file name but remove the directionality component
 
 selection_Number=size(matrix_2_print,1)/2; %selection number is the number of repeating units we have of data
 
 %These are the count and positions of the top regions in ontology ordering
-count_vertex_10pct_noUncharted=sum(idx_vertex_10pct_noUncharted_inOntologyOrder);
-positional_idx_10pct_noUncharted_inOntologyOrder=find(idx_vertex_10pct_noUncharted_inOntologyOrder);
+count_vertex_10pct_noUncharted=sum(idx_inOntologyOrder);
+sort_position=find(idx_inOntologyOrder); %This sorts it by increasing ontology positional value
 
 N=15; %How many labels to put on graph
 if count_vertex_10pct_noUncharted > N
@@ -52,7 +51,6 @@ if ~exist(fullfile(directory,'edge_strength_plot'),'dir')
     mkdir(fullfile(directory,'edge_strength_plot'))
 end
 
-
 %% Where to put the Figure's X Label Things
 select_ROI=[100 180.5 1100];
 
@@ -64,7 +62,6 @@ select_ipsilateral_contra={'ipsilateral','','contralateral'};
 %% Make output plots -- Average Mean Plots (Blue)
 f=figure;
 EntryA=width*printfactor; %width
-%EntryB=3.3*(selection_Number/24)*printfactor;
 EntryB=((fontsize*2)/alt_print_num)*2*selection_Number*printfactor; %height
 
 set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB]);
@@ -102,66 +99,40 @@ set(gca,'FontSize',fontsize,'FontName','Arial','TickDir','out');
 print(f, fullfile(directory,'edge_strength_plot',strcat('ROI_',num2str(vertex(1,1)),'_',Structure,'_Means.svg')),'-dsvg','-vector');
 close all;
 
-%% Make output plots -- Average Mean Plots (Blue) -- ANNOTATIONS Labels.
+%% Make output plots -- Average Mean Plots (Blue) -- ANNOTATIONS Labels (THE KEY VERTICES!!!).
 f2=figure;
 EntryA=(width-((45/alt_print_num)/0.775))*printfactor; %width
 EntryB=0.5*printfactor; %height
 
 set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'InnerPosition',[check_size(1) check_size(2) EntryA*print_num EntryB*print_num]); %*0.80625 for 4 inches
-%0.905
 
 positioning=linspace(0,360,N+1);
 positioning=positioning+(positioning(2)-positioning(1))/2;
 positioning(positioning>360)=[];
-
-if count_vertex_10pct_noUncharted > N
-    [~,idx]=sort(matrix_Criteria(positional_idx_10pct_noUncharted_inOntologyOrder),'descend'); %-- This is NOT in VERTEX ORDER which is 1:360 it is in the ORDER SPECIFIED BY ONTOLOGY ORDER.
-
-    data_subset_idx=idx(1:N);
-    data_subset_positional_idx_10pct_noUncharted_inOntologyOrder=positional_idx_10pct_noUncharted_inOntologyOrder(data_subset_idx);
-    sort_position=sort(data_subset_positional_idx_10pct_noUncharted_inOntologyOrder);
-    Top_idx_10pct_noUncharted_inOntologyOrder=data_subset_positional_idx_10pct_noUncharted_inOntologyOrder;
-else
-    sort_position=sort(positional_idx_10pct_noUncharted_inOntologyOrder);
-    Top_idx_10pct_noUncharted_inOntologyOrder=positional_idx_10pct_noUncharted_inOntologyOrder;
-end
 
 rectangle("Position",[0.5 0 360.5,1],"FaceColor",[1 1 1],"EdgeColor",[1 1 1])
 axis([0.5 360.5 0 1]);
 
 line([0,0],[0 1],'Color','w');
 
-name_entries=table;
 for vertex_set=1:numel(sort_position)
     if sort_position(vertex_set)>180
         if ~isempty(ontology_Order.GN_Symbol{sort_position(vertex_set)-180})
             name_temp=strsplit(ontology_Order.GN_Symbol{sort_position(vertex_set)-180},{'-B','-L','-R'});
-            try
-                name_entries.ROI(vertex_set)=ontology_Order.ROI(sort_position(vertex_set)-180);
-                name_entries.Structure{vertex_set}=ontology_Order.Structure{sort_position(vertex_set)-180};
-                name_entries.GN_Symbol{vertex_set}=ontology_Order.GN_Symbol{sort_position(vertex_set)-180};
-                name_entries.Hemisphere{vertex_set}='contralateral';
-            catch
-                keyboard;
-            end
-
-            text_value=text(positioning(vertex_set),0.9,name_temp{1},'HorizontalAlignment','center','FontSize',fontsize,'FontName','FixedWidth');
-            line([sort_position(vertex_set),positioning(vertex_set)],[0 0.8-((fontsize-4.5)/alt_print_num)]);%round((text_value.Extent(2))*0.9,1)]);
+            text(positioning(vertex_set),0.9,name_temp{1},'HorizontalAlignment','center','FontSize',fontsize,'FontName','FixedWidth');
+            line([sort_position(vertex_set),positioning(vertex_set)],[0 0.8-((fontsize-4.5)/alt_print_num)]);
+        else
+            keyboard; %% added to protect for if uncharted leaks in accidently
         end
     else
         if ~isempty(ontology_Order.GN_Symbol{sort_position(vertex_set)})
             name_temp=strsplit(ontology_Order.GN_Symbol{sort_position(vertex_set)},{'-B','-L','-R'});
-
-            name_entries.ROI(vertex_set)=ontology_Order.ROI(sort_position(vertex_set));
-            name_entries.Structure{vertex_set}=ontology_Order.Structure{sort_position(vertex_set)};
-            name_entries.GN_Symbol{vertex_set}=ontology_Order.GN_Symbol{sort_position(vertex_set)};
-            name_entries.Hemisphere{vertex_set}='ipsilateral';
-
-            text_value=text(positioning(vertex_set),0.9,name_temp{1},'HorizontalAlignment','center','FontSize',fontsize,'FontName','FixedWidth');
+            text(positioning(vertex_set),0.9,name_temp{1},'HorizontalAlignment','center','FontSize',fontsize,'FontName','FixedWidth');
             line([sort_position(vertex_set),positioning(vertex_set)],[0 0.8-((fontsize-4.5)/alt_print_num)]);
+        else
+            keyboard; %% added to protect for if uncharted leaks in accidently
         end
     end
-    
 end
 
 xticks(0);
@@ -175,7 +146,6 @@ close all;
 if make_Left_Axis
     make_Left_Axis=false;
     EntryA=3.3*printfactor;
-    %EntryB=(selection_Number/24)*3.3*printfactor;
     EntryB=((fontsize*2)/alt_print_num)*2*selection_Number*printfactor;
 
     %% Make output plots -- Average Mean Plots (Blue) -- Left Super labels for Y axis.
@@ -190,7 +160,6 @@ if make_Left_Axis
 
     for n=1:(selection_Number)
         text(0.25,positioning(n),strcat(selection_pull{n},'{'),'HorizontalAlignment','right','VerticalAlignment','middle','FontSize',fontsize,'FontName','Arial');
-
     end
 
     xticks(0);
@@ -235,7 +204,6 @@ if make_Left_Axis
 
     for n=1:(selection_Number)
         text(0.25,positioning(n),strcat(selection_pull{n}),'HorizontalAlignment','right','VerticalAlignment','middle','FontSize',fontsize,'FontName','Arial');
-
         line([0.25,0.3],[positioning(n),positioning(n)-0.5])
         line([0.25,0.3],[positioning(n),positioning(n)+0.5])
     end
