@@ -42,7 +42,9 @@ selection_group_idx=ones(height(dataframe),1);
 output_connectome=vertcat(output_connectome{:});
 
 %selection_pull=list2cell('All Two Six Ten Twelve Fifteen');
-selection_pull=list2cell('All Fifteen Twelve Ten Six Two');
+%selection_pull=list2cell('All Fifteen Twelve Ten Six Two');
+selection_pull=list2cell('All Fifteen Ten Six Two');
+
 
 compare_group_A='WILD'; %CONTROL GROUP
 compare_group_B='HET'; %TREATED GROUP
@@ -76,14 +78,20 @@ for n=1:numel(all_sig_pvalues)
     matrix_2_print={matrix_2_print_blue;matrix_2_print_cohenD;matrix_2_print_percent};
     matrix_2_print_names={'blue','cohenD','percent'};
 
-    [idx_10pct_noUncharted_inOntologyOrder_Top15] = find_key_vertices(matrix_2_print,matrix_2_print_names,ontology_Order);
+    [idx_10pct_noUncharted_inOntologyOrder_Top15,positional_idx_10pct_noUncharted_inOntologyOrder_Top15,node_keyvertices_entries] = find_key_vertices(all_sig_pvalues(n),matrix_2_print,matrix_2_print_names,ontology_Order);
+    
+    %setup LUT of output plot vertices per each key node
+    offset=height(output_plot_LUT);
+    output_plot_LUT(offset+[1:height(node_keyvertices_entries)],:)=node_keyvertices_entries;
 
-    [~,make_Left_Axis,name_entries] = setup_blue_plot(directory,all_sig_pvalues(n),selection_pull,matrix_2_print,data_y_labels,idx_10pct_noUncharted_inOntologyOrder_Top15,ontology_Order,make_Left_Axis);
-    [~,make_LUT_img] = setup_difference_plot(directory,all_sig_pvalues(n),selection_pull,matrix_2_print_cohenD,idx_10pct_noUncharted_inOntologyOrder_Top15,'cohenD_difference',ontology_Order,make_LUT_img);
+    [~,make_Left_Axis] = setup_blue_plot(directory,all_sig_pvalues(n),selection_pull,matrix_2_print_blue,data_y_labels,idx_10pct_noUncharted_inOntologyOrder_Top15,ontology_Order,make_Left_Axis);
+    [~,make_LUT_img] = setup_difference_plot(directory,all_sig_pvalues(n),selection_pull,matrix_2_print_cohenD,positional_idx_10pct_noUncharted_inOntologyOrder_Top15,'cohenD_difference',ontology_Order,make_LUT_img);
+    
     if n==1
         make_LUT_img=1;
     end
-    [~,make_LUT_img] = setup_difference_plot(directory,all_sig_pvalues(n),selection_pull,matrix_2_print_percent,idx_10pct_noUncharted_inOntologyOrder_Top15,'percent_difference',ontology_Order,make_LUT_img);
+
+    [~,make_LUT_img] = setup_difference_plot(directory,all_sig_pvalues(n),selection_pull,matrix_2_print_percent,positional_idx_10pct_noUncharted_inOntologyOrder_Top15,'percent_difference',ontology_Order,make_LUT_img);
 
     blue_mean_data=mean(matrix_2_print_blue);
 
@@ -106,3 +114,23 @@ for n=1:numel(all_sig_pvalues)
         out_outside_keeper=blue_mean_data(~idx_large_effect);
     end
 end
+
+civm_write_table(output_plot_LUT,fullfile(working_folder,"All+AgeGroupStratified_BluePlots_EffectPlots","Top_15_Vertices_ForEach_Significant_Node_inOverallModel_20260127.csv"));
+
+[a,b]=ecdf(out_data_keeper);
+[a2,b2]=ecdf(out_outside_keeper);
+
+f=figure;
+set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 1 1]*3.3*(72/96));
+
+semilogx(b,100*(1-a));
+hold on
+semilogx(b2,100*a2);
+
+legend({'Showing Blown-up % Change','Not Showing Blown-up % Change'},Location="northoutside");
+
+ylabel('Cumulative Probability');
+xlabel('Edge Strength');
+set(gca,'FontSize',6,'FontName','Arial'); %6 == 4.5 on mac
+
+print(f, fullfile(working_folder,'Blown-up_PercentagesGraph_atDifferentEdgeStrengths.png'),'-dpng','-r600');
