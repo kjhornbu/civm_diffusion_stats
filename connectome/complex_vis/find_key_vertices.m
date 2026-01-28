@@ -1,4 +1,4 @@
-function [idx_top, positional_idx_top,name_entries] = find_key_vertices(matrix_2_print,matrix_2_print_names,ontology_Order)
+function [idx_top, positional_idx_top,node_keyvertices_entries] = find_key_vertices(key_node,matrix_2_print,matrix_2_print_names,ontology_Order)
 
 %% the original match for high signal
 idx=reg_match(matrix_2_print_names,'blue');
@@ -21,17 +21,31 @@ end
 positional_idx_top=find(idx_top);
 
 %% Getting key vertex information
-name_entries=table;
+node_keyvertices_entries=table;
+
 for vertex_set=1:numel(positional_idx_top)
+    node_keyvertices_entries.ROI_Node(vertex_set)=key_node;
+
+    temp_split=strsplit(ontology_Order.Structure{ontology_Order.ROI==key_node},'_');
+    node_keyvertices_entries.Structure_Node{vertex_set}=strjoin(temp_split(1:numel(temp_split)-1),'_');
+
+    temp_split=strsplit(ontology_Order.GN_Symbol{ontology_Order.ROI==key_node},'-');
+    node_keyvertices_entries.GN_Symbol_Node{vertex_set}=strjoin(temp_split(1:numel(temp_split)-1),'_');
+
     if positional_idx_top(vertex_set)>180
-        name_entries.ROI(vertex_set)=ontology_Order.ROI(positional_idx_top(vertex_set)-180);
-        name_entries.Structure{vertex_set}=ontology_Order.Structure{positional_idx_top(vertex_set)-180};
-        name_entries.GN_Symbol{vertex_set}=ontology_Order.GN_Symbol{positional_idx_top(vertex_set)-180};
-        name_entries.Hemisphere{vertex_set}='contralateral';
+        adjust_idx=positional_idx_top(vertex_set)-180;
+        node_keyvertices_entries.Hemisphere_Vertex{vertex_set}='contralateral';
     else
-        name_entries.ROI(vertex_set)=ontology_Order.ROI(positional_idx_top(vertex_set));
-        name_entries.Structure{vertex_set}=ontology_Order.Structure{positional_idx_top(vertex_set)};
-        name_entries.GN_Symbol{vertex_set}=ontology_Order.GN_Symbol{positional_idx_top(vertex_set)};
-        name_entries.Hemisphere{vertex_set}='ipsilateral';
+        adjust_idx=positional_idx_top(vertex_set);
+        node_keyvertices_entries.Hemisphere_Vertex{vertex_set}='ipsilateral';
     end
+    node_keyvertices_entries.ROI_Vertex(vertex_set)=ontology_Order.ROI(adjust_idx);
+
+    temp_split=strsplit(ontology_Order.Structure{adjust_idx},'_');
+    node_keyvertices_entries.Structure_Vertex{vertex_set}=strjoin(temp_split(1:numel(temp_split)-1),'_');
+
+    temp_split=strsplit(ontology_Order.GN_Symbol{adjust_idx},'-');
+    node_keyvertices_entries.GN_Symbol_Vertex{vertex_set}=strjoin(temp_split(1:numel(temp_split)-1),'_');
+end
+
 end
