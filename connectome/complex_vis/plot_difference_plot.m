@@ -1,4 +1,4 @@
-function [figure_entries] = plot_difference_plot(directory,difference_criteria,vertex,selection_pull,matrix_2_print_onlyKeyRegions,LUT,ontology_Order,positional_idx_regions)
+function [figure_entries] = plot_difference_plot(directory,difference_criteria,vertex,y_label_information,matrix_2_print_onlyKeyRegions,LUT,ontology_Order,positional_idx_regions)
 width=3; %width=2*3.3; -- What width do you want the figures to be (at minimum -- if the font doesn't fit on the graph it will make it bigger).
 fontsize=8; %apparent final font size in the figure (typically viewed on mac)
 
@@ -123,7 +123,7 @@ set(gca,'position',ax_pos + [ 0 fig_shift(2) 0 0 ]);
 %% Y Axis, Finish X Axis and Saving
 
 yticks(((1/selection_Number)/2)+0:1/selection_Number:1)
-yticklabels(selection_pull)
+yticklabels(y_label_information)
 set(gca,'FontSize',fontsize,'FontName','Arial');
 
 xticks(0);

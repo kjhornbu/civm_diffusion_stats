@@ -9,6 +9,9 @@ data_middle_idx=size(graphs,2)/2;
 vertex=1:size(graphs,2);
 vertex=reshape(vertex,[],2);
 
+%Just pulls for each compare group and selection group possible with each list of criteria in the data
+%set. if you don't have data for that criteria selection it just continues.
+%
 for n=1:size(vertex,1)
     for m=1:numel(selection_group)
         for o=1:numel(compare_group)
@@ -46,9 +49,6 @@ for n=1:size(vertex,1)
 
             output_connectome.data{count}=mean([connectome_parts(:,:,1);connectome_parts(:,:,2)]);
             output_connectome.std_data{count}=std([connectome_parts(:,:,1);connectome_parts(:,:,2)]);
-
-            %output_connectome.mean_data{count}=std([squeeze(graphs(idx,vertex(n,1),:));[squeeze(graphs(idx,vertex(n,2),data_middle_idx+(1:data_middle_idx))),squeeze(graphs(idx,vertex(n,2),1:data_middle_idx))]]);
-            %output_connectome.std_data{count}=std([squeeze(graphs(idx,vertex(n,1),:));[squeeze(graphs(idx,vertex(n,2),data_middle_idx+(1:data_middle_idx))),squeeze(graphs(idx,vertex(n,2),1:data_middle_idx))]]);
 
             output_connectome.indiv_specimen_data{count}=mean(connectome_parts,3);
             output_connectome.indiv_specimen_std{count}=std(connectome_parts,0,3);
