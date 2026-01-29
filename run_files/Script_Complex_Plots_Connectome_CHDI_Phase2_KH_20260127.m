@@ -120,8 +120,8 @@ selection_pull=list2cell('All Fifteen Ten Six Two');
 %selection_pull=list2cell('All All All');
 
 %can either be 1 entry like this for all the selection pulls
-compare_group_A='WILD';%{'WILD' 'WILD M' 'WILD F'}; %CONTROL GROUP % WILD
-compare_group_B='HET';%{'HET' 'HET M' 'HET F'}; %TREATED GROUP %HET
+compare_group_A={'WILD'};%{'WILD' 'WILD M' 'WILD F'}; %CONTROL GROUP % WILD
+compare_group_B={'HET'};%{'HET' 'HET M' 'HET F'}; %TREATED GROUP %HET
 
 [output_difference] = create_difference_metric_for_connectome(output_connectome,selection_pull,compare_group_A,compare_group_B);
 
@@ -144,7 +144,6 @@ output_plot_LUT=table;
 all_sig_pvalues=[47];
 
 for n=1:numel(all_sig_pvalues)
-
     [matrix_2_print_blue,data_y_labels] = setup_matrix2print(output_connectome,selection_pull,all_sig_pvalues(n),total_Ordering,'blue','',compare_group_A,compare_group_B);
     [matrix_2_print_cohenD,data_y_labels_cohenD] = setup_matrix2print(output_difference,selection_pull,all_sig_pvalues(n),total_Ordering,'effect','cohenD_difference',compare_group_A,compare_group_B);
     [matrix_2_print_percent,data_y_labels_percent] = setup_matrix2print(output_difference,selection_pull,all_sig_pvalues(n),total_Ordering,'effect','percent_difference',compare_group_A,compare_group_B);

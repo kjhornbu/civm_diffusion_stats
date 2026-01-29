@@ -14,14 +14,14 @@ for n=1:size(vertex,1)
         if numel(groupA)==numel(selection_pull)
             output_difference.compare_group_A{count}=groupA{m};
         elseif numel(groupA)==1
-            output_difference.compare_group_A{count}=groupA;
+            output_difference.compare_group_A{count}=groupA{:};
         end
 
         %% Constant GroupB (as in for all selection the same groups) or Different Groups for GroupB (as in different groups for each selection)
         if numel(groupB)==numel(selection_pull)
             output_difference.compare_group_B{count}=groupB{m};
         elseif numel(groupB)==1
-            output_difference.compare_group_B{count}=groupB;
+            output_difference.compare_group_B{count}=groupB{:};
         end
 
         output_difference.vertex(count)=vertex(n,1);
@@ -31,14 +31,14 @@ for n=1:size(vertex,1)
         if numel(groupA)==numel(selection_pull)
             idx_A=~cellfun(@isempty,regexpi(output.selection_group,strcat('^(',selection_pull{m},')$'))) & ~cellfun(@isempty,regexpi(output.compare_group,strcat('^(',groupA{m},')$'))) & output.vertex==vertex(n);
         elseif numel(groupA)==1
-            idx_A=~cellfun(@isempty,regexpi(output.selection_group,strcat('^(',selection_pull{m},')$'))) & ~cellfun(@isempty,regexpi(output.compare_group,strcat('^(',groupA,')$'))) & output.vertex==vertex(n);
+            idx_A=~cellfun(@isempty,regexpi(output.selection_group,strcat('^(',selection_pull{m},')$'))) & ~cellfun(@isempty,regexpi(output.compare_group,strcat('^(',groupA{:},')$'))) & output.vertex==vertex(n);
         end
 
         %% Constant GroupB (as in for all selection the same groups) or Different Groups for GroupB (as in different groups for each selection)
         if numel(groupB)==numel(selection_pull)
             idx_B=~cellfun(@isempty,regexpi(output.selection_group,strcat('^(',selection_pull{m},')$'))) & ~cellfun(@isempty,regexpi(output.compare_group,strcat('^(',groupB{m},')$'))) & output.vertex==vertex(n);
         elseif numel(groupB)==1
-            idx_B=~cellfun(@isempty,regexpi(output.selection_group,strcat('^(',selection_pull{m},')$'))) & ~cellfun(@isempty,regexpi(output.compare_group,strcat('^(',groupA,')$'))) & output.vertex==vertex(n);
+            idx_B=~cellfun(@isempty,regexpi(output.selection_group,strcat('^(',selection_pull{m},')$'))) & ~cellfun(@isempty,regexpi(output.compare_group,strcat('^(',groupB{:},')$'))) & output.vertex==vertex(n);
         end
 
         output_difference.percent_difference{count}=(output.data{idx_B}-output.data{idx_A})./output.data{idx_A};

@@ -11,7 +11,7 @@ switch plot_type
                         data_y_labels{count}=compare_group_A{m};
                     elseif numel(compare_group_A)==1
                         matrix_2_print(count,:)=data.data{(data.vertex==vertex(1,1))&(~cellfun(@isempty,regexpi(data.selection_group,strcat('^(',selection_pull{m},')$'))))& (~cellfun(@isempty,regexpi(data.compare_group,strcat('^(',compare_group_A,')$'))))};
-                        data_y_labels{count}=compare_group_A;
+                        data_y_labels{count}=compare_group_A{:};
                     end
                     
                     count = count + 1;
@@ -21,7 +21,7 @@ switch plot_type
                         data_y_labels{count}=compare_group_B{m};
                     elseif numel(compare_group_B)==1
                         matrix_2_print(count,:)=data.data{(data.vertex==vertex(1,1))&(~cellfun(@isempty,regexpi(data.selection_group,strcat('^(',selection_pull{m},')$'))))&(~cellfun(@isempty,regexpi(data.compare_group,strcat('^(',compare_group_B,')$'))))};
-                        data_y_labels{count}=compare_group_B;
+                        data_y_labels{count}=compare_group_B{:};
                     end
                     count = count + 1;
                 end
@@ -33,7 +33,7 @@ switch plot_type
                 matrix_2_print(m,:)=data.(difference_criteria){(data.vertex==vertex(1,1))&(~cellfun(@isempty,regexpi(data.selection_group,strcat('^(',selection_pull{m},')$'))))&(~cellfun(@isempty,regexpi(data.compare_group_A,strcat('^(',compare_group_A{m},')$'))))&(~cellfun(@isempty,regexpi(data.compare_group_B,strcat('^(',compare_group_B{m},')$'))))};
                 data_y_labels{m}=strcat(selection_pull{m},':',compare_group_A{m},32,'v',32,compare_group_B{m});
             elseif numel(compare_group_A)==1 &&  numel(compare_group_B)==1
-                matrix_2_print(m,:)=data.(difference_criteria){(data.vertex==vertex(1,1))&(~cellfun(@isempty,regexpi(data.selection_group,strcat('^(',selection_pull{m},')$'))))&(~cellfun(@isempty,regexpi(data.compare_group_A,strcat('^(',compare_group_A,')$'))))&(~cellfun(@isempty,regexpi(data.compare_group_B,strcat('^(',compare_group_B,')$'))))};
+                matrix_2_print(m,:)=data.(difference_criteria){(data.vertex==vertex(1,1))&(~cellfun(@isempty,regexpi(data.selection_group,strcat('^(',selection_pull{m},')$'))))&(~cellfun(@isempty,regexpi(data.compare_group_A,strcat('^(',compare_group_A{:},')$'))))&(~cellfun(@isempty,regexpi(data.compare_group_B,strcat('^(',compare_group_B{:},')$'))))};
                 data_y_labels{m}=selection_pull{m};
             end
         end
