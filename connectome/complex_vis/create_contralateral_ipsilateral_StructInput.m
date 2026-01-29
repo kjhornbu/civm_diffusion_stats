@@ -1,4 +1,4 @@
-function [output_connectome] = create_contralateral_ipsilateral_JamesVersion(graphs,selection_name,selection_group_idx,postional_idx_selection,compare_a_name,compare_group_A_idx,positional_idx_A,compare_b_name,compare_group_B_idx,positional_idx_B)
+function [output_connectome] = create_contralateral_ipsilateral_StructInput(graphs,selection_name,selection_group_idx,postional_idx_selection,compare_a_name,compare_group_A_idx,positional_idx_A,compare_b_name,compare_group_B_idx,positional_idx_B)
 
 % for most of our data sets the data_middle idx == 180 (data is 1:180 and
 % 180+(1:180) so 1:middle_idx and middle_idx + (1: middle_idx))

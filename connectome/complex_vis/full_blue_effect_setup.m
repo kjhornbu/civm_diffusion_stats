@@ -26,22 +26,22 @@ for n=1:numel(comparison)
     end
 
     % Get comparision fields
-    compare_a=fieldnames(comparison(n).grouping.A);
-    compare_b=fieldnames(comparison(n).grouping.B);
+    compare_a=fieldnames(comparison(n).grouping.Basis);
+    compare_b=fieldnames(comparison(n).grouping.UnderTest);
 
     [~,compare_group_A,compare_group_A_idx]=find_group_information_from_groupingcriteria(dataframe,compare_a);
     [~,compare_group_B,compare_group_B_idx]=find_group_information_from_groupingcriteria(dataframe,compare_b);
 
     clear compare_a_term
     for m=1:numel(compare_a)
-        compare_a_term{m}=comparison(n).grouping.A.(compare_a{m});
+        compare_a_term{m}=comparison(n).grouping.Basis.(compare_a{m});
     end
     compare_a_name=strjoin(fliplr(compare_a_term),' ');
     positional_idx_A=find(reg_match(compare_group_A,compare_a_name));
 
     clear compare_b_term
     for m=1:numel(compare_b)
-        compare_b_term{m}=comparison(n).grouping.B.(compare_b{m});
+        compare_b_term{m}=comparison(n).grouping.UnderTest.(compare_b{m});
     end
     compare_b_name=strjoin(fliplr(compare_b_term),' ');
     positional_idx_B=find(reg_match(compare_group_B,compare_b_name));
@@ -81,8 +81,7 @@ for n=1:numel(meaningful_nodes)
     offset=height(output_plot_vertex_LUT);
     output_plot_vertex_LUT(offset+[1:height(node_keyvertices_entries)],:)=node_keyvertices_entries;
 
-    %The blue plot doesn't need a wrapper since we dont' make a LUT for it
-    %or only pull out key regions
+    %The blue plot doesn't need a wrapper since we dont' make a LUT for it or only pull out key regions
     [~,make_Left_Axis] = plot_blue_plot(directory,meaningful_nodes(n),matrix_2_print_blue,selection_pull,data_y_labels,ontology_Order,make_Left_Axis,idx_10pct_noUncharted_inOntologyOrder_Top15);
     [~,make_LUT_img] = setup_difference_plot(directory,meaningful_nodes(n),data_y_labels_cohenD,matrix_2_print_cohenD,positional_idx_10pct_noUncharted_inOntologyOrder_Top15,'cohenD_difference',ontology_Order,make_LUT_img);
 

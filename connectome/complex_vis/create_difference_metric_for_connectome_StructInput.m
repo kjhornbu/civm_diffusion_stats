@@ -1,4 +1,4 @@
-function [output_difference] = create_difference_metric_for_connectome_JamesVersion(output,selection_pull,groupA,groupB)
+function [output_difference] = create_difference_metric_for_connectome_StructInput(output,selection_pull,groupA,groupB)
 % A is the control group
 % B is the treatment group
 output_difference=table;

@@ -19,23 +19,23 @@ meaningful_nodes=pval_table.ROI(and(source_idx,pval_idx));
 meaningful_nodes(meaningful_nodes>1000)=meaningful_nodes(meaningful_nodes>1000)-1000;
 meaningful_nodes=unique(meaningful_nodes); %only 1 hemisphere
 
-comparison(1).grouping.A.('Genotype')='WILD';
-comparison(1).grouping.B.('Genotype')='HET';
+comparison(1).grouping.Basis.('Genotype')='WILD';
+comparison(1).grouping.UnderTest.('Genotype')='HET';
 
 comparison(2).stratification.('Age_of_Termination_months')='Fifteen';
-comparison(2).grouping.A.('Genotype')='WILD';
-comparison(2).grouping.B.('Genotype')='HET';
+comparison(2).grouping.Basis.('Genotype')='WILD';
+comparison(2).grouping.UnderTest.('Genotype')='HET';
 
 comparison(3).stratification.('Age_of_Termination_months')='Ten';
-comparison(3).grouping.A.('Genotype')='WILD';
-comparison(3).grouping.B.('Genotype')='HET';
+comparison(3).grouping.Basis.('Genotype')='WILD';
+comparison(3).grouping.UnderTest.('Genotype')='HET';
 
 comparison(4).stratification.('Age_of_Termination_months')='Six';
-comparison(4).grouping.A.('Genotype')='WILD';
-comparison(4).grouping.B.('Genotype')='HET';
+comparison(4).grouping.Basis.('Genotype')='WILD';
+comparison(4).grouping.UnderTest.('Genotype')='HET';
 
 comparison(5).stratification.('Age_of_Termination_months')='Two';
-comparison(5).grouping.A.('Genotype')='WILD';
-comparison(5).grouping.B.('Genotype')='HET';
+comparison(5).grouping.Basis.('Genotype')='WILD';
+comparison(5).grouping.UnderTest.('Genotype')='HET';
 
 [output_connectome,output_difference,output_plot_vertex_LUT] = full_blue_effect_setup(directory,dataframe,data_scaling,comparison,meaningful_nodes);
