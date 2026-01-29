@@ -1,4 +1,4 @@
-function [output_connectome,output_difference,output_plot_LUT] = full_blue_effect_setup(directory,dataframe,data_scaling,comparison,meaningful_nodes)
+function [output_connectome,output_difference,output_plot_vertex_LUT] = full_blue_effect_setup(directory,dataframe,data_scaling,comparison,meaningful_nodes)
 
 graphs=load_graph(dataframe);
 if data_scaling
@@ -49,8 +49,8 @@ for n=1:numel(comparison)
     %Get connectomic data and differences for each comparsion and compile
     %into a tabular format for each ROI in the connectome (not filtering
     %ROIs at this point)
-    [output_connectome{n}] = create_contralateral_ipsilateral_JamesVersion(graphs,selection_name,selection_group_idx,postional_idx_selection,compare_a_name,compare_group_A_idx,positional_idx_A,compare_b_name,compare_group_B_idx,positional_idx_B);
-    [output_difference{n}] = create_difference_metric_for_connectome_JamesVersion(output_connectome{n},selection_name,compare_a_name,compare_b_name);
+    [output_connectome{n}] = create_contralateral_ipsilateral_StructInput(graphs,selection_name,selection_group_idx,postional_idx_selection,compare_a_name,compare_group_A_idx,positional_idx_A,compare_b_name,compare_group_B_idx,positional_idx_B);
+    [output_difference{n}] = create_difference_metric_for_connectome_StructInput(output_connectome{n},selection_name,compare_a_name,compare_b_name);
 end
 
 output_connectome=vertcat(output_connectome{:});
@@ -59,18 +59,18 @@ output_difference=vertcat(output_difference{:});
 %% Generate Plots -- basically do this unit over and over again to make figures with different selection pull and different directories.
 make_Left_Axis=1;
 make_LUT_img=1;
-output_plot_LUT=table;
+output_plot_vertex_LUT=table;
 
 %get all options out of the setup data in the order they were placed in the
 %table
 selection_pull=unique(output_connectome.selection_group,'stable');
-compare_group_A=unique(output_difference.compare_group_A,'stable');
-compare_group_B=unique(output_difference.compare_group_B,'stable');
+compare_group_A_pull=unique(output_difference.compare_group_A,'stable');
+compare_group_B_pull=unique(output_difference.compare_group_B,'stable');
 
 for n=1:numel(meaningful_nodes)
-    [matrix_2_print_blue,data_y_labels] = setup_matrix2print(output_connectome,selection_pull,meaningful_nodes(n),total_Ordering,'blue','',compare_group_A,compare_group_B);
-    [matrix_2_print_cohenD,data_y_labels_cohenD] = setup_matrix2print(output_difference,selection_pull,meaningful_nodes(n),total_Ordering,'effect','cohenD_difference',compare_group_A,compare_group_B);
-    [matrix_2_print_percent,data_y_labels_percent] = setup_matrix2print(output_difference,selection_pull,meaningful_nodes(n),total_Ordering,'effect','percent_difference',compare_group_A,compare_group_B);
+    [matrix_2_print_blue,data_y_labels] = setup_matrix2print(output_connectome,selection_pull,meaningful_nodes(n),total_Ordering,'blue','',compare_group_A_pull,compare_group_B_pull);
+    [matrix_2_print_cohenD,data_y_labels_cohenD] = setup_matrix2print(output_difference,selection_pull,meaningful_nodes(n),total_Ordering,'effect','cohenD_difference',compare_group_A_pull,compare_group_B_pull);
+    [matrix_2_print_percent,data_y_labels_percent] = setup_matrix2print(output_difference,selection_pull,meaningful_nodes(n),total_Ordering,'effect','percent_difference',compare_group_A_pull,compare_group_B_pull);
 
     matrix_2_print={matrix_2_print_blue;matrix_2_print_cohenD;matrix_2_print_percent};
     matrix_2_print_names={'blue','cohenD','percent'};
@@ -78,11 +78,12 @@ for n=1:numel(meaningful_nodes)
     [idx_10pct_noUncharted_inOntologyOrder_Top15,positional_idx_10pct_noUncharted_inOntologyOrder_Top15,node_keyvertices_entries] = find_key_vertices(meaningful_nodes(n),matrix_2_print,matrix_2_print_names,ontology_Order);
 
     %setup LUT of output plot vertices per each key node
-    offset=height(output_plot_LUT);
-    output_plot_LUT(offset+[1:height(node_keyvertices_entries)],:)=node_keyvertices_entries;
+    offset=height(output_plot_vertex_LUT);
+    output_plot_vertex_LUT(offset+[1:height(node_keyvertices_entries)],:)=node_keyvertices_entries;
 
+    %The blue plot doesn't need a wrapper since we dont' make a LUT for it
+    %or only pull out key regions
     [~,make_Left_Axis] = plot_blue_plot(directory,meaningful_nodes(n),matrix_2_print_blue,selection_pull,data_y_labels,ontology_Order,make_Left_Axis,idx_10pct_noUncharted_inOntologyOrder_Top15);
-    
     [~,make_LUT_img] = setup_difference_plot(directory,meaningful_nodes(n),data_y_labels_cohenD,matrix_2_print_cohenD,positional_idx_10pct_noUncharted_inOntologyOrder_Top15,'cohenD_difference',ontology_Order,make_LUT_img);
 
     if n==1
@@ -94,5 +95,5 @@ for n=1:numel(meaningful_nodes)
     [~,make_LUT_img] = setup_difference_plot(directory,meaningful_nodes(n),data_y_labels_percent,matrix_2_print_percent,positional_idx_10pct_noUncharted_inOntologyOrder_Top15,'percent_difference',ontology_Order,make_LUT_img);
 end
 
-civm_write_table(output_plot_LUT,fullfile(directory,strcat('Top15Vertices_ForEachNode_',datestr(datetime("today")),'.csv')));
+civm_write_table(output_plot_vertex_LUT,fullfile(directory,strcat('Top15Vertices_ForEachNode_',datestr(datetime("today")),'.csv')));
 end
