@@ -3,11 +3,20 @@ function [df] = finding_scale_values(df,filename)
 try
     [df,col_2_modify,VariableDescriptions]=scaleconnectome_by_volume(df,0); %The 0 is remove the ventricles
 catch
+    keyboard;
     df=scaleconnectome_by_volume_old_WHS_version(df,0); %The 0 is remove the ventricles
 end
 
-%Put the variable descriptions back on
-df.Properties.VariableDescriptions=VariableDescriptions;
+%Put the variable descriptions back on BUTTTTT
+%need a check for if the variable descriptions matches the size of the
+%dataframe
+if numel(VariableDescriptions) == numel(df.Properties.VariableDescriptions)
+        df.Properties.VariableDescriptions=VariableDescriptions;
+elseif numel(VariableDescriptions)-2 == numel(df.Properties.VariableDescriptions)
+        df.Properties.VariableDescriptions=VariableDescriptions(1:end-2);
+else
+    keyboard;
+end
 
 %make user Readable dataframe for resaving with the scale values
 df_user_readable=df;
@@ -24,4 +33,3 @@ civm_write_table(df_user_readable,filename);
 %but to keep internal meaning keep the df the same as it is at this point.
 %(send  back the df without the switched names)
 end
-
