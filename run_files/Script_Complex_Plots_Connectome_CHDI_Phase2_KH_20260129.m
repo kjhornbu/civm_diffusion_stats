@@ -18,7 +18,7 @@ meaningful_nodes=pval_table.ROI(and(source_idx,pval_idx));
 
 meaningful_nodes(meaningful_nodes>1000)=meaningful_nodes(meaningful_nodes>1000)-1000;
 meaningful_nodes=unique(meaningful_nodes); %only 1 hemisphere
-
+%meaningful_nodes=[9 15 47 111];
 comparison(1).grouping.Basis.('Genotype')='WILD';
 comparison(1).grouping.UnderTest.('Genotype')='HET';
 

@@ -161,7 +161,7 @@ for i_column=1:numel(columns_to_plot)
                     % complex config.
                     if reg_match(LUT_type{i_column}{1},'percent_change')
                         c_mm={'min',-0.1,'max',0.1};
-                        c_neutral={'neutral',[-0.05, 0.05]};
+                        c_neutral={'neutral',[-0.01, 0.01]};%KH Shifted from 0.05 to 0.01 on 202600130 to better represent CHDI
                     elseif reg_match(LUT_type{i_column}{1},'cohenD')
                         % inital range proposed by yuqi
                         c_mm={'min',-2,'max',2};

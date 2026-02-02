@@ -1,6 +1,8 @@
 function [keep_last_dataframe] = do_dataframe_ui(setup_file)
 
 fig=uifigure('Position',[100 100 2150 550]);
+
+
 main_grid = uigridlayout(fig,[3,1]);
 main_grid.RowHeight = {'1x','1x',65};
 main_grid.ColumnWidth = {'1x'};

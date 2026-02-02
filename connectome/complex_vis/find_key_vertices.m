@@ -1,17 +1,58 @@
 function [idx_top, positional_idx_top,node_keyvertices_entries] = find_key_vertices(key_node,matrix_2_print,matrix_2_print_names,ontology_Order)
 
-%% the original match for high signal
-idx=reg_match(matrix_2_print_names,'blue');
+%% What if instead we bake into this where the high signal is... that is we want at least 50% of the large effect vertices seen in the node but not noise vertices... that would be like
+% Thresholding on 1% of the signal 
 
+idx=reg_match(matrix_2_print_names,'blue');
 matrix_2_print_single=matrix_2_print{idx};
 matrix_Criteria=mean(matrix_2_print_single);
-idx_10pct_noUncharted_inOntologyOrder=(matrix_Criteria./max(matrix_Criteria))>0.1 & [~cellfun(@isempty,ontology_Order.GN_Symbol);~cellfun(@isempty,ontology_Order.GN_Symbol)]';
-pos_idx_10pct_noUncharted_inOntologyOrder=find(idx_10pct_noUncharted_inOntologyOrder);
 
+idx_raw=(matrix_Criteria./max(matrix_Criteria))>0.01;
+idx_uncharted=[~cellfun(@isempty,ontology_Order.GN_Symbol);~cellfun(@isempty,ontology_Order.GN_Symbol)]';
+
+%idx_10pct_noUncharted_inOntologyOrder=(matrix_Criteria./max(matrix_Criteria))>0.01 & [~cellfun(@isempty,ontology_Order.GN_Symbol);~cellfun(@isempty,ontology_Order.GN_Symbol)]';
+%pos_idx_10pct_noUncharted_inOntologyOrder=find(idx_10pct_noUncharted_inOntologyOrder);
+
+%Check effect size for nodes...
+
+idx=reg_match(matrix_2_print_names,'cohenD');
+matrix_2_print_single_c=matrix_2_print{idx};
+Cohen_Matrix_Criteria=mean(matrix_2_print_single_c);
+idx_large=abs(Cohen_Matrix_Criteria)>0.8; 
+idx_medium=abs(Cohen_Matrix_Criteria)>0.5; 
+idx_small=abs(Cohen_Matrix_Criteria)>0.2;
+
+% idx=reg_match(matrix_2_print_names,'percent');
+% matrix_2_print_single_p=matrix_2_print{idx};
+% idx_p=abs(matrix_2_print_single_p)>1;
+
+% %% the original match for high signal
+% idx=reg_match(matrix_2_print_names,'blue');
+% matrix_2_print_single=matrix_2_print{idx};
+% matrix_Criteria=mean(matrix_2_print_single);
+% idx_10pct_noUncharted_inOntologyOrder=(matrix_Criteria./max(matrix_Criteria))>0.1 & [~cellfun(@isempty,ontology_Order.GN_Symbol);~cellfun(@isempty,ontology_Order.GN_Symbol)]';
+% pos_idx_10pct_noUncharted_inOntologyOrder=find(idx_10pct_noUncharted_inOntologyOrder);
+
+if sum(idx_large&idx_raw&idx_uncharted)<3
+    if sum(idx_medium&idx_raw&idx_uncharted)<3
+        idx_10pct_noUncharted_inOntologyOrder=(idx_small&idx_raw&idx_uncharted);
+        type='small';
+    else
+        idx_10pct_noUncharted_inOntologyOrder=(idx_medium&idx_raw&idx_uncharted);
+        type='medium';
+    end
+else
+  idx_10pct_noUncharted_inOntologyOrder=(idx_large&idx_raw&idx_uncharted); 
+  type='large';
+end
+
+%idx_10pct_noUncharted_inOntologyOrder=idx_c&idx_raw&idx_uncharted;
+pos_idx_10pct_noUncharted_inOntologyOrder=find(idx_10pct_noUncharted_inOntologyOrder);
 %% Filtering to Top 15 Vertices within the Node
 N=15;
 if sum(idx_10pct_noUncharted_inOntologyOrder)>N
-    [~,b]=sort(matrix_Criteria(idx_10pct_noUncharted_inOntologyOrder),'descend');
+    %[~,b]=sort(matrix_Criteria(idx_10pct_noUncharted_inOntologyOrder),'descend');
+    [~,b]=sort(Cohen_Matrix_Criteria(idx_10pct_noUncharted_inOntologyOrder),'descend','ComparisonMethod','abs');
     idx_10pct_noUncharted_inOntologyOrder_TopN=zeros(size(idx_10pct_noUncharted_inOntologyOrder));
     idx_10pct_noUncharted_inOntologyOrder_TopN(pos_idx_10pct_noUncharted_inOntologyOrder(b(1:N)))=1;
     idx_top=idx_10pct_noUncharted_inOntologyOrder_TopN>0;
@@ -31,6 +72,8 @@ for vertex_set=1:numel(positional_idx_top)
 
     temp_split=strsplit(ontology_Order.GN_Symbol{ontology_Order.ROI==key_node},'-');
     node_keyvertices_entries.GN_Symbol_Node{vertex_set}=strjoin(temp_split(1:numel(temp_split)-1),'_');
+    
+    node_keyvertices_entries.Effect_Size_Metric_used{vertex_set}=type;
 
     if positional_idx_top(vertex_set)>180
         adjust_idx=positional_idx_top(vertex_set)-180;
