@@ -30,7 +30,6 @@ opts.assumeNLSAM=true;
 if ~exist(save_dir,'dir')
     mkdir(save_dir);
 end
-output_paths=fullfile(save_dir,'Scalar_Data_Sheet_Paths.csv');
 
 %% Data setup -- User Input form
 keep_last_dataframe = 0;
@@ -215,7 +214,12 @@ if sum(reg_match(which_tests,'^(Scalar)$'))>0
     if ~exist(save_scalar,'dir')
         mkdir(save_scalar);
     end
-
+    % easy to screw up scalar sheet paths
+    %output_paths=fullfile(save_dir,'Scalar_Data_Sheet_Paths.csv');
+    % less easy to screw up.
+    [~,setup_name,~]=fileparts(setup_file);
+    %output_paths=fullfile(save_dir,'Scalar_Data_Sheet_Paths.csv');
+    output_paths=fullfile(save_dir,sprintf('%s_Scalar_Sheet_Paths.csv',setup_name));
     if ~file_time_check(output_paths, 'newer', setup_file)
         output_paths_table=scalar_processing_main(dataframe,save_scalar,group,subgroup,test_criteria,test_remove_criteria,stats_test_scalar);
 
