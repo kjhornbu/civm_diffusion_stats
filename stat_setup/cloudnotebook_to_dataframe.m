@@ -63,7 +63,7 @@ for n=1:height(cloud_notebook)
         dataFrame.stat_path{n}=polished_stats;
         dataFrame.stat_path_erode{n}=polished_e1stats;
         dataFrame.label_lookup_path{n}=path_to_atlasontology;
-        % dataFrame.label_path{n}=temp_connectome_data.labels;
+         dataFrame.label_path{n}=temp_connectome_data.labels; %WE NEED THIS FOR CONNECTOMES!!!! WHY DO YOU COMMENT IT OUT JAMES/HARRISON?
         dataFrame.connectome_obj{n}=temp_connectome_data;
     elseif numel(fieldnames(temp_connectome_data.headfile)) == 0 && ...
             ~any(reg_match(stats_archive,'research[\/]?$'))

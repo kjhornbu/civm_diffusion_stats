@@ -25,7 +25,7 @@ assert(numel(varargin)==0 || strcmp(user,'jjc29'),...
     'Only james knows why varargin is there and has options in it.');
 % pretend we've parsed options, and found an assume nlsam option.
 opts=struct;
-opts.assumeNLSAM=true;
+opts.assumeNLSAM=false;
 
 if ~exist(save_dir,'dir')
     mkdir(save_dir);
