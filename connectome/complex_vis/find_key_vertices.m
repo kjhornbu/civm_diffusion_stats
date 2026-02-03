@@ -10,11 +10,7 @@ matrix_Criteria=mean(matrix_2_print_single);
 idx_raw=(matrix_Criteria./max(matrix_Criteria))>0.01;
 idx_uncharted=[~cellfun(@isempty,ontology_Order.GN_Symbol);~cellfun(@isempty,ontology_Order.GN_Symbol)]';
 
-%idx_10pct_noUncharted_inOntologyOrder=(matrix_Criteria./max(matrix_Criteria))>0.01 & [~cellfun(@isempty,ontology_Order.GN_Symbol);~cellfun(@isempty,ontology_Order.GN_Symbol)]';
-%pos_idx_10pct_noUncharted_inOntologyOrder=find(idx_10pct_noUncharted_inOntologyOrder);
-
 %Check effect size for nodes...
-
 idx=reg_match(matrix_2_print_names,'cohenD');
 matrix_2_print_single_c=matrix_2_print{idx};
 Cohen_Matrix_Criteria=mean(matrix_2_print_single_c);
@@ -33,20 +29,20 @@ idx_small=abs(Cohen_Matrix_Criteria)>0.2;
 % idx_10pct_noUncharted_inOntologyOrder=(matrix_Criteria./max(matrix_Criteria))>0.1 & [~cellfun(@isempty,ontology_Order.GN_Symbol);~cellfun(@isempty,ontology_Order.GN_Symbol)]';
 % pos_idx_10pct_noUncharted_inOntologyOrder=find(idx_10pct_noUncharted_inOntologyOrder);
 
-if sum(idx_large&idx_raw&idx_uncharted)<3
-    if sum(idx_medium&idx_raw&idx_uncharted)<3
-        idx_10pct_noUncharted_inOntologyOrder=(idx_small&idx_raw&idx_uncharted);
-        type='small';
-    else
-        idx_10pct_noUncharted_inOntologyOrder=(idx_medium&idx_raw&idx_uncharted);
-        type='medium';
-    end
-else
-  idx_10pct_noUncharted_inOntologyOrder=(idx_large&idx_raw&idx_uncharted); 
-  type='large';
-end
-
-%idx_10pct_noUncharted_inOntologyOrder=idx_c&idx_raw&idx_uncharted;
+% if sum(idx_large&idx_raw&idx_uncharted)<3
+%     if sum(idx_medium&idx_raw&idx_uncharted)<3
+%         idx_10pct_noUncharted_inOntologyOrder=(idx_small&idx_raw&idx_uncharted);
+%         type='small';
+%     else
+%         idx_10pct_noUncharted_inOntologyOrder=(idx_medium&idx_raw&idx_uncharted);
+%         type='medium';
+%     end
+% else
+%   idx_10pct_noUncharted_inOntologyOrder=(idx_large&idx_raw&idx_uncharted); 
+%   type='large';
+% end
+type='JustSortingAll';
+idx_10pct_noUncharted_inOntologyOrder=idx_raw&idx_uncharted;
 pos_idx_10pct_noUncharted_inOntologyOrder=find(idx_10pct_noUncharted_inOntologyOrder);
 %% Filtering to Top 15 Vertices within the Node
 N=15;
@@ -59,6 +55,7 @@ if sum(idx_10pct_noUncharted_inOntologyOrder)>N
 else
     idx_top=idx_10pct_noUncharted_inOntologyOrder;
 end
+
 positional_idx_top=find(idx_top);
 
 %% Getting key vertex information
@@ -89,6 +86,8 @@ for vertex_set=1:numel(positional_idx_top)
 
     temp_split=strsplit(ontology_Order.GN_Symbol{adjust_idx},'-');
     node_keyvertices_entries.GN_Symbol_Vertex{vertex_set}=strjoin(temp_split(1:numel(temp_split)-1),'_');
+
+    node_keyvertices_entries.average_CohenD_value(vertex_set)=Cohen_Matrix_Criteria(positional_idx_top(vertex_set));
 end
 
 end

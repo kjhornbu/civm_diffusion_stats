@@ -77,8 +77,9 @@ for n=1:numel(meaningful_nodes)
 
     [idx_10pct_noUncharted_inOntologyOrder_Top15,positional_idx_10pct_noUncharted_inOntologyOrder_Top15,node_keyvertices_entries] = find_key_vertices(meaningful_nodes(n),matrix_2_print,matrix_2_print_names,ontology_Order);
 
-%     [out_large,out_NOT_large,out_gt_100,out_NOT_gt_100] = test_case_effectsize(output_connectome,matrix_2_print_blue,matrix_2_print_cohenD,matrix_2_print_percent,selection_pull,meaningful_nodes(n),idx_10pct_noUncharted_inOntologyOrder_Top15);
-% 
+%% This is making the pretty dot
+%    [out_large,out_NOT_large,out_gt_100,out_NOT_gt_100] = test_case_effectsize(output_connectome,matrix_2_print_blue,matrix_2_print_cohenD,matrix_2_print_percent,selection_pull,meaningful_nodes(n),idx_10pct_noUncharted_inOntologyOrder_Top15);
+
 %     if n>1
 %         offset=width(keep_out_large);
 %         keep_out_large(offset+(1:numel(out_large)))=out_large;
@@ -116,12 +117,12 @@ if ~isempty(node_keyvertices_entries)
     end
 
     [~,make_LUT_img] = setup_difference_plot(directory,meaningful_nodes(n),data_y_labels_percent,matrix_2_print_percent,positional_idx_10pct_noUncharted_inOntologyOrder_Top15,'percent_difference',ontology_Order,make_LUT_img);
-
 end
 end
 
 
 civm_write_table(output_plot_vertex_LUT,fullfile(directory,strcat('Top15Vertices_ForEachNode_',datestr(datetime("today")),'.csv')));
 
+%% This is plotting histograms of different filtered data on COHEN D and Percent Change
 %Plotting_Effect_Size_Categories(keep_out_gt_100,keep_out_NOT_gt_100,keep_out_large,keep_out_NOT_large);
 end

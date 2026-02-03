@@ -9,7 +9,7 @@ studyID='24.chdi.01';
 project_dir=fullfile(HOME_DIR,studyID);
 google_doc_dir=fullfile(BD,'Projects',studyID,'google_sheet_caps');
 google_doc=fullfile(google_doc_dir,'24.chdi.01 - MRI record for phase II-2026-01-10.tsv');
-cleaned_google_doc_path=fullfile(google_doc_dir,strcat('Edited_GoogleSheet15_',char(datetime('today')),'.txt'));
+cleaned_google_doc_path=fullfile(google_doc_dir,strcat('Edited_GoogleSheet6_',char(datetime('today')),'.txt'));
 %if the day has changed since you ran this you want to make sure you set this to the fixed path!!!
 
 dataframe_path=fullfile(project_dir, [studyID '_DataFrame_Windows_',char(datetime('today')),'.txt']);
@@ -29,7 +29,7 @@ atlas_ontology_path=fullfile(getenv("WORKSTATION_HOME"),'static_data','atlas','s
 pval_threshold=0.05;
 pval_cols=list2cell('pval_BH pval');
 user='Harrison Mansour ';
-save_dir=fullfile(project_dir,'stats_15m_redo_pct_change-20260202');
+save_dir=fullfile(project_dir,'stats_6m_redo_pct_change-20260202');
 
 %% uncomment to allow which part of pipeline desired to run. 
 %which_tests=list2cell('Scalar'); %does only scalar stats

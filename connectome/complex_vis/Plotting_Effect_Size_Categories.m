@@ -1,6 +1,6 @@
 function [] = Plotting_Effect_Size_Categories(out_gt_100,out_NOT_gt_100,out_large,out_NOT_large)
 
-saving_path=fullfile("B:\24.chdi.01-PHASE2\stats\Hornburg_Stat_20260115_overall",'Effect_v_MeanConnectome');
+saving_path=fullfile("B:\24.chdi.01-PHASE2\stats\Hornburg_Stat_20260115_overall",'Effect_v_MeanConnectome_EffectAdded');
 mkdir(saving_path);
 
 %% Making a graph illustrating where there are very high and very low
