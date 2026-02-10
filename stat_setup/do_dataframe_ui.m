@@ -1,4 +1,4 @@
-function [keep_last_dataframe] = do_dataframe_ui(setup_file)
+function [not_keep_last_dataframe] = do_dataframe_ui(setup_file)
 
 fig=uifigure('Position',[100 100 2150 550]);
 
@@ -24,9 +24,9 @@ waitfor(next_button,'ButtonPushedFcn');
 %Internal Functions
     function next_button_pressed(src,event)
         if strcmp(yes_no_buttons.SelectedObject.Text,'NO')
-            keep_last_dataframe = 1;
+            not_keep_last_dataframe = 1;
         elseif strcmp(yes_no_buttons.SelectedObject.Text,'YES')
-            keep_last_dataframe = 0;
+            not_keep_last_dataframe = 0;
         end
         close(fig);
         return

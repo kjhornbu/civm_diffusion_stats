@@ -42,8 +42,21 @@ if exist(dataframe_path,'file')
         idate.Format='yyyy-MM-dd''T''HHmm';
         old_file_path=fullfile(path,sprintf('%s_%s%s',name,char(idate),extension));
         movefile(dataframe_path,old_file_path)
+    else
+        %Clear out any lingering names in the dataframe table related to
+        %the past group/subgrouping.
+        dataframe=civm_read_table(dataframe_path);
+        not_empty_logical=~cellfun(@isempty,dataframe.Properties.VariableDescriptions);
+        not_empty_positional=find(not_empty_logical);
+
+        for n=1:numel(not_empty_positional)
+            dataframe.Properties.VariableDescriptions(not_empty_positional(n))={''};
+        end
+
+        civm_write_table(dataframe,dataframe_path);
     end
 end
+
 if ~keep_last_dataframe
     if ~exist(cleaned_google_doc_path,'file')
         %Do standard metadata cleanup
@@ -452,7 +465,25 @@ if sum(reg_match(which_tests,'^(Connectome)$'))>0
     %approx_specimenspace_remaining=max_specimen-2*(num_specimen+(num_specimen-1)^2); %total specimen possible based on memory - (2x because scaled/unscale) (specimen in inital omni  + all the one remove at the same time (so just )^2)
 %its really related to how many entries need to keep to hold the data...
 %which is more related to how many significant terms are we keeping
+
 oneRM_done=0;
+
+%Check groupings for n in them if <2 then cannot actually do 1-remove
+%testing without breaking the test.
+grouping_names=[stats_test_manova.group_name,stats_test_manova.subgroup_name];
+grouping_models=stats_test_manova.matrix{1};
+
+group_keeper=zeros(height(grouping_models),1);
+for n=1:height(grouping_models)
+    select_group=grouping_names(logical(grouping_models(n,:)));
+    [~,unique_groups,group_idxs]=find_group_information_from_groupingcriteria(dataframe,select_group);
+    group_keeper(n)=any(sum(group_idxs==1:numel(unique_groups))<=2);
+end
+
+if any(group_keeper)
+
+    fprintf('Not completing 1-Remove Testing, group sizes are too small!');
+else
     if dataLimit>0
         % ParFor for One remove testing
         if ~file_time_check(fullfile(save_cnt,'Pval_Paths.mat'),'newer',dataframe_path)
@@ -479,7 +510,7 @@ oneRM_done=0;
                         find_scale=n-1;
                     end
                     set_scale=n-1;
-                    param_list_1_rm{s}={updated_dataframe_path,o_dir,group,subgroup,test_criteria,test_remove_criteria,stats_test_manova,do_binarize, do_mean_subtract, do_ptr, do_augment, find_scale, set_scale};
+                    param_list_1_rm{s}={updated_dataframe_path,o_dir,group,subgroup,test_criteria,test_remove_criteria,stats_test_manova,do_binarize, do_mean_subtract, do_ptr, do_augment, find_scale, set_scale,pval_threshold};
                     remove1_dataframe=fulldataFrame;
                 end
 
@@ -514,6 +545,7 @@ oneRM_done=0;
     else
         fprintf('Not Doing 1 Remove Testing of Omni-Manova -- Too many specimen to do analysis (Have %d, Can Only Do %d)\n',num_specimen,floor(max_1rm));
     end
+end
     %% TO DO: Put complex figure generation here for Connectomes
     % they are so dependant for ordering to put together but at least getting
     % the components  here would be a good thing.

@@ -11,11 +11,15 @@ end
 %need a check for if the variable descriptions matches the size of the
 %dataframe
 if numel(VariableDescriptions) == numel(df.Properties.VariableDescriptions)
-        df.Properties.VariableDescriptions=VariableDescriptions;
+    df.Properties.VariableDescriptions=VariableDescriptions;
 elseif numel(VariableDescriptions)-2 == numel(df.Properties.VariableDescriptions)
+    df.Properties.VariableDescriptions=VariableDescriptions(1:end-2);
+elseif (numel(df.Properties.VariableDescriptions) == 0 && numel(VariableDescriptions)>0)
+    if numel(VariableDescriptions) == width(df)
+        df.Properties.VariableDescriptions=VariableDescriptions;
+    elseif numel(VariableDescriptions)-2 == width(df)
         df.Properties.VariableDescriptions=VariableDescriptions(1:end-2);
-else
-    keyboard;
+    end
 end
 
 %make user Readable dataframe for resaving with the scale values

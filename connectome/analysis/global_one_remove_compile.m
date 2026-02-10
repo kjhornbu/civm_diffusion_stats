@@ -47,7 +47,9 @@ for n=1:numel(sov)
     for m=1:numel(connectome_outputs)
         idx_connectome=reg_match(connectome,connectome_outputs{m});
         postional_idx_connectome=find(idx_connectome);
-        Sig_Among_1RM.(connectome_outputs{m})(postional_idx_sov)=sum((connectome_idx==postional_idx_connectome & sov_idx==postional_idx_sov));
+        if ~isempty(postional_idx_connectome)
+            Sig_Among_1RM.(connectome_outputs{m})(postional_idx_sov)=sum((connectome_idx==postional_idx_connectome & sov_idx==postional_idx_sov));
+        end
     end
 end
 

@@ -31,18 +31,26 @@ for m=1:numel(source_of_variations)
     [Contrasts,~,Contrasts_idx]=unique(Statistical_Results_SOV.contrast);
 
     Key_Grouping_Columns_toSources_idx=~cellfun(@isempty,regexpi(Key_Grouping_Columns,strjoin(strsplit(source_of_variations{m},':'),'|')));
-    %Key_Grouping_Columns_toSources_idx=strcmp(Key_Grouping_Columns,strsplit(source_of_variations{m},':'));
+
+    group_sov_lookup_idx=~cellfun(@isempty,regexpi(Group_Table.Properties.VariableNames,strjoin(strsplit(source_of_variations{m},':'),'|')));
+    group_key_columns_idx=~cellfun(@isempty,regexpi(Group_Table.Properties.VariableNames,strjoin(Key_Grouping_Columns,'|')));
+    group_key_columns_positional_idx=find(group_key_columns_idx);
+
+    group_sov_lookup_idx=group_sov_lookup_idx(group_key_columns_positional_idx);
+
     [group_full,~,~] = find_group_information_from_groupingcriteria(Group_Table,Key_Grouping_Columns);
 
     if sum(Key_Grouping_Columns_toSources_idx)==numel(Key_Grouping_Columns)
         %remove all dashes (not everything that has a dash)
         group_source_of_variation_positional_idx=~contains(group_full,'-');
     else
-        %Keep dash entries in the opposite of the condition working on
+        %Keep dash entries in the opposite of the condition working on 
         separated_group_full=split(group_full,' ');
         logical_NOT_dash_idx=~strcmp(separated_group_full,'-');
 
-        group_source_of_variation_positional_idx=sum(logical_NOT_dash_idx==Key_Grouping_Columns_toSources_idx,2)==numel(Key_Grouping_Columns);
+        %The Key_Grouping Columns are not in the same order as
+        %the column names in the sheet. 
+        group_source_of_variation_positional_idx=sum(logical_NOT_dash_idx==group_sov_lookup_idx,2)==numel(Key_Grouping_Columns); %This is the problem right here... it is grabbing it on the wrong column here??
     end
 
     for n=1:numel(Contrasts)
@@ -54,7 +62,7 @@ for m=1:numel(source_of_variations)
         Subject_Table_Contrast=Subject_Table(:,Subject_Table_positional_idx);
 
         Group_Table_positional_idx=column_find(Group_Table.Properties.VariableNames,strjoin([Bookkeeping_list,{Contrasts{n},Key_Grouping_Columns{:}}],'|'));
-        Group_Table_Contrast_SOV=Group_Table(group_source_of_variation_positional_idx,Group_Table_positional_idx);
+        Group_Table_Contrast_SOV=Group_Table(group_source_of_variation_positional_idx,Group_Table_positional_idx); %this is not selecting the correct indices. 
         
         positional_idx_cohen_f=column_find(Statistical_Results_SOV_Contrast,'cohenF$');
         positional_idx_pval=column_find(Statistical_Results_SOV_Contrast,strcat(pvalue_type,'$'));
@@ -90,7 +98,6 @@ for m=1:numel(source_of_variations)
             Save_Interesting_Data=Interesting_ROIs;
         else
             Save_Interesting_Data(length_Save_Interesting_Data+(1:height(Interesting_ROIs)),:)=Interesting_ROIs;
-
         end
        
         ROIKeepNum=10;

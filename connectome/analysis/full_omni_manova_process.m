@@ -71,15 +71,15 @@ if stratified
 
     [~,stratification_groups_global,group_name_idx_global] = find_group_information_from_groupingcriteria(ase_global, test_criteria(straified_dim));
     [~,stratification_groups_regional,group_name_idx_regional] = find_group_information_from_groupingcriteria(ase_regional, test_criteria(straified_dim));
-    
+
     TotalDF=sum(group_name_idx_global==1:numel(stratification_groups_global))-1;
 
     count_idx=1;
     for r=1:height(stats_test_manova.matrix{test_idx})
-       
+
         criteria_idx=logical(stats_test_manova.matrix{test_idx}(r,:));
         [~,group_names,group_member_to_name_idx] = find_group_information_from_groupingcriteria(dataframe,test_criteria{2}{test_idx}(criteria_idx));
-        
+
         DF(r)=numel(group_names)-1;
 
         for m=1:numel(group_names)
@@ -93,7 +93,7 @@ if stratified
 
     %need to be sampled such that not 0 or 1 for N in a grouping we are
     %measuring AND have enough degree of freedom in the residuals so that
-    %we can account for the number of ASE terms maintained. 
+    %we can account for the number of ASE terms maintained.
 
     global_idx_range=global_idx_range(sum(strat_select<2)==0 & (TotalDF-sum(DF))-count_G>0);
     regional_idx_range=regional_idx_range(sum(strat_select<2)==0 &(TotalDF-sum(DF))-count_R>0);
@@ -129,13 +129,13 @@ if stratified
         global_paths.ase=temp_global;
 
         global_interesting_results(ase_path,global_paths.pval,pval_threshold); % These do the summary plotting in the case that we stratifiy
-        regional_interesting_results(ase_path,regional_paths.pval,pval_threshold); % These do the summary plotting in the case that we stratifiy 
+        regional_interesting_results(ase_path,regional_paths.pval,pval_threshold); % These do the summary plotting in the case that we stratifiy
     end
 else
     [regional_paths,global_paths] = run_manova_in_R(save_dir,group, subgroup,test_criteria, stats_test_manova,regional_paths,global_paths,'');
 
-     global_interesting_results(save_dir,global_paths.pval,pval_threshold); % These do the summary plotting in the case that we stratifiy
-     regional_interesting_results(save_dir,regional_paths.pval,pval_threshold); % These do the summary plotting in the case that we stratifiy
+    global_interesting_results(save_dir,global_paths.pval,pval_threshold); % These do the summary plotting in the case that we stratifiy
+    regional_interesting_results(save_dir,regional_paths.pval,pval_threshold); % These do the summary plotting in the case that we stratifiy
 end
 
 end

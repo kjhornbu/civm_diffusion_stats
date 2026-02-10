@@ -28,21 +28,6 @@ for n=1:height(Path_table)
         hemisphere=Path_table.hemisphere(n);
     end
 
-    %{
-    %each hemisphere, each erode condition
-    %This was useful with the old form of building processed_stats_dir
-    voxel_wise=Path_table.voxel_wise{n};
-    if hemisphere==0
-        hemisphere_set='Bilateral';
-    elseif hemisphere==1
-        hemisphere_set='Right';
-    elseif hemisphere==-1
-        hemisphere_set='Left';
-    else
-        keyboard;
-    end
-    processed_stats_dir=fullfile(save_location,voxel_wise,hemisphere_set);
-    %}
     processed_stats_dir=fileparts(Path_table.StatsResults{n});
     figure_dir=fullfile(processed_stats_dir,fig_dir_name);
     out_file=fullfile(processed_stats_dir,strcat('Group_Statistical_Results_',strjoin(Key_Grouping_Columns{1},'_'),'.csv'));
@@ -52,6 +37,7 @@ for n=1:height(Path_table)
         Path_table.StatsResults{n}=out_file;
         continue;
     end
+
     % load
     if isempty(last_table_loaded{1}) || ~strcmp(last_table_loaded{1},Path_table.SubjectTable{n})
         %Only load the data if we have a change in the subject data table path
@@ -157,15 +143,15 @@ for n=1:height(Path_table)
         Statistical_Results_wPairwise_FullTable.Pval_Symbol(Statistical_Results_wPairwise_FullTable.pval<thresholds(threshold))=symbols(threshold);
     end
 
-    thresholds=[0.05, 0.1, 0.2, 0.5 1];
-    symbols={'1','2','3','4','0'};
-
-    for threshold=numel(thresholds):-1:1
-        Statistical_Results_wPairwise_FullTable.Pval_BH_Threshold(Statistical_Results_wPairwise_FullTable.pval_BH<thresholds(threshold))=symbols(threshold);
-    end
-    for threshold = numel(thresholds):-1:1
-        Statistical_Results_wPairwise_FullTable.Pval_Threshold(Statistical_Results_wPairwise_FullTable.pval<thresholds(threshold))=symbols(threshold);
-    end
+%     thresholds=[0.05, 0.1, 0.2, 0.5 1];
+%     symbols={'1','2','3','4','0'};
+% 
+%     for threshold=numel(thresholds):-1:1
+%         Statistical_Results_wPairwise_FullTable.Pval_BH_Threshold(Statistical_Results_wPairwise_FullTable.pval_BH<thresholds(threshold))=symbols(threshold);
+%     end
+%     for threshold = numel(thresholds):-1:1
+%         Statistical_Results_wPairwise_FullTable.Pval_Threshold(Statistical_Results_wPairwise_FullTable.pval<thresholds(threshold))=symbols(threshold);
+%     end
 
     % deferring save to the end to allow it to act as simple flag for
     % completion
@@ -179,10 +165,10 @@ for n=1:height(Path_table)
     %     end
     % *** cleverly *** sort table based on the pairwise comparison we're
     % doing, this helps print things in desireable and constant
-    % order(provided we dont accidentally re-sort data).
+    % order(provided we dont accidentally re-sort data). 2026-02-05 Is this
+    % what is blowing us up here???
     Subject_Table=sort_table_by_pairwise(Subject_Table,pairwise_comparisons{1});
     Group_Table=sort_table_by_pairwise(Group_Table,pairwise_comparisons{1});
-
 
 
     generate_figures(figure_dir, ...
