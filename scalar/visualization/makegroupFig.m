@@ -22,8 +22,6 @@ top10ScalarYAxis(fig2,Contrast,low_bound,top_bound);
 
 createDataAbbrevLabels(Interesting_Data_Table_groupsubset,name_mean,name_std,name_abb);
 setscalarlegend(fig2,group_name);
-%file_name=strcat(Contrast,'_Group_Data_Fig');
-%file_extension={'png'};
 saveMultiOutFigure(fig2,save_location_update,file_name,file_extension);
 close(fig2);
 end

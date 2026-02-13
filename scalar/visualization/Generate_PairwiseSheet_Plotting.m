@@ -143,15 +143,15 @@ for n=1:height(Path_table)
         Statistical_Results_wPairwise_FullTable.Pval_Symbol(Statistical_Results_wPairwise_FullTable.pval<thresholds(threshold))=symbols(threshold);
     end
 
-%     thresholds=[0.05, 0.1, 0.2, 0.5 1];
-%     symbols={'1','2','3','4','0'};
-% 
-%     for threshold=numel(thresholds):-1:1
-%         Statistical_Results_wPairwise_FullTable.Pval_BH_Threshold(Statistical_Results_wPairwise_FullTable.pval_BH<thresholds(threshold))=symbols(threshold);
-%     end
-%     for threshold = numel(thresholds):-1:1
-%         Statistical_Results_wPairwise_FullTable.Pval_Threshold(Statistical_Results_wPairwise_FullTable.pval<thresholds(threshold))=symbols(threshold);
-%     end
+    %     thresholds=[0.05, 0.1, 0.2, 0.5 1];
+    %     symbols={'1','2','3','4','0'};
+    %
+    %     for threshold=numel(thresholds):-1:1
+    %         Statistical_Results_wPairwise_FullTable.Pval_BH_Threshold(Statistical_Results_wPairwise_FullTable.pval_BH<thresholds(threshold))=symbols(threshold);
+    %     end
+    %     for threshold = numel(thresholds):-1:1
+    %         Statistical_Results_wPairwise_FullTable.Pval_Threshold(Statistical_Results_wPairwise_FullTable.pval<thresholds(threshold))=symbols(threshold);
+    %     end
 
     % deferring save to the end to allow it to act as simple flag for
     % completion

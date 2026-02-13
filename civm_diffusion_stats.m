@@ -481,8 +481,7 @@ for n=1:height(grouping_models)
 end
 
 if any(group_keeper)
-
-    fprintf('Not completing 1-Remove Testing, group sizes are too small!');
+    warning('Not completing 1-Remove Testing, group sizes are too small!\n');
 else
     if dataLimit>0
         % ParFor for One remove testing

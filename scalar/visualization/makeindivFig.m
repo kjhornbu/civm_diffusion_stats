@@ -15,7 +15,11 @@ for n=1:numel(group_indiv_name) %each group
     [~,~,Interesting_Data_Table_groupsubset.idx]=unique(Interesting_Data_Table_groupsubset.ROI,'stable');
 
     offset=(rand(size(Interesting_Data_Table_groupsubset,1),1)-0.5)/5;
-    plot(Interesting_Data_Table_groupsubset.idx+offset,Interesting_Data_Table_groupsubset.(Contrast)','o','Markersize',1)
+
+    plot(Interesting_Data_Table_groupsubset.idx+offset,Interesting_Data_Table_groupsubset.(Contrast)','o','Markersize',3)
+    %plot(Interesting_Data_Table_groupsubset.idx+offset,Interesting_Data_Table_groupsubset.(Contrast)','o','Markersize',4)
+    %plot(Interesting_Data_Table_groupsubset.idx+offset,Interesting_Data_Table_groupsubset.(Contrast)','o','Markersize',1)
+    %prior tiny dots == MarkerSize 1
 end
 
 hold off
@@ -27,8 +31,6 @@ top10ScalarYAxis(fig3,Contrast,low_bound,top_bound);
 createDataAbbrevLabels(Interesting_Data_Table_Group(group_name_idx==1,:),name_mean,name_std,name_abb);%Use Group data to place information
 
 setscalarlegend(fig3,group_indiv_name);
-%file_name=strcat(Contrast,'_Subject_Data_Fig');
-%file_extension={'png'};
 saveMultiOutFigure(fig3,save_location_update,file_name,file_extension);
 close(fig3);
 end

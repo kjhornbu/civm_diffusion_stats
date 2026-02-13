@@ -14,6 +14,6 @@ end
 
 text_set=abb(:);
 
-text((data_length)+0.25,y_position, text_set,'fontsize',4,'FontName','Arial','HorizontalAlignment','left');
+text((data_length)+0.25,y_position, text_set,'fontsize',4,'FontName','Arial','HorizontalAlignment','left'); %4
 
 end
