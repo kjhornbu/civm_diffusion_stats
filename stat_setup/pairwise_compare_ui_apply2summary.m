@@ -24,10 +24,10 @@ only_interesting_col_names=vertcat(configuration_struct.test_criteria.Column_Nam
 
 %Check and remove things in the zscoring or stratification entries --- Does
 %not work together because none is not and effective name with the string
-%join  -- REMEMBER ONLY 1 column can stratify or zscore on
+%join  -- REMEMBER ONLY 1 column can stratify
     
 if any(~strcmp(configuration_struct.zscore,'none') | ~strcmp(configuration_struct.stratification,'none'))
-    idx_zscore=reg_match(only_interesting_col_names, configuration_struct.zscore);
+    idx_zscore=reg_match(only_interesting_col_names, strcat('^(',strjoin(configuration_struct.zscore,'|'),')$')); % we allow multiple zscore columns now
     idx_strat=reg_match(only_interesting_col_names,configuration_struct.stratification);
     idx = idx_zscore | idx_strat;
     only_interesting_col_names(idx)=[];
