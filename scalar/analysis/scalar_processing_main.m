@@ -243,7 +243,7 @@ for o=1:numel(voxel_wise)
 
     %%  Now do actual formulation on each of the data groupings
     %Loop over test conditions
-    for i_zg=1:numel(test_conditions) %this is controlling the stratifications? 
+    for i_zg=1:numel(test_conditions) %this is controlling the stratifications? --- no this is for putting in multiple test conditions at a single time instead of configuring appropriately
 
         %Makes the matrix of stats math to do for the current loop be the
         %first entry to grab in stats_test struct.
@@ -251,9 +251,9 @@ for o=1:numel(voxel_wise)
         stats_test_temp.matrix={};
         stats_test_temp.matrix{1}=stats_test.matrix{i_zg};
 
-        if size(test_conditions{i_zg},1)>1
+        if size(test_condition,1)==2
             %% This starts stratificaiton
-            [~,group_names,group_name_idx] = find_group_information_from_groupingcriteria(big_table,test_conditions{i_zg}(1));
+            [~,group_names,group_name_idx] = find_group_information_from_groupingcriteria(big_table,test_conditions(i_zg));
             strat_column_idx=column_find(big_table.Properties.VariableNames,strcat('^(',test_conditions{i_zg}{1},')$'));
 
             for m=1:numel(group_names)
