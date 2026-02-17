@@ -87,21 +87,6 @@ for o=1:numel(voxel_wise)
 
     %% assign group/subgroup specified to dataframe, and convert the columns that might accidently be non-strings to strings
     [dataframe] = clean_df_to_general_entries(group,subgroup,dataframe);
-    %% Adjusting the drives you are pulling data from -- the analysis computer could have multiple people accessing and that causes a weird drive issue
-    if ismac
-        %{
-        for i_zg=1:size(group_names,1)
-            group_name=group_names{i_zg};
-            for m=1:size(groups.(group_name))
-                % TODO: fix this to support group being a struct of tables,
-                % instead of a struct of filepaths
-                groups.(group_name){m}=mac_os_mounted_dir_fix(groups.(group_name){m});
-            end
-        end
-        %}
-        save_location=mac_os_mounted_dir_fix(save_location);
-    end
-
 
     %% Pull Data from Stat Files
     try
@@ -162,19 +147,13 @@ for o=1:numel(voxel_wise)
     User_Defined_big_table=User_Defined_big_table(:,~bad_contrast_user_defined_idx);
     big_table=big_table(:,~bad_contrast_idx);
 
-%     %We want not the all contrast columns (the meta data columns) OR the
-%     %ideal contrast list
-%     all_keep_user_defined_idx=or(~all_contrast_user_defined_idx,keep_user_defined_idx);
-%     all_keep_idx=or(~all_contrast_idx,keep_idx);
-%
-%     %Perform actual filter.
-%     User_Defined_big_tablev2=User_Defined_big_table(:,all_keep_user_defined_idx);
-%     big_tablev2=big_table(:,all_keep_idx);
-
     % force important columns to text
     big_table=column2text(big_table,test_conditions);
 
     %% Make Bilateral case if doesn't exist
+    % This should not apply anymore to the datasets! all data with the
+    % modern labels should have this built in... should this be put in a
+    % function so we can skip and not hhave be nasty. 
     hemifind=regexpi(big_table.Properties.VariableNames,'hemisphere_assignment');
 
     if sum(~cellfun(@isempty,hemifind))==0
@@ -260,12 +239,11 @@ for o=1:numel(voxel_wise)
 
         civm_write_table(mean_CoV_specimen_table,fullfile(save_location,'Subject_Average_CoV_Table.csv'));
         civm_write_table(mean_CoV_ROI_table,fullfile(save_location,'ROI_Average_CoV_Table.csv'));
-
     end
 
     %%  Now do actual formulation on each of the data groupings
     %Loop over test conditions
-    for i_zg=1:numel(test_conditions)
+    for i_zg=1:numel(test_conditions) %this is controlling the stratifications? 
 
         %Makes the matrix of stats math to do for the current loop be the
         %first entry to grab in stats_test struct.
@@ -409,7 +387,6 @@ for o=1:numel(voxel_wise)
 
             %Bilat, Left, and Right
             try
-
                 if isempty(remove_zscore_grouping{i_zg})
                     [bilat_result_table,bilat_multi_compare_table,bilat_group_summary_stats] = calc_stats(bilat_table,test_conditions{i_zg},stats_test_temp);
                     [left_result_table,left_multi_compare_table,left_group_summary_stats] = calc_stats(left_table,test_conditions{i_zg},stats_test_temp);
@@ -454,7 +431,7 @@ for o=1:numel(voxel_wise)
             output_paths_left=save_output_from_scalar_analysis(save_location,'Left',[],group,subgroup,test_conditions{i_zg},left_group_summary_stats,left_specimen_zscore,left_result_table_BHFDR,left_multi_compare_table);
             output_paths_right=save_output_from_scalar_analysis(save_location,'Right',[],group,subgroup,test_conditions{i_zg},right_group_summary_stats,right_specimen_zscore,right_result_table_BHFDR,right_multi_compare_table);
 
-            %% attempt to asssign all paths in one shot to output table
+            %% attempt to assign all paths in one shot to output table
             height_paths_table=height(output_path_table);
             hemisphere=0;
             output_path_table(1+height_paths_table,:)={{hemisphere},{voxel_wise{o}},{'-'},{output_paths_bilat.StatsResults}, {output_paths_bilat.Posthoc}, {output_paths_bilat.GroupTable}, {subject_data_table_path}};

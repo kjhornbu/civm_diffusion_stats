@@ -74,12 +74,16 @@ else
     group_compare=strcmp(group,configuration_struct.stratification);
     subgroup_compare=strcmp(subgroup,configuration_struct.stratification);
 
-    if sum(group_compare)>0
-        idx_pos=find(group_compare);
-        test_criteria={strcat('group',num2str(idx_pos));{model}};
-    elseif sum(subgroup_compare)>0
-        idx_pos=find(subgroup_compare);
-        test_criteria={strcat('subgroup',num2str(idx_pos));{model}};
+    if sum([group_compare subgroup_compare])>1
+        error('Too many stratification terms utilized! We can only use 1 term in stratification')
+    else
+        if sum(group_compare)==1
+            idx_pos=find(group_compare);
+            test_criteria={strcat('group',num2str(idx_pos));{model}};
+        elseif sum(subgroup_compare)==1
+            idx_pos=find(subgroup_compare);
+            test_criteria={strcat('subgroup',num2str(idx_pos));{model}};
+        end
     end
 end
 

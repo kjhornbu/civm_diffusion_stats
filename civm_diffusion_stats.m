@@ -58,6 +58,9 @@ if exist(dataframe_path,'file')
 end
 
 if ~keep_last_dataframe
+
+    %Clean James goop better here? This isn't what I intended at all at
+    %this point... it was to write with a saving of the old entry
     if ~exist(cleaned_google_doc_path,'file')
         %Do standard metadata cleanup
         extendedStudyColumns={};
@@ -180,7 +183,6 @@ if ~keep_last_setup
     save(setup_file,'pairwise_criteria','configuration_struct','-mat');
 else
     % load pairwise_criteria, configuration struct
-    %setup_mat=matfile(setup_file);
     load(setup_file,'pairwise_criteria','configuration_struct');
 end
 
@@ -193,6 +195,7 @@ dataframe=column2text(dataframe,{group,subgroup});
 
 if sum(reg_match(which_tests,'^(Scalar)$'))>0
 
+    %Setup folder naming
     if ~exist(fullfile(save_dir,'Scalar_and_Volume'),'dir')
         mkdir(fullfile(save_dir,'Scalar_and_Volume'))
     end
@@ -227,6 +230,7 @@ if sum(reg_match(which_tests,'^(Scalar)$'))>0
     if ~exist(save_scalar,'dir')
         mkdir(save_scalar);
     end
+
     % easy to screw up scalar sheet paths
     %output_paths=fullfile(save_dir,'Scalar_Data_Sheet_Paths.csv');
     % less easy to screw up.
@@ -251,6 +255,8 @@ if sum(reg_match(which_tests,'^(Scalar)$'))>0
     % (james likes to only plot bilateral non-erode to save some time)
     % In theory to plot more just modify plotting_sheet_types and
     % plotting_hemispheres to whatever you want. 
+
+
     px=sprintf('^%s$',strjoin(plotting_sheet_types,'|'));
     st_idx=row_find(output_paths_table,'voxel_wise',px,1);
     h_idx=any( row_find(output_paths_table,'hemisphere',plotting_hemispheres,1), 2);
@@ -285,16 +291,7 @@ if sum(reg_match(which_tests,'^(Scalar)$'))>0
     previously_loaded_labelfile={};
 
     %% list off the "cool" columns to go plot
-    %{
-% We could be cool and look up the columns to prevent error, but really we
-% should know them. So, we'll just assume they're righteous to avoid loading
-% the table one more time.
-col_idx=cell(size(col_types));
-for col_type_idx=1:numel(col_types)
-    col_idx{col_type_idx}=column_find(col_names,sprintf('%s_.+',col_types{col_type_idx}),1);
-end
-col_names=group_stat_table.Properties.VariableNames;
-    %}
+
     col_types={'cohenD','percent_change'};
     column_setup = {
         'pvalue_extended', 'pval'
@@ -302,7 +299,9 @@ col_names=group_stat_table.Properties.VariableNames;
         };
     % indicies of the summary criteria, we dont use summary criterais because
     % its not as well connected to what we want.
+
     summary_idx=pairwise_criteria.control.applytosummary==1;
+   
     % comparison_names
     case_names=pairwise_criteria.control.case(summary_idx);
     name_code=cell(size(case_names));
@@ -351,6 +350,7 @@ end
 %% Omni Manova Analysis
 if sum(reg_match(which_tests,'^(Connectome)$'))>0
 
+    %getting memory information for the test
     try
         A=memory;
         number_of_leafs=360;
@@ -397,50 +397,48 @@ if sum(reg_match(which_tests,'^(Connectome)$'))>0
         end
         save_cnt=fullfile(save_dir,'Connectomics',stats_test_manova.name,name_augment);
     end
-    
+
     connectome_outputs=list2cell('Unscaled_Omni_Manova BrainScaled_Omni_Manova');
-    do_binarize=0; do_mean_subtract=0; do_ptr=0; do_augment=0;
-    t_start=tic;
-    if ~file_time_check(fullfile(save_cnt, connectome_outputs{1}, 'Pval_sorted_from_ASE_0000.csv'), 'newer', dataframe_path)
-        Paths_Pval=struct;
+    do_binarize=0; do_mean_subtract=0; do_ptr=0; do_augment=0; t_start=tic;
+    Paths_Pval=struct;
 
-        %% All specimen OmniManova
-        for n=1:numel(connectome_outputs)
-            dataframe=civm_read_table(dataframe_path);
+    %% All specimen OmniManova
+    for n=1:numel(connectome_outputs)
+        dataframe=civm_read_table(dataframe_path);
 
-            if height(dataframe)> max_specimen
-                error('Too many specimen in study to complete omni-manova on this system. Max Specimen # for system is %d.',max_specimen);
-            end
-
-            dataframe=column2text(dataframe,{group,subgroup});
-            Paths_Pval.(connectome_outputs{n})=table;
-            o_dir=fullfile(save_cnt,connectome_outputs{n});
-
-            if ~exist(o_dir,'dir')
-                mkdir(o_dir);
-            end
-
-            if ~isempty(column_find(dataframe,'^(scale)$'))
-                find_scale=0;
-            else
-                find_scale=1;
-            end
-
-            set_scale=n-1;
-            [regional_paths,global_paths]=full_omni_manova_process(dataframe_path,o_dir,group, subgroup,test_criteria,test_remove_criteria,stats_test_manova,do_binarize, do_mean_subtract, do_ptr, do_augment, find_scale, set_scale,pval_threshold);
-          
-            %placed back inside the full_omni_manova process -- to allow
-            %for stratification summarizing
-           % global_interesting_results(o_dir,global_paths.pval,pval_threshold); % These are doing the summary plottign here
-           % regional_interesting_results(o_dir,regional_paths.pval,pval_threshold); % These are doing the summary plottign here 
-
-            % Need to figure out how this is done for the scalar data...
-
-            Paths_Pval.(connectome_outputs{n}).name{1}='All';
-            Paths_Pval.(connectome_outputs{n}).regional{1}=regional_paths.pval;
-            Paths_Pval.(connectome_outputs{n}).global{1}=global_paths.pval;
+        if height(dataframe)> max_specimen
+            error('Too many specimen in study to complete omni-manova on this system. Max Specimen # for system is %d.',max_specimen);
         end
+
+        dataframe=column2text(dataframe,{group,subgroup});
+        Paths_Pval.(connectome_outputs{n})=table;
+        o_dir=fullfile(save_cnt,connectome_outputs{n});
+
+        if ~exist(o_dir,'dir')
+            mkdir(o_dir);
+        end
+
+        if ~isempty(column_find(dataframe,'^(scale)$'))
+            find_scale=0;
+        else
+            find_scale=1;
+        end
+
+        set_scale=n-1;
+        [regional_paths,global_paths]=full_omni_manova_process(dataframe_path,o_dir,group, subgroup,test_criteria,test_remove_criteria,stats_test_manova,do_binarize, do_mean_subtract, do_ptr, do_augment, find_scale, set_scale,pval_threshold);
+
+        %placed back inside the full_omni_manova process -- to allow
+        %for stratification summarizing
+        % global_interesting_results(o_dir,global_paths.pval,pval_threshold); % These are doing the summary plottign here
+        % regional_interesting_results(o_dir,regional_paths.pval,pval_threshold); % These are doing the summary plottign here
+
+        % Need to figure out how this is done for the scalar data...
+
+        Paths_Pval.(connectome_outputs{n}).name{1}='All';
+        Paths_Pval.(connectome_outputs{n}).regional{1}=regional_paths.pval;
+        Paths_Pval.(connectome_outputs{n}).global{1}=global_paths.pval;
     end
+
     t_omni=toc(t_start);
     % have some sort of check of the memory requirements so that it won't
     % push too hard. (like if number of specimen > 
