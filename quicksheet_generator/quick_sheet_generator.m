@@ -16,11 +16,15 @@ column_name='stratification';
 % In the case that the stratiifcation is not empty (ie it has something) --
 % break it on delineations = and ,
 if ~reg_match(value_stratification,'') 
-    string_stratification=strsplit(value_stratification{:},{'stratification =',','});
-    if ~reg_match(string_stratification{end-1},'stratification')
+    string_stratification=strsplit(value_stratification{:},{'=',','});
+    if reg_match(string_stratification{end-1},'hemisphere')
         %in the case of we just grabbed hemisphere clear out the
         %stratification checking
         clear string_stratification
+    else
+        string_stratification_temp= string_stratification;
+        clear string_stratification        
+        string_stratification{1}=strjoin(string_stratification_temp(2:2:numel(string_stratification_temp)-2),'_');
     end
 end
 
@@ -49,7 +53,7 @@ if numel(value_contrast)>1 && any(~cellfun(@isempty,value_contrast))
 
             %save to desired location
             if exist('string_stratification','var')
-                temp_file_name=strcat('Stratified_by_',string_stratification{end},'_Reduced_Results_for_',value_sov{m},'SourceOnly_and_',value_contrast{n},'_SigAfterBHCorrection.csv');
+                temp_file_name=strcat('Stratified_by_',string_stratification{1},'_Reduced_Results_for_',value_sov{m},'SourceOnly_and_',value_contrast{n},'_SigAfterBHCorrection.csv');
             else
                 temp_file_name=strcat('Reduced_Results_for_',value_sov{m},'SourceOnly_and_',value_contrast{n},'_SigAfterBHCorrection.csv');
             end
@@ -63,7 +67,7 @@ else
 
         %save to desired location
         if exist('string_stratification','var')
-            temp_file_name=strcat('Stratified_by_',string_stratification{end},'_Reduced_Results_for_',value_sov{m},'SourceOnly_SigAfterBHCorrection.csv');
+            temp_file_name=strcat('Stratified_by_',string_stratification{1},'_Reduced_Results_for_',value_sov{m},'SourceOnly_SigAfterBHCorrection.csv');
         else
             temp_file_name=strcat('Reduced_Results_for_',value_sov{m},'SourceOnly_SigAfterBHCorrection.csv');
         end

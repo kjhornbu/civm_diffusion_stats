@@ -16,9 +16,12 @@ if isempty( column_find(dataframe,'^stat_path_erode$') )
 end
 
 %% Check if too many input groupings
-if numel(test_conditions)>1
-    %error('We don''t currently support multiple stats test in 1 go. You need to call scalar processing main multiple times yourself.');
-    error('Scalar Processing doesn''t currently support stratification. Connectomics does. If you need stratification in scalar, please improve this.');
+if numel(test_conditions)>1 && ~ischar(test_conditions{1})
+    error('We don''t currently support multiple stats models (like Sex+Strain then doing Sex+Strain+Sex:Strain with single call) in 1 go. You need to call scalar processing main multiple times yourself.');
+    %This was actually for the  case that had you pushing like 5 stats
+    %models in one go... rather than stratification... the stratification
+    %being broken was a "happy accident".
+    %error('Scalar Processing doesn''t currently support stratification. Connectomics does. If you need stratification in scalar, please improve this.');
 end
 %Defining output path table
 output_path_table=table;
@@ -61,7 +64,7 @@ for o=1:numel(voxel_wise)
     idx=column_find(dataframe,'^specimen$',1);
     if ~nnz(idx)
         % IF there is not an exact specimen column, try harder -- this is
-        % some unique identifier across all the data entries. 
+        % some unique identifier across all the data entries.
         idx=reg_match(dataframe.Properties.VariableNames,'^(civm_scan_id|CIVM_ID|specimen|runno|scan|civm_specimen_id)$');
     end
     %create an iteration to find the unique across all the properties
@@ -69,11 +72,11 @@ for o=1:numel(voxel_wise)
     pos_idx=find(idx,nnz(idx));
     for n=1:nnz(idx)
         terms=unique(dataframe.(pos_idx(n)));
-       if height(dataframe)==numel(terms)
-           idx=false(size(idx));
-           idx(pos_idx(n))=true;
-           break;
-       end
+        if height(dataframe)==numel(terms)
+            idx=false(size(idx));
+            idx(pos_idx(n))=true;
+            break;
+        end
     end
     if nnz(idx)==1
         %accept 1
@@ -90,7 +93,7 @@ for o=1:numel(voxel_wise)
 
     %% Pull Data from Stat Files
     try
-    [big_table, User_Defined_big_table]=build_study_table(dataframe,voxel_wise_keys{o});
+        [big_table, User_Defined_big_table]=build_study_table(dataframe,voxel_wise_keys{o});
     catch
         keyboard;
     end
@@ -153,7 +156,7 @@ for o=1:numel(voxel_wise)
     %% Make Bilateral case if doesn't exist
     % This should not apply anymore to the datasets! all data with the
     % modern labels should have this built in... should this be put in a
-    % function so we can skip and not hhave be nasty. 
+    % function so we can skip and not hhave be nasty.
     hemifind=regexpi(big_table.Properties.VariableNames,'hemisphere_assignment');
 
     if sum(~cellfun(@isempty,hemifind))==0
@@ -183,30 +186,30 @@ for o=1:numel(voxel_wise)
         right_table=right_table(:,right_table_logical);
 
         bilat_table=table;
-        for i_zg=1:numel(left_name)
+        for i_testcondition=1:numel(left_name)
 
-            if strcmp(left_name(i_zg),right_name(i_zg)) ~= 1
+            if strcmp(left_name(i_testcondition),right_name(i_testcondition)) ~= 1
                 error('The specimen do not match')
             else
 
                 bilat_length=size(bilat_table,1);
 
-                temp_bilat_ROI=left_table.ROI(left_idx==i_zg);
+                temp_bilat_ROI=left_table.ROI(left_idx==i_testcondition);
                 bilat_table.ROI(bilat_length+[1:numel(temp_bilat_ROI)])=temp_bilat_ROI;
 
-                bilat_table.structure(bilat_length+[1:numel(temp_bilat_ROI)])=left_table.structure(left_idx==i_zg);
+                bilat_table.structure(bilat_length+[1:numel(temp_bilat_ROI)])=left_table.structure(left_idx==i_testcondition);
 
 
                 for m=1:numel(volume_list)
 
-                    temp_bilat_vol=left_table.(volume_list(m))(left_idx==i_zg)+right_table.(volume_list(m))(right_idx==i_zg);
+                    temp_bilat_vol=left_table.(volume_list(m))(left_idx==i_testcondition)+right_table.(volume_list(m))(right_idx==i_testcondition);
                     bilat_table.(volume_list(m))(bilat_length+[1:numel(temp_bilat_ROI)])=temp_bilat_vol;
 
                 end
 
                 for m=1:numel(contrast_list)
 
-                    temp_bilat_con=((left_table.(contrast_list(m))(left_idx==i_zg).*left_table.(volume_list(1))(left_idx==i_zg))+(right_table.(contrast_list(m))(right_idx==i_zg).*right_table.(volume_list(1))(right_idx==i_zg)))./(left_table.(volume_list(1))(left_idx==i_zg)+right_table.(volume_list(1))(right_idx==i_zg));
+                    temp_bilat_con=((left_table.(contrast_list(m))(left_idx==i_testcondition).*left_table.(volume_list(1))(left_idx==i_testcondition))+(right_table.(contrast_list(m))(right_idx==i_testcondition).*right_table.(volume_list(1))(right_idx==i_testcondition)))./(left_table.(volume_list(1))(left_idx==i_testcondition)+right_table.(volume_list(1))(right_idx==i_testcondition));
                     bilat_table.(contrast_list(m))(bilat_length+[1:numel(temp_bilat_ROI)])=temp_bilat_con;
 
                 end
@@ -216,10 +219,10 @@ for o=1:numel(voxel_wise)
                 group_setting_name=left_table.Properties.VariableNames(group_positional_idx);
 
                 for m=1:numel(group_setting_name)
-                    bilat_table.(group_setting_name{m})(bilat_length+[1:numel(temp_bilat_ROI)])=left_table.(group_setting_name{m})(left_idx==i_zg);
+                    bilat_table.(group_setting_name{m})(bilat_length+[1:numel(temp_bilat_ROI)])=left_table.(group_setting_name{m})(left_idx==i_testcondition);
                 end
 
-                bilat_table.specimen(bilat_length+[1:numel(temp_bilat_ROI)])=left_table.specimen(left_idx==i_zg);
+                bilat_table.specimen(bilat_length+[1:numel(temp_bilat_ROI)])=left_table.specimen(left_idx==i_testcondition);
 
                 bilat_table.hemisphere_assignment(bilat_length+[1:numel(temp_bilat_ROI)])=0;
 
@@ -242,171 +245,77 @@ for o=1:numel(voxel_wise)
     end
 
     %%  Now do actual formulation on each of the data groupings
-    %Loop over test conditions
-    for i_zg=1:numel(test_conditions) %this is controlling the stratifications? --- no this is for putting in multiple test conditions at a single time instead of configuring appropriately
+    %Loop over test conditions --- the models in the system (we only allow
+    %one model at a time now  and have a check condition to disappear at
+    %this point so don't allow the looping. 
 
-        %Makes the matrix of stats math to do for the current loop be the
-        %first entry to grab in stats_test struct.
-        stats_test_temp=stats_test;
-        stats_test_temp.matrix={};
-        stats_test_temp.matrix{1}=stats_test.matrix{i_zg};
 
-        if size(test_condition,1)==2
-            %% This starts stratificaiton
-            [~,group_names,group_name_idx] = find_group_information_from_groupingcriteria(big_table,test_conditions(i_zg));
-            strat_column_idx=column_find(big_table.Properties.VariableNames,strcat('^(',test_conditions{i_zg}{1},')$'));
+    % thought for later make the bilateral L/R a loop rather than doing
+    % things 3 times (would definately make cleaner)
+    i_testcondition=1;
+    % test conditions builds along second dimension not first in the structure.
+    % That is if the multi test conditions existed and was able to be used we would iterate through that but for now this forces 1
+   
+    %removed the grabbing loop because we only have 1 condition in the
+    %stats_test layout... don't make it more complex
 
-            for m=1:numel(group_names)
-                %filter by the test_conditions{i_sz}{1} prior to running
-                %analysis
-                shifted_big_table=big_table(group_name_idx==m,:);
+    % Form of data within the single test condition: {'STRATIFICATION'};{{'GROUPING'}}
+    if size(test_conditions,1)==2 && ischar(test_conditions{1})
+        %% This starts stratificaiton
+        [~,group_names,group_name_idx] = find_group_information_from_groupingcriteria(big_table,test_conditions(1));
+        strat_column_idx=column_find(big_table.Properties.VariableNames,strcat('^(',test_conditions{1},')$'));
+        %Grab the model grouping separate from the stratification condition
+        model_GROUPING=test_conditions{2}{1}; % We now wrap the grouping conditions with a cell so its a cell within a cell just remove that to put together.
+        for m=1:numel(group_names)
+            %filter by the test_conditions{i_sz}{1} prior to running
+            %analysis
+            shifted_big_table=big_table(group_name_idx==m,:);
 
-                left_table=shifted_big_table(shifted_big_table.hemisphere_assignment==-1,:);
-                bilat_table=shifted_big_table(shifted_big_table.hemisphere_assignment==0,:);
-                right_table=shifted_big_table(shifted_big_table.hemisphere_assignment==1,:);
-
-                for p=2:numel(test_conditions{i_zg})
-                    if ischar(test_conditions{i_zg}{p})
-                        %Need to unwrap the names correctly for feeding
-                        %into the system
-                        zscore_GROUPING=test_conditions{i_zg}(p);
-                    else
-                        zscore_GROUPING=test_conditions{i_zg}{p};
-                    end
-
-                    %then do testing on test_conditions{i_zg}{2..N}
-                    try
-                        if isempty(remove_zscore_grouping{i_zg})
-                            [bilat_specimen_zscore] = zscoring_finder(bilat_table,zscore_GROUPING);
-                            [left_specimen_zscore] = zscoring_finder(left_table,zscore_GROUPING);
-                            [right_specimen_zscore] = zscoring_finder(right_table,zscore_GROUPING);
-                        else
-                            [bilat_table_standardized,bilat_specimen_zscore] = zscoring_finder(bilat_table,zscore_GROUPING,remove_zscore_grouping{i_zg}{:});
-                            [left_table_standardized,left_specimen_zscore] = zscoring_finder(left_table,zscore_GROUPING,remove_zscore_grouping{i_zg}{:});
-                            [right_table_standardized,right_specimen_zscore] = zscoring_finder(right_table,zscore_GROUPING,remove_zscore_grouping{i_zg}{:});
-
-                            civm_write_table(bilat_table_standardized,fullfile(save_location,strcat(group_names{m},'_Bilat_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_zg},'_'),'.csv')));
-                            civm_write_table(left_table_standardized,fullfile(save_location,strcat(group_names{m},'_Left_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_zg},'_'),'.csv')));
-                            civm_write_table(right_table_standardized,fullfile(save_location,strcat(group_names{m},'_Right_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_zg},'_'),'.csv')));
-
-                        end
-                    catch
-                        %if it doesn't work we aren't trying to hard right now --
-                        %typically it is a string related issued with non
-                        %categorical terms
-                        bilat_specimen_zscore=table;
-                        left_specimen_zscore=table;
-                        right_specimen_zscore=table;
-                    end
-
-                    if isempty(remove_zscore_grouping{i_zg})
-                        [bilat_result_table,bilat_multi_compare_table,bilat_group_summary_stats] = calc_stats(bilat_table,zscore_GROUPING,stats_test_temp);
-                        [left_result_table,left_multi_compare_table,left_group_summary_stats] = calc_stats(left_table,zscore_GROUPING,stats_test_temp);
-                        [right_result_table,right_multi_compare_table,right_group_summary_stats] = calc_stats(right_table,zscore_GROUPING,stats_test_temp);
-                    else
-                        [bilat_result_table,bilat_multi_compare_table,bilat_group_summary_stats] = calc_stats(bilat_table_standardized,zscore_GROUPING,stats_test_temp);
-                        [left_result_table,left_multi_compare_table,left_group_summary_stats] = calc_stats(left_table_standardized,zscore_GROUPING,stats_test_temp);
-                        [right_result_table,right_multi_compare_table,right_group_summary_stats] = calc_stats(right_table_standardized,zscore_GROUPING,stats_test_temp);
-                    end
-
-                    %Defining the Stratificaiton into the result tables
-                    %that isadding in empties so we keep the main group naming.
-                    strat_record=strcat(big_table.Properties.VariableDescriptions{strat_column_idx},'=',group_names{m});
-                    bilat_strat_full=strcat(strat_record,32,'hemisphere=bilateral');
-                    left_strat_full=strcat(strat_record,32,'hemisphere=left');
-                    right_strat_full=strcat(strat_record,32,'hemisphere=right');
-
-                    bilat_group_summary_stats.stratification=repmat({bilat_strat_full},size(bilat_group_summary_stats,1),1);
-                    left_group_summary_stats.stratification=repmat({left_strat_full},size(left_group_summary_stats,1),1);
-                    right_group_summary_stats.stratification=repmat({right_strat_full},size(right_group_summary_stats,1),1);
-
-                    bilat_result_table.stratification=repmat({bilat_strat_full},size(bilat_result_table,1),1);
-                    left_result_table.stratification=repmat({left_strat_full},size(left_result_table,1),1);
-                    right_result_table.stratification=repmat({right_strat_full},size(right_result_table,1),1);
-
-                    if size(bilat_multi_compare_table,1)>0
-                        bilat_multi_compare_table.stratification=repmat({bilat_strat_full},size(bilat_multi_compare_table,1),1);
-                        left_multi_compare_table.stratification=repmat({left_strat_full},size(left_multi_compare_table,1),1);
-                        right_multi_compare_table.stratification=repmat({right_strat_full},size(right_multi_compare_table,1),1);
-                    end
-
-                    %This needs to go on the smallest most useful unit for multicomparison otherwise we
-                    %can't get the BH calculated correctly -- ie don't to L/R/BI together
-
-                    bilat_result_table_BHFDR=calculate_BHFDR(bilat_result_table);
-                    left_result_table_BHFDR=calculate_BHFDR(left_result_table);
-                    right_result_table_BHFDR=calculate_BHFDR(right_result_table);
-
-                    %shift the saving location so it is in respect to the given filtering groups in the directory.
-                    output_paths_bilat=save_output_from_scalar_analysis(save_location,'Bilateral',group_names{m},group,subgroup,zscore_GROUPING,bilat_group_summary_stats,bilat_specimen_zscore,bilat_result_table_BHFDR,bilat_multi_compare_table);
-                    output_paths_left=save_output_from_scalar_analysis(save_location,'Left',group_names{m},group,subgroup,zscore_GROUPING,left_group_summary_stats,left_specimen_zscore,left_result_table_BHFDR,left_multi_compare_table);
-                    output_paths_right=save_output_from_scalar_analysis(save_location,'Right',group_names{m},group,subgroup,zscore_GROUPING,right_group_summary_stats,right_specimen_zscore,right_result_table_BHFDR,right_multi_compare_table);
-
-                    %% attempt to asssign all paths in one shot to output table
-                    height_paths_table=height(output_path_table);
-                    hemisphere=0;
-                    output_path_table(1+height_paths_table,:)={{hemisphere},{voxel_wise{o}},{strat_record},{output_paths_bilat.StatsResults}, {output_paths_bilat.Posthoc}, {output_paths_bilat.GroupTable}, {subject_data_table_path}};
-                    hemisphere=-1;
-                    output_path_table(2+height_paths_table,:)={{hemisphere},{voxel_wise{o}},{strat_record},{output_paths_left.StatsResults}, {output_paths_left.Posthoc}, {output_paths_left.GroupTable}, {subject_data_table_path}};
-                    hemisphere=1;
-                    output_path_table(3+height_paths_table,:)={{hemisphere},{voxel_wise{o}},{strat_record},{output_paths_right.StatsResults}, {output_paths_right.Posthoc}, {output_paths_right.GroupTable}, {subject_data_table_path}};
-                end
-            end
-        else
-
-            left_table=big_table(big_table.hemisphere_assignment==-1,:);
-            bilat_table=big_table(big_table.hemisphere_assignment==0,:);
-            right_table=big_table(big_table.hemisphere_assignment==1,:);
+            left_table=shifted_big_table(shifted_big_table.hemisphere_assignment==-1,:);
+            bilat_table=shifted_big_table(shifted_big_table.hemisphere_assignment==0,:);
+            right_table=shifted_big_table(shifted_big_table.hemisphere_assignment==1,:);
 
             try
-
-                if isempty(remove_zscore_grouping{i_zg})
-                    [bilat_specimen_zscore] = zscoring_finder(bilat_table,test_conditions{i_zg});
-                    [left_specimen_zscore] = zscoring_finder(left_table,test_conditions{i_zg});
-                    [right_specimen_zscore] = zscoring_finder(right_table,test_conditions{i_zg});
+                if isempty(remove_zscore_grouping{i_testcondition})
+                    [bilat_specimen_zscore] = zscoring_finder(bilat_table,model_GROUPING);
+                    [left_specimen_zscore] = zscoring_finder(left_table,model_GROUPING);
+                    [right_specimen_zscore] = zscoring_finder(right_table,model_GROUPING);
                 else
-                    [bilat_table_standardized,bilat_specimen_zscore] = zscoring_finder(bilat_table,test_conditions{i_zg},remove_zscore_grouping{i_zg}{:});
-                    [left_table_standardized,left_specimen_zscore] = zscoring_finder(left_table,test_conditions{i_zg},remove_zscore_grouping{i_zg}{:});
-                    [right_table_standardized,right_specimen_zscore] = zscoring_finder(right_table,test_conditions{i_zg},remove_zscore_grouping{i_zg}{:});
+                    [bilat_table_standardized,bilat_specimen_zscore] = zscoring_finder(bilat_table,model_GROUPING,remove_zscore_grouping{i_testcondition}{:});
+                    [left_table_standardized,left_specimen_zscore] = zscoring_finder(left_table,model_GROUPING,remove_zscore_grouping{i_testcondition}{:});
+                    [right_table_standardized,right_specimen_zscore] = zscoring_finder(right_table,model_GROUPING,remove_zscore_grouping{i_testcondition}{:});
 
-                    civm_write_table(bilat_table_standardized,fullfile(save_location,strcat('Bilat_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_zg},'_'),'.csv')));
-                    civm_write_table(left_table_standardized,fullfile(save_location,strcat('Left_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_zg},'_'),'.csv')));
-                    civm_write_table(right_table_standardized,fullfile(save_location,strcat('Right_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_zg},'_'),'.csv')));
+                    civm_write_table(bilat_table_standardized,fullfile(save_location,strcat(group_names{m},'_Bilat_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
+                    civm_write_table(left_table_standardized,fullfile(save_location,strcat(group_names{m},'_Left_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
+                    civm_write_table(right_table_standardized,fullfile(save_location,strcat(group_names{m},'_Right_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
 
                 end
-            catch merr
-                warning(merr.identifier,'zscoring_finder incomplete: %s',merr.message);
+            catch
                 %if it doesn't work we aren't trying to hard right now --
                 %typically it is a string related issued with non
                 %categorical terms
-
                 bilat_specimen_zscore=table;
                 left_specimen_zscore=table;
                 right_specimen_zscore=table;
             end
 
-            %Bilat, Left, and Right
-            try
-                if isempty(remove_zscore_grouping{i_zg})
-                    [bilat_result_table,bilat_multi_compare_table,bilat_group_summary_stats] = calc_stats(bilat_table,test_conditions{i_zg},stats_test_temp);
-                    [left_result_table,left_multi_compare_table,left_group_summary_stats] = calc_stats(left_table,test_conditions{i_zg},stats_test_temp);
-                    [right_result_table,right_multi_compare_table,right_group_summary_stats] = calc_stats(right_table,test_conditions{i_zg},stats_test_temp);
-                else
-                    [bilat_result_table,bilat_multi_compare_table,bilat_group_summary_stats] = calc_stats(bilat_table_standardized,test_conditions{i_zg},stats_test_temp);
-                    [left_result_table,left_multi_compare_table,left_group_summary_stats] = calc_stats(left_table_standardized,test_conditions{i_zg},stats_test_temp);
-                    [right_result_table,right_multi_compare_table,right_group_summary_stats] = calc_stats(right_table_standardized,test_conditions{i_zg},stats_test_temp);
-
-                end
-            catch merr
-                db_inplace(mfilename,'Error in calc stats');
+            if isempty(remove_zscore_grouping{i_testcondition})
+                [bilat_result_table,bilat_multi_compare_table,bilat_group_summary_stats] = calc_stats(bilat_table,model_GROUPING,stats_test);
+                [left_result_table,left_multi_compare_table,left_group_summary_stats] = calc_stats(left_table,model_GROUPING,stats_test);
+                [right_result_table,right_multi_compare_table,right_group_summary_stats] = calc_stats(right_table,model_GROUPING,stats_test);
+            else
+                [bilat_result_table,bilat_multi_compare_table,bilat_group_summary_stats] = calc_stats(bilat_table_standardized,model_GROUPING,stats_test);
+                [left_result_table,left_multi_compare_table,left_group_summary_stats] = calc_stats(left_table_standardized,model_GROUPING,stats_test);
+                [right_result_table,right_multi_compare_table,right_group_summary_stats] = calc_stats(right_table_standardized,model_GROUPING,stats_test);
             end
-
-            bilat_strat_full='hemisphere=bilateral';
-            left_strat_full='hemisphere=left';
-            right_strat_full='hemisphere=right';
 
             %Defining the Stratificaiton into the result tables
             %that isadding in empties so we keep the main group naming.
+            strat_record=strcat(big_table.Properties.VariableDescriptions{strat_column_idx},'=',group_names{m});
+            bilat_strat_full=strcat('hemisphere=bilateral',32,strat_record);
+            left_strat_full=strcat('hemisphere=left',32,strat_record);
+            right_strat_full=strcat('hemisphere=right',32,strat_record);
+
             bilat_group_summary_stats.stratification=repmat({bilat_strat_full},size(bilat_group_summary_stats,1),1);
             left_group_summary_stats.stratification=repmat({left_strat_full},size(left_group_summary_stats,1),1);
             right_group_summary_stats.stratification=repmat({right_strat_full},size(right_group_summary_stats,1),1);
@@ -423,23 +332,112 @@ for o=1:numel(voxel_wise)
 
             %This needs to go on the smallest most useful unit for multicomparison otherwise we
             %can't get the BH calculated correctly -- ie don't to L/R/BI together
+
             bilat_result_table_BHFDR=calculate_BHFDR(bilat_result_table);
             left_result_table_BHFDR=calculate_BHFDR(left_result_table);
             right_result_table_BHFDR=calculate_BHFDR(right_result_table);
 
-            output_paths_bilat=save_output_from_scalar_analysis(save_location,'Bilateral',[],group,subgroup,test_conditions{i_zg},bilat_group_summary_stats,bilat_specimen_zscore,bilat_result_table_BHFDR,bilat_multi_compare_table);
-            output_paths_left=save_output_from_scalar_analysis(save_location,'Left',[],group,subgroup,test_conditions{i_zg},left_group_summary_stats,left_specimen_zscore,left_result_table_BHFDR,left_multi_compare_table);
-            output_paths_right=save_output_from_scalar_analysis(save_location,'Right',[],group,subgroup,test_conditions{i_zg},right_group_summary_stats,right_specimen_zscore,right_result_table_BHFDR,right_multi_compare_table);
+            %shift the saving location so it is in respect to the given filtering groups in the directory.
+            output_paths_bilat=save_output_from_scalar_analysis(save_location,'Bilateral',group_names{m},group,subgroup,model_GROUPING,bilat_group_summary_stats,bilat_specimen_zscore,bilat_result_table_BHFDR,bilat_multi_compare_table);
+            output_paths_left=save_output_from_scalar_analysis(save_location,'Left',group_names{m},group,subgroup,model_GROUPING,left_group_summary_stats,left_specimen_zscore,left_result_table_BHFDR,left_multi_compare_table);
+            output_paths_right=save_output_from_scalar_analysis(save_location,'Right',group_names{m},group,subgroup,model_GROUPING,right_group_summary_stats,right_specimen_zscore,right_result_table_BHFDR,right_multi_compare_table);
 
-            %% attempt to assign all paths in one shot to output table
+            %% attempt to asssign all paths in one shot to output table
             height_paths_table=height(output_path_table);
             hemisphere=0;
-            output_path_table(1+height_paths_table,:)={{hemisphere},{voxel_wise{o}},{'-'},{output_paths_bilat.StatsResults}, {output_paths_bilat.Posthoc}, {output_paths_bilat.GroupTable}, {subject_data_table_path}};
+            output_path_table(1+height_paths_table,:)={{hemisphere},{voxel_wise{o}},{strat_record},{output_paths_bilat.StatsResults}, {output_paths_bilat.Posthoc}, {output_paths_bilat.GroupTable}, {subject_data_table_path}};
             hemisphere=-1;
-            output_path_table(2+height_paths_table,:)={{hemisphere},{voxel_wise{o}},{'-'},{output_paths_left.StatsResults}, {output_paths_left.Posthoc}, {output_paths_left.GroupTable}, {subject_data_table_path}};
+            output_path_table(2+height_paths_table,:)={{hemisphere},{voxel_wise{o}},{strat_record},{output_paths_left.StatsResults}, {output_paths_left.Posthoc}, {output_paths_left.GroupTable}, {subject_data_table_path}};
             hemisphere=1;
-            output_path_table(3+height_paths_table,:)={{hemisphere},{voxel_wise{o}},{'-'},{output_paths_right.StatsResults}, {output_paths_right.Posthoc}, {output_paths_right.GroupTable}, {subject_data_table_path}};
+            output_path_table(3+height_paths_table,:)={{hemisphere},{voxel_wise{o}},{strat_record},{output_paths_right.StatsResults}, {output_paths_right.Posthoc}, {output_paths_right.GroupTable}, {subject_data_table_path}};
         end
+    else
+
+        left_table=big_table(big_table.hemisphere_assignment==-1,:);
+        bilat_table=big_table(big_table.hemisphere_assignment==0,:);
+        right_table=big_table(big_table.hemisphere_assignment==1,:);
+
+        try
+
+            if isempty(remove_zscore_grouping{i_testcondition})
+                [bilat_specimen_zscore] = zscoring_finder(bilat_table,test_conditions{i_testcondition});
+                [left_specimen_zscore] = zscoring_finder(left_table,test_conditions{i_testcondition});
+                [right_specimen_zscore] = zscoring_finder(right_table,test_conditions{i_testcondition});
+            else
+                [bilat_table_standardized,bilat_specimen_zscore] = zscoring_finder(bilat_table,test_conditions{i_testcondition},remove_zscore_grouping{i_testcondition}{:});
+                [left_table_standardized,left_specimen_zscore] = zscoring_finder(left_table,test_conditions{i_testcondition},remove_zscore_grouping{i_testcondition}{:});
+                [right_table_standardized,right_specimen_zscore] = zscoring_finder(right_table,test_conditions{i_testcondition},remove_zscore_grouping{i_testcondition}{:});
+
+                civm_write_table(bilat_table_standardized,fullfile(save_location,strcat('Bilat_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
+                civm_write_table(left_table_standardized,fullfile(save_location,strcat('Left_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
+                civm_write_table(right_table_standardized,fullfile(save_location,strcat('Right_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
+
+            end
+        catch merr
+            warning(merr.identifier,'zscoring_finder incomplete: %s',merr.message);
+            %if it doesn't work we aren't trying to hard right now --
+            %typically it is a string related issued with non
+            %categorical terms
+
+            bilat_specimen_zscore=table;
+            left_specimen_zscore=table;
+            right_specimen_zscore=table;
+        end
+
+        %Bilat, Left, and Right
+        try
+            if isempty(remove_zscore_grouping{i_testcondition})
+                [bilat_result_table,bilat_multi_compare_table,bilat_group_summary_stats] = calc_stats(bilat_table,test_conditions{i_testcondition},stats_test);
+                [left_result_table,left_multi_compare_table,left_group_summary_stats] = calc_stats(left_table,test_conditions{i_testcondition},stats_test);
+                [right_result_table,right_multi_compare_table,right_group_summary_stats] = calc_stats(right_table,test_conditions{i_testcondition},stats_test);
+            else
+                [bilat_result_table,bilat_multi_compare_table,bilat_group_summary_stats] = calc_stats(bilat_table_standardized,test_conditions{i_testcondition},stats_test);
+                [left_result_table,left_multi_compare_table,left_group_summary_stats] = calc_stats(left_table_standardized,test_conditions{i_testcondition},stats_test);
+                [right_result_table,right_multi_compare_table,right_group_summary_stats] = calc_stats(right_table_standardized,test_conditions{i_testcondition},stats_test);
+
+            end
+        catch merr
+            db_inplace(mfilename,'Error in calc stats');
+        end
+
+        bilat_strat_full='hemisphere=bilateral';
+        left_strat_full='hemisphere=left';
+        right_strat_full='hemisphere=right';
+
+        %Defining the Stratificaiton into the result tables
+        %that isadding in empties so we keep the main group naming.
+        bilat_group_summary_stats.stratification=repmat({bilat_strat_full},size(bilat_group_summary_stats,1),1);
+        left_group_summary_stats.stratification=repmat({left_strat_full},size(left_group_summary_stats,1),1);
+        right_group_summary_stats.stratification=repmat({right_strat_full},size(right_group_summary_stats,1),1);
+
+        bilat_result_table.stratification=repmat({bilat_strat_full},size(bilat_result_table,1),1);
+        left_result_table.stratification=repmat({left_strat_full},size(left_result_table,1),1);
+        right_result_table.stratification=repmat({right_strat_full},size(right_result_table,1),1);
+
+        if size(bilat_multi_compare_table,1)>0
+            bilat_multi_compare_table.stratification=repmat({bilat_strat_full},size(bilat_multi_compare_table,1),1);
+            left_multi_compare_table.stratification=repmat({left_strat_full},size(left_multi_compare_table,1),1);
+            right_multi_compare_table.stratification=repmat({right_strat_full},size(right_multi_compare_table,1),1);
+        end
+
+        %This needs to go on the smallest most useful unit for multicomparison otherwise we
+        %can't get the BH calculated correctly -- ie don't to L/R/BI together
+        bilat_result_table_BHFDR=calculate_BHFDR(bilat_result_table);
+        left_result_table_BHFDR=calculate_BHFDR(left_result_table);
+        right_result_table_BHFDR=calculate_BHFDR(right_result_table);
+
+        output_paths_bilat=save_output_from_scalar_analysis(save_location,'Bilateral',[],group,subgroup,test_conditions{i_testcondition},bilat_group_summary_stats,bilat_specimen_zscore,bilat_result_table_BHFDR,bilat_multi_compare_table);
+        output_paths_left=save_output_from_scalar_analysis(save_location,'Left',[],group,subgroup,test_conditions{i_testcondition},left_group_summary_stats,left_specimen_zscore,left_result_table_BHFDR,left_multi_compare_table);
+        output_paths_right=save_output_from_scalar_analysis(save_location,'Right',[],group,subgroup,test_conditions{i_testcondition},right_group_summary_stats,right_specimen_zscore,right_result_table_BHFDR,right_multi_compare_table);
+
+        %% attempt to assign all paths in one shot to output table
+        height_paths_table=height(output_path_table);
+        hemisphere=0;
+        output_path_table(1+height_paths_table,:)={{hemisphere},{voxel_wise{o}},{'-'},{output_paths_bilat.StatsResults}, {output_paths_bilat.Posthoc}, {output_paths_bilat.GroupTable}, {subject_data_table_path}};
+        hemisphere=-1;
+        output_path_table(2+height_paths_table,:)={{hemisphere},{voxel_wise{o}},{'-'},{output_paths_left.StatsResults}, {output_paths_left.Posthoc}, {output_paths_left.GroupTable}, {subject_data_table_path}};
+        hemisphere=1;
+        output_path_table(3+height_paths_table,:)={{hemisphere},{voxel_wise{o}},{'-'},{output_paths_right.StatsResults}, {output_paths_right.Posthoc}, {output_paths_right.GroupTable}, {subject_data_table_path}};
     end
 end
 end

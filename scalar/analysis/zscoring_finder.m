@@ -26,37 +26,6 @@ if numel(varargin)>0
     zscore_remove_fulldata_positional_idx=find(~cellfun(@isempty,zscore_remove_fulldata_idx)==1);
     [full_data_remove_type,~,full_data_remove_type_idx]=unique(data_table(:,zscore_remove_fulldata_positional_idx),'stable');
 
-    %% Trying to make it more "exact" in pulling the data in
-    %     for m=1:size(full_data_remove_type,1)
-    %         %The thing you are removing sorted alphabetically
-    %         full_remove_test=data_table(full_data_remove_type_idx==m,:);
-    %         removemean_test=remove_group_mean(remove_data_type_idx==m,:);
-    %         removestd_test=remove_group_std(remove_data_type_idx==m,:);
-    %
-    %         [specimen_name_list,~,specimen_name_idx]=unique(full_remove_test.specimen,'stable');
-    %
-    %         for specimen=1:size(specimen_name_list)
-    %             for ROI_entry=1:size(ROI_value)
-    %                 for contrast=1:size(fulldata_name)
-    %
-    %                     select_correct_specimen_cells=regexpi(data_standardized.specimen,specimen_name_list{specimen});
-    %                     select_correct_specimen_logical_idx=~cellfun(@isempty,select_correct_specimen_cells);
-    %
-    %                     select_correct_specimen_Specimen_Data_cells=regexpi(full_remove_test.specimen,specimen_name_list{specimen});
-    %                     select_correct_specimen_Specimen_Data_logical_idx=~cellfun(@isempty,select_correct_specimen_Specimen_Data_cells);
-    %
-    %                     select_correct_ROI_logical_idx=data_standardized.ROI==ROI_value(ROI_entry);
-    %                     select_correct_ROI_MEAN_logical_idx=removemean_test.ROI==ROI_value(ROI_entry);
-    %                     select_correct_ROI_STD_logical_idx=removestd_test.ROI==ROI_value(ROI_entry);
-    %                     select_correct_ROI_Specimen_Data_logical_idx=full_remove_test.ROI==ROI_value(ROI_entry);
-    %
-    %                     data_standardized.(fulldata_name{contrast})(select_correct_specimen_logical_idx & select_correct_ROI_logical_idx)=(full_remove_test.(fulldata_name{contrast})(select_correct_specimen_Specimen_Data_logical_idx & select_correct_ROI_Specimen_Data_logical_idx)-removemean_test.(fulldata_name{contrast})(select_correct_ROI_MEAN_logical_idx))/removestd_test.(fulldata_name{contrast})(select_correct_ROI_STD_logical_idx);
-    %
-    %                 end
-    %             end
-    %         end
-    %     end
-
     %% Making some assumptions about the ordering.
     for m=1:size(full_data_remove_type,1)
         %All specimen of one data type
@@ -105,7 +74,7 @@ else
 
 end
 
-%%  Getting Median Zscore for each specimen so that can get estimate of best specimen to pick
+%%  Getting Median Zscore for each specimen grouping type so that can get estimate of best specimen to pick
 if ~exist('data_standardized','var')
     zscore_grouping_fulldata_idx=regexpi(data_table.Properties.VariableNames,strcat('^(',strjoin(zscore_grouping,'|'),')$'));
     zscore_grouping_fulldata_positional_idx=find(~cellfun(@isempty,zscore_grouping_fulldata_idx)==1);
