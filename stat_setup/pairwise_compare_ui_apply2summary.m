@@ -26,13 +26,21 @@ only_interesting_col_names=vertcat(configuration_struct.test_criteria.Column_Nam
 %not work together because none is not and effective name with the string
 %join  -- REMEMBER ONLY 1 column can stratify
     
-if any(~strcmp(configuration_struct.zscore,'none') | ~strcmp(configuration_struct.stratification,'none'))
+if any(~strcmp(configuration_struct.zscore,'none'))
     idx_zscore=reg_match(only_interesting_col_names, strcat('^(',strjoin(configuration_struct.zscore,'|'),')$')); % we allow multiple zscore columns now
+else
+    idx_zscore=logical(zeros(height(only_interesting_col_names),1));
+end
+    
+ if any(~strcmp(configuration_struct.stratification,'none'))
     idx_strat=reg_match(only_interesting_col_names,configuration_struct.stratification);
+ else
+     idx_strat=logical(zeros(height(only_interesting_col_names),1));
+ end
+
     idx = idx_zscore | idx_strat;
     only_interesting_col_names(idx)=[];
-end
-
+    
 %% Start the ui for figure generation
 fig=uifigure('Position',[100 100 2150 1100]);
 main_grid = uigridlayout(fig,[2,1]); % Have two grids one with all the info in it and another which holds the next button
