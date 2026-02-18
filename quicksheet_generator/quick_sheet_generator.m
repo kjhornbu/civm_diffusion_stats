@@ -24,7 +24,7 @@ if ~reg_match(value_stratification,'')
     else
         string_stratification_temp= string_stratification;
         clear string_stratification        
-        string_stratification{1}=strjoin(string_stratification_temp(2:2:numel(string_stratification_temp)-2),'_');
+        string_stratification{1}=strjoin(string_stratification_temp(2+2:2:numel(string_stratification_temp)),'_');
     end
 end
 
