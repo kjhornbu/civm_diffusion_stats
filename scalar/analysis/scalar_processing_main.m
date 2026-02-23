@@ -265,7 +265,7 @@ for o=1:numel(voxel_wise)
         [~,group_names,group_name_idx] = find_group_information_from_groupingcriteria(big_table,test_conditions(1));
         strat_column_idx=column_find(big_table.Properties.VariableNames,strcat('^(',test_conditions{1},')$'));
         %Grab the model grouping separate from the stratification condition
-        model_GROUPING=test_conditions{2}{1}; % We now wrap the grouping conditions with a cell so its a cell within a cell just remove that to put together.
+        model_GROUPING=test_conditions{2}{i_testcondition}; % We now wrap the grouping conditions with a cell so its a cell within a cell just remove that to put together.
         for m=1:numel(group_names)
             %filter by the test_conditions{i_sz}{1} prior to running
             %analysis
@@ -358,7 +358,6 @@ for o=1:numel(voxel_wise)
         right_table=big_table(big_table.hemisphere_assignment==1,:);
 
         try
-
             if isempty(remove_zscore_grouping{i_testcondition})
                 [bilat_specimen_zscore] = zscoring_finder(bilat_table,test_conditions{i_testcondition});
                 [left_specimen_zscore] = zscoring_finder(left_table,test_conditions{i_testcondition});

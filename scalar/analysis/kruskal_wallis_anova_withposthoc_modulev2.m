@@ -232,7 +232,7 @@ for d_idx=1:numel(data_idx)
         output.source_of_variation(length_output+(1:num_lines_to_add))=name_table.group_type{1};
         output.sum_of_squares(length_output+(1:num_lines_to_add))=tbl(2:end-1,2);
         output.df(length_output+(1:num_lines_to_add))=tbl(2:end-1,3);
-        output.Chi_Squared_Statistic(length_output+(1:num_lines_to_add))=tbl(2:end-1,5);
+        %output.Chi_Squared_Statistic(length_output+(1:num_lines_to_add))=tbl(2:end-1,5);
 
         Number_of_Groupings=cellfun(@numel,name_table.N);
         Number_of_Groupings(~harmonic_puller)=0;

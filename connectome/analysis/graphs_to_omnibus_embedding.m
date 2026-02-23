@@ -149,11 +149,11 @@ elb_med=round(median(q,1));
 elb_found=0;
 n=1;
 while and(n <= numel(elb_med), elb_found ~=1)
-    value_Median=median(sum((V(1:elb_med(n),:)./total_V),1));
+    value_Median=median(sum((V(1:elb_med(n),:)./total_V),1),'omitnan');
     if and(value_Median>=0.8, n>1)
         elb=elb_med(n);
         elb_found=1;
-        main_embedding_median_eigen=median(V(1:elb_med(n),:)./total_V,2);
+        main_embedding_median_eigen=median(V(1:elb_med(n),:)./total_V,2,'omitnan');
     end
     n=n+1;
 end
