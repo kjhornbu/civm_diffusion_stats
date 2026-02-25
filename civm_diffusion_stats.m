@@ -254,7 +254,7 @@ if sum(reg_match(which_tests,'^(Scalar)$'))>0
     % limit the plotted data-sets according to limit vars set at beginning.
     % (james likes to only plot bilateral non-erode to save some time)
     % In theory to plot more just modify plotting_sheet_types and
-    % plotting_hemispheres to whatever you want. 
+    % plotting_hemispheres to whatever you want.
 
 
     px=sprintf('^%s$',strjoin(plotting_sheet_types,'|'));
@@ -272,6 +272,8 @@ if sum(reg_match(which_tests,'^(Scalar)$'))>0
         pvalue_type=pt{1};
         % need to assign to temp to prevent handling pval different from pval_BH
         output_paths_with_compare=Generate_PairwiseSheet_Plotting( output_paths_table, compare_criteria, pvalue_type, pval_threshold, {plot_criteria}); %
+
+        close all
     end
     output_paths_table=output_paths_with_compare;
 
@@ -280,72 +282,83 @@ if sum(reg_match(which_tests,'^(Scalar)$'))>0
     % the components  here would be a good thing.
 
     % need to select the proper row of the output_paths_table
-    n=1;
-    if height(output_paths_table) > 1
-        warning('Unexpected more than one output line, james lazyily coded this to only one. You need to select the correct row, or add a loop here -- ie if you make post processing > 1 then you need this worked on.')
-        keyboard;
-    end
-    group_stats_file=output_paths_table.StatsResults{n};
-    processed_stats_dir=fileparts(group_stats_file);
-    scalar_complex_vis_dir=fullfile(processed_stats_dir,'complex_figures');
-    previously_loaded_labelfile={};
 
-    %% list off the "cool" columns to go plot
+    [values,~,idx]=unique(output_paths_table.stratification);
 
-    col_types={'cohenD','percent_change'};
-    column_setup = {
-        'pvalue_extended', 'pval'
-        'pvalue_extended', 'pval_BH'%This was pvalue regular before but as rob loves getting all the exact pvalues, I did more
-        };
-    % indicies of the summary criteria, we dont use summary criterais because
-    % its not as well connected to what we want.
+    if (numel(values) == 1 && ~cellfun(@isempty,regexpi(values,'^(-)$'))) || (numel(values)>1 && height(output_paths_table)==numel(values))
+        for n=1:numel(values)
+            output_paths_table_single=output_paths_table(n,:);
+            group_stats_file=output_paths_table.StatsResults{n};
+            processed_stats_dir=fileparts(group_stats_file);
+            scalar_complex_vis_dir=fullfile(processed_stats_dir,'complex_figures');
+            previously_loaded_labelfile={};
 
-    summary_idx=pairwise_criteria.control.applytosummary==1;
-   
-    % comparison_names
-    case_names=pairwise_criteria.control.case(summary_idx);
-    name_code=cell(size(case_names));
-    sum_compare=compare_criteria{1}(:,summary_idx);
-    for col_type_idx=1:numel(col_types)
-        for n=1:size(sum_compare,2)
-            test_name_ctrl=strsplit(sum_compare{1,n},{':',','});
-            test_name_treat=strsplit(sum_compare{2,n},{':',','});
+            %% list off the "cool" columns to go plot
 
-            name_code{n}=strcat(strjoin(test_name_ctrl(2:2:end),'_'),'_',strjoin(test_name_treat(2:2:end),'_'));
-            name_code{n}=strrep(name_code{n},'.','p');
+            col_types={'cohenD','percent_change'};
+            column_setup = {
+                'pvalue_extended', 'pval'
+                'pvalue_extended', 'pval_BH'%This was pvalue regular before but as rob loves getting all the exact pvalues, I did more
+                };
+            % indicies of the summary criteria, we dont use summary criterais because
+            % its not as well connected to what we want.
 
-            % expect 1 column here?
-            %name_code_idx=column_find(col_names,sprintf('.*(%s)$',name_code{n}),1);
-            %n_idx=name_code_idx&col_idx{col_type_idx};
-            %if nnz(n_idx)==1
-            %    column_setup(end+1,:)={col_types{col_type_idx},col_names{n_idx}};
-            %end
-            % WARNING: ONLY the neutral works right now, make james fix the color
-            % table junk (or replace the whole thing with something smart(er/ish)).
-            column_setup(end+1,:)={sprintf('%s_WN',col_types{col_type_idx}), sprintf('%s_%s',col_types{col_type_idx},name_code{n})};
+            summary_idx=pairwise_criteria.control.applytosummary==1;
+
+            % comparison_names
+            case_names=pairwise_criteria.control.case(summary_idx);
+            name_code=cell(size(case_names));
+            sum_compare=compare_criteria{1}(:,summary_idx);
+            for col_type_idx=1:numel(col_types)
+                for n=1:size(sum_compare,2)
+                    test_name_ctrl=strsplit(sum_compare{1,n},{':',','});
+                    test_name_treat=strsplit(sum_compare{2,n},{':',','});
+
+                    name_code{n}=strcat(strjoin(test_name_ctrl(2:2:end),'_'),'_',strjoin(test_name_treat(2:2:end),'_'));
+                    name_code{n}=strrep(name_code{n},'.','p');
+
+                    % expect 1 column here?
+                    %name_code_idx=column_find(col_names,sprintf('.*(%s)$',name_code{n}),1);
+                    %n_idx=name_code_idx&col_idx{col_type_idx};
+                    %if nnz(n_idx)==1
+                    %    column_setup(end+1,:)={col_types{col_type_idx},col_names{n_idx}};
+                    %end
+                    % WARNING: ONLY the neutral works right now, make james fix the color
+                    % table junk (or replace the whole thing with something smart(er/ish)).
+                    column_setup(end+1,:)={sprintf('%s_WN',col_types{col_type_idx}), sprintf('%s_%s',col_types{col_type_idx},name_code{n})};
+                end
+            end
+
+            % internally, composite ontology and slice generator follows the structure
+            % of our figures (as it was programmed at the time). If we change that
+            % orgzanization wed have to update the composite code.
+            try
+                label_nrrd = ontology_and_slice_generator(group_stats_file, column_setup, scalar_complex_vis_dir, previously_loaded_labelfile{:});
+                % this is ONLY useful if we re-run.
+                if exist('label_nrrd','var')
+                    previously_loaded_labelfile={label_nrrd};
+                end
+            catch merr
+                warning(merr.message);
+                fprintf('ontology and slice gen failed, see above\n');
+                pause(3);
+            end
+
+            %% Create Summary Powerpoint for scalars
+            for pt=pval_cols
+                pvalue_type=pt{1};
+                generate_summary_ppts( output_paths_table_single, studyID, user,pvalue_type, pval_threshold, studymodel, Summary_Criteria);
+            end
         end
     end
 
-    % internally, composite ontology and slice generator follows the structure
-    % of our figures (as it was programmed at the time). If we change that
-    % orgzanization wed have to update the composite code.
-    try
-        label_nrrd = ontology_and_slice_generator(group_stats_file, column_setup, scalar_complex_vis_dir, previously_loaded_labelfile{:});
-        % this is ONLY useful if we re-run.
-        if exist('label_nrrd','var')
-            previously_loaded_labelfile={label_nrrd};
-        end
-    catch merr
-        warning(merr.message);
-        fprintf('ontology and slice gen failed, see above\n');
-        pause(3);
-    end
+%     n=1;
+%     if height(output_paths_table) > 1
+%         warning('Unexpected more than one output line, james lazyily coded this to only one. You need to select the correct row, or add a loop here -- ie if you make post processing > 1 then you need this worked on.')
+%         keyboard;
+%     end
 
-    %% Create Summary Powerpoint for scalars
-    for pt=pval_cols
-        pvalue_type=pt{1};
-        generate_summary_ppts( output_paths_table, studyID, user,pvalue_type, pval_threshold, studymodel, Summary_Criteria);
-    end
+
 end
 %% Omni Manova Analysis
 if sum(reg_match(which_tests,'^(Connectome)$'))>0
