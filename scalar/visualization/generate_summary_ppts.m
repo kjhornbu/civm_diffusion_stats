@@ -100,7 +100,6 @@ for n=1:height(Path_table)
     [slidepointer] = summary_slide_setup(ppt,name,compare_image);
 
 %     %% CohenF Plot Slides
-%     %name=figure_dir
 % 
 %     % Volume slides
 %     name = "source of variation Volume Metrics Cohen F Plots";

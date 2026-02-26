@@ -351,14 +351,6 @@ if sum(reg_match(which_tests,'^(Scalar)$'))>0
             end
         end
     end
-
-%     n=1;
-%     if height(output_paths_table) > 1
-%         warning('Unexpected more than one output line, james lazyily coded this to only one. You need to select the correct row, or add a loop here -- ie if you make post processing > 1 then you need this worked on.')
-%         keyboard;
-%     end
-
-
 end
 %% Omni Manova Analysis
 if sum(reg_match(which_tests,'^(Connectome)$'))>0

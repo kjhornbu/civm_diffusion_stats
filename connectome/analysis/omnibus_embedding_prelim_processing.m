@@ -222,6 +222,7 @@ global_paths.mds_fig=saved_fig_paths; %BUT this isn't the same as the ASE that w
 %warning('save-unwrapped-asedist doesnt work. (yet?)');
 % save_unwrapped_asedist()
 
+%% Applying Zscoring to the data
 if ~isempty(zscore_configuration) &&  ~isempty(zscore_configuration{1})
     %updates the global and regional paths to the zscored form if
     %needed. -- search for Zscore in name for later rather than

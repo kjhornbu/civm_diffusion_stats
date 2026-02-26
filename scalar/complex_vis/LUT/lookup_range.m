@@ -4,8 +4,7 @@ function lut_range = lookup_range(varargin)
 % table creation.
 %
 % desired_steps  - the number of non-neutral steps we want.
-
-
+%
 % neutrals  - the number of neutral steps(steps near 0) where we'll use a
 %             netural color (see lookup_colors_dual_change).
 % 
