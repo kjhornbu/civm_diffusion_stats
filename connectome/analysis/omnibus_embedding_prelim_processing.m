@@ -63,43 +63,43 @@ dataframe=sortrows(dataframe,col_headings);
 regional_paths=struct;
 global_paths=struct;
 
-%% using small file recording run time as indicator we've done this
-% before and dont need to repeat. --remove this embedded file???
-t_start=tic;
-ase_runtime_path=fullfile(save_dir,'ASE_run_time.headfile');
-region_cols=list2cell('ase mds mds_bilat perc_explained'); %asedist perc_explained_bilat
-global_cols=list2cell('ase mds mds_fig perc_explained');
-if ~exist(save_dir,'dir')
-    mkdir(save_dir);
-end
-if file_time_check(ase_runtime_path, 'newer', dataframe_path)
-    update_needed=0;
-    run_data=read_headfile(ase_runtime_path);
-    for col_idx=1:numel(region_cols)
-        col=region_cols{col_idx};
-        regional_paths.(col)=run_data.(sprintf('r_%s',col));
-        if ~exist(regional_paths.(col),'file')
-            update_needed=update_needed+1;
-        end
-    end
-    for col_idx=1:numel(global_cols)
-        col=global_cols{col_idx};
-        global_paths.(col)=run_data.(sprintf('g_%s',col));
-        f=global_paths.(col);
-        % for mds_fig we get two outputs(at least) so this'll check them
-        % all for us.
-        if ~iscell(f)
-           f={f};
-        end
-        if ~ all(cellfun(@(x) exist(x,'file'),f))
-            update_needed=update_needed+1;
-        end
-    end
-    if not( update_needed )
-        warning('Assuming complete because %s exists\n',ase_runtime_path);
-        return;
-    end
-end
+% %% using small file recording run time as indicator we've done this
+% % before and dont need to repeat. --remove this embedded file???
+% t_start=tic;
+% ase_runtime_path=fullfile(save_dir,'ASE_run_time.headfile');
+% region_cols=list2cell('ase mds mds_bilat perc_explained'); %asedist perc_explained_bilat
+% global_cols=list2cell('ase mds mds_fig perc_explained');
+% if ~exist(save_dir,'dir')
+%     mkdir(save_dir);
+% end
+% if file_time_check(ase_runtime_path, 'newer', dataframe_path)
+%     update_needed=0;
+%     run_data=read_headfile(ase_runtime_path);
+%     for col_idx=1:numel(region_cols)
+%         col=region_cols{col_idx};
+%         regional_paths.(col)=run_data.(sprintf('r_%s',col));
+%         if ~exist(regional_paths.(col),'file')
+%             update_needed=update_needed+1;
+%         end
+%     end
+%     for col_idx=1:numel(global_cols)
+%         col=global_cols{col_idx};
+%         global_paths.(col)=run_data.(sprintf('g_%s',col));
+%         f=global_paths.(col);
+%         % for mds_fig we get two outputs(at least) so this'll check them
+%         % all for us.
+%         if ~iscell(f)
+%            f={f};
+%         end
+%         if ~ all(cellfun(@(x) exist(x,'file'),f))
+%             update_needed=update_needed+1;
+%         end
+%     end
+%     if not( update_needed )
+%         warning('Assuming complete because %s exists\n',ase_runtime_path);
+%         return;
+%     end
+% end
 
 %% Find the Scale Factor Needed for the Dataframe and saves the df back into the same location
 if find_scale==1
@@ -242,24 +242,24 @@ if ~isempty(zscore_configuration) &&  ~isempty(zscore_configuration{1})
     [regional_paths, global_paths] = Zscore_Applied_to_ASE(save_dir,dataframe,test_criteria,zscore_configuration{1},do_binarize,do_mean_subtract,do_ptr,do_augment,regional_paths, global_paths,ase_regional,ase_global);
 end
 
-%% save run time in seconds to use as flag for completion.
-% include paths to output files for reload purpose.
-t_run=toc(t_start);
-time_out=struct;
-time_out.run_time=t_run;
-time_out.group=strjoin(cellsimplify(group));
-time_out.subgroup=strjoin(cellsimplify(subgroup));
-time_out.test_criteria=strjoin(cellsimplify(test_criteria));
-time_out.save_dir=save_dir;
-time_out.data_frame=dataframe_path;
-for col_idx=1:numel(region_cols)
-    col=region_cols{col_idx};
-    time_out.(sprintf('r_%s',col))=regional_paths.(col);
-end
-for col_idx=1:numel(global_cols)
-    col=global_cols{col_idx};
-    time_out.(sprintf('g_%s',col))=global_paths.(col);
-end
-write_headfile(ase_runtime_path,time_out);
+% %% save run time in seconds to use as flag for completion.
+% % include paths to output files for reload purpose.
+% t_run=toc(t_start);
+% time_out=struct;
+% time_out.run_time=t_run;
+% time_out.group=strjoin(cellsimplify(group));
+% time_out.subgroup=strjoin(cellsimplify(subgroup));
+% time_out.test_criteria=strjoin(cellsimplify(test_criteria));
+% time_out.save_dir=save_dir;
+% time_out.data_frame=dataframe_path;
+% for col_idx=1:numel(region_cols)
+%     col=region_cols{col_idx};
+%     time_out.(sprintf('r_%s',col))=regional_paths.(col);
+% end
+% for col_idx=1:numel(global_cols)
+%     col=global_cols{col_idx};
+%     time_out.(sprintf('g_%s',col))=global_paths.(col);
+% end
+% write_headfile(ase_runtime_path,time_out);
 
 end
