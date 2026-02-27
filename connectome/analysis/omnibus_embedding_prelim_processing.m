@@ -41,9 +41,6 @@ function [regional_paths, global_paths, dataframe] = omnibus_embedding_prelim_pr
 
 % Import Data
 dataframe=civm_read_table(dataframe_path);
-dataframe.("utilization_index")(:)=1:height(dataframe);
-dataframe=column_reorder(dataframe,'utilization_index');
-
 % sort based on study groupings
 col_names=dataframe.Properties.VariableNames;
 col_headings=[group,subgroup];
@@ -104,9 +101,15 @@ if find_scale==1
     % df.scale=df.scale*2; forced scale factor for 2022-10-12 dsi studio
 end
 
-%Check the test conditions remove stuff we can't run
+%Check the test conditions remove stuff we can't run This is if you have
+%multiple instances of stats models you can't do multiple together. Need to
+%just do one at a time.
 number_experimental_setups=size(test_criteria,2);
-assert(number_experimental_setups==1,'james broke doing more than one');
+assert(number_experimental_setups==1,'james broke doing more than one statistical model at the same time -- THIS IS NOT THE SAME THING AS STRATIFYING');
+
+%% Adding utilization index -- after all the work done scaling and adding values is done to keep the name properly indicated.
+dataframe.("utilization_index")(:)=1:height(dataframe);
+dataframe=column_reorder(dataframe,'utilization_index');
 
 %% Load Data: This loads up all the connectome files... Sped up by removing multiple loading of atlas and using the dsi connectivity to create a smart loading with zero offsets.
 % Fixed partially because the double loading of data in .mat specification
