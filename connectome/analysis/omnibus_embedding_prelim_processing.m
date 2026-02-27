@@ -39,7 +39,13 @@ function [regional_paths, global_paths, dataframe] = omnibus_embedding_prelim_pr
 % Augument-- adjusts the values of the diagonal so the responses are spread
 % along that instead of being just 0.
 
-% Import Data
+%Check the test conditions remove stuff we can't run This is if you have
+%multiple instances of stats models you can't do multiple together. Need to
+%just do one at a time.
+number_experimental_setups=size(test_criteria,2);
+assert(number_experimental_setups==1,'james broke doing more than one statistical model at the same time -- THIS IS NOT THE SAME THING AS STRATIFYING');
+
+%% Import Data
 dataframe=civm_read_table(dataframe_path);
 % sort based on study groupings
 col_names=dataframe.Properties.VariableNames;
@@ -58,7 +64,7 @@ regional_paths=struct;
 global_paths=struct;
 
 %% using small file recording run time as indicator we've done this
-% before and dont need to repeat.
+% before and dont need to repeat. --remove this embedded file???
 t_start=tic;
 ase_runtime_path=fullfile(save_dir,'ASE_run_time.headfile');
 region_cols=list2cell('ase mds mds_bilat perc_explained'); %asedist perc_explained_bilat
@@ -101,12 +107,6 @@ if find_scale==1
     % df.scale=df.scale*2; forced scale factor for 2022-10-12 dsi studio
 end
 
-%Check the test conditions remove stuff we can't run This is if you have
-%multiple instances of stats models you can't do multiple together. Need to
-%just do one at a time.
-number_experimental_setups=size(test_criteria,2);
-assert(number_experimental_setups==1,'james broke doing more than one statistical model at the same time -- THIS IS NOT THE SAME THING AS STRATIFYING');
-
 %% Adding utilization index -- after all the work done scaling and adding values is done to keep the name properly indicated.
 dataframe.("utilization_index")(:)=1:height(dataframe);
 dataframe=column_reorder(dataframe,'utilization_index');
@@ -124,19 +124,26 @@ graphs=load_graph(dataframe);
     main_embedding_median_eigen, eigen_Global, eigen_regional, eigen_regional_bilat]...
     = graphs_to_omnibus_embedding(dataframe, graphs, do_binarize, do_mean_subtract, do_ptr, do_augment, set_scale);
 
+%% SAVING BLOCKS %%
 %% SAVE OUTPUT CONNECTOMES
 out_name=sprintf('Combined_Connectome_Graphs_%i%i%i%i.mat',do_binarize,do_mean_subtract,do_ptr,do_augment);
 out_file=fullfile(save_dir,out_name);
 save(out_file,'graphs','dataframe')
 
-%% SAVING BLOCKS
+%% What does the Median Model Nominally explain?
 out_name=sprintf('Median_ASE_Model_Explains_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
 out_file=fullfile(save_dir,out_name);
 percexplain=main_embedding_median_eigen';
-[percexplain] = format_embedded_data_file(dataframe,test_criteria,percexplain,out_file,'globalnorepeat');
+[~] = format_embedded_data_file(dataframe,test_criteria,percexplain,out_file,'globalnorepeat');
 regional_paths.median_ase_model_explains=out_file;
 
 %% Save Distance
+
+% James form of unwrapped distance -- very huge files.
+% save for jmp(ha)
+%warning('save-unwrapped-asedist doesnt work. (yet?)');
+% save_unwrapped_asedist()
+
 % save regional dist explained
 out_name=sprintf('Regional_Dist_%i%i%i%i.mat',do_binarize,do_mean_subtract,do_ptr,do_augment);
 out_file=fullfile(save_dir,out_name);
@@ -160,21 +167,21 @@ global_paths.dist_explained=out_file;
 out_name=sprintf('Regional_PercentExplained_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
 out_file=fullfile(save_dir,out_name);
 percexplain_regional=eigen_regional';
-[percexplain_regional] = format_embedded_data_file(dataframe,test_criteria,percexplain_regional,out_file,'regionalnorepeat');
+[~] = format_embedded_data_file(dataframe,test_criteria,percexplain_regional,out_file,'regionalnorepeat');
 regional_paths.perc_explained=out_file;
 
 %save bilat percent explained
 out_name=sprintf('Regional_Bilateral_PercentExplained_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
 out_file=fullfile(save_dir,out_name);
 percexplain_regional_bilat=eigen_regional_bilat';
-[percexplain_regional_bilat] = format_embedded_data_file(dataframe,test_criteria,percexplain_regional_bilat,out_file,'regional_bilatnorepeat');
+[~] = format_embedded_data_file(dataframe,test_criteria,percexplain_regional_bilat,out_file,'regional_bilatnorepeat');
 regional_paths.perc_explained_bilat=out_file;
 
 %save global percent explained
 out_name=sprintf('Global_PercentExplained_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
 out_file=fullfile(save_dir,out_name);
 percexplain_global_longform=eigen_Global';
-[percexplain_global] = format_embedded_data_file(dataframe,test_criteria,percexplain_global_longform,out_file,'globalnorepeat');
+[~] = format_embedded_data_file(dataframe,test_criteria,percexplain_global_longform,out_file,'globalnorepeat');
 global_paths.perc_explained=out_file;
 
 %% Save ASE
@@ -197,14 +204,14 @@ global_paths.ase=out_file;
 out_name=sprintf('Regional_MDS_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
 out_file=fullfile(save_dir,out_name);
 mds_regional_longform=reshape( permute(mds_regional,[3 1 2]),[size(mds_regional,1)*size(mds_regional,3),size(mds_regional,2)]);
-[mds_regional] = format_embedded_data_file(dataframe,test_criteria,mds_regional_longform,out_file,'regional');
+[~] = format_embedded_data_file(dataframe,test_criteria,mds_regional_longform,out_file,'regional');
 regional_paths.mds=out_file;
 
 %save bilat MDS
 out_name=sprintf('Regional_Bilateral_MDS_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
 out_file=fullfile(save_dir,out_name);
 mds_regional_bilat_longform=reshape( permute(mds_regional_bilat,[3 1 2]),[size(mds_regional_bilat,1)*size(mds_regional_bilat,3),size(mds_regional_bilat,2)]);
-[mds_regional_bilat] = format_embedded_data_file(dataframe,test_criteria,mds_regional_bilat_longform,out_file,'regional_bilat');
+[~] = format_embedded_data_file(dataframe,test_criteria,mds_regional_bilat_longform,out_file,'regional_bilat');
 regional_paths.mds_bilat=out_file;
 
 %save global MDS
@@ -219,11 +226,6 @@ out_name=sprintf('2D_Embedding_Plot_Global_MDS_%i%i%i%i',do_binarize,do_mean_sub
 out_fig_prefix=fullfile(save_dir,out_name);
 saved_fig_paths=plot_mds(mds_global,test_criteria,out_fig_prefix);
 global_paths.mds_fig=saved_fig_paths; %BUT this isn't the same as the ASE that we use with the statsitical testing since we aren't doing the reduced coordinates
-
-%% Save Semipar Distance
-% save for jmp(ha)
-%warning('save-unwrapped-asedist doesnt work. (yet?)');
-% save_unwrapped_asedist()
 
 %% Applying Zscoring to the data
 if ~isempty(zscore_configuration) &&  ~isempty(zscore_configuration{1})
