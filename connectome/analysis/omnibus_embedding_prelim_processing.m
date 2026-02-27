@@ -190,7 +190,6 @@ out_name=sprintf('ASE_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augme
 out_file=fullfile(save_dir,out_name);
 regional_paths.ase=out_file;
 [ase_regional] = format_embedded_data_file(dataframe,test_criteria,ase_regional,out_file,'regional');
-ase_param_count=numel(column_find(ase_regional,'^X[0-9]+$'));
 
 %save global ase
 out_name=sprintf('Global_ASE_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
