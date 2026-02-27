@@ -103,22 +103,19 @@ if stratified
         [ad,an,ae]=fileparts(regional_paths.ase);
         ase_path=fullfile(ad,stratification_groups_regional{regional_idx_range(strat)});
         ase_file=fullfile(ase_path,strcat(an,ae));
-
         if ~exist(ase_path,'dir')
             mkdir(ase_path);
         end
-
         ase_regional_select=ase_regional(group_name_idx_regional==regional_idx_range(strat),:);
         writetable(ase_regional_select, ase_file);
         regional_paths.ase=ase_file;
 
         [ad,an,ae]=fileparts(global_paths.ase);
-        ase_file=fullfile(ad,stratification_groups_global{global_idx_range(strat)},strcat(an,ae));
-
+        ase_path=fullfile(ad,stratification_groups_global{global_idx_range(strat)});
+        ase_file=fullfile(ase_path,strcat(an,ae));
         if ~exist(ase_path,'dir')
             mkdir(ase_path);
         end
-
         ase_global_select=ase_global(group_name_idx_global==global_idx_range(strat),:);
         writetable(ase_global_select, ase_file);
         global_paths.ase=ase_file;
