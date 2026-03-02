@@ -121,7 +121,7 @@ graphs=load_graph(dataframe);
 [graphs, ase_regional, ase_global,...
     mds_global, mds_regional, mds_regional_bilat,...
     Dist_global, Dist_regional, Dist_regional_bilat,...
-    main_embedding_median_eigen, eigen_Global, eigen_regional, eigen_regional_bilat]...
+    main_embedding_median_eigen,main_embedding_global_eigen,eigen_Global, eigen_regional, eigen_regional_bilat]...
     = graphs_to_omnibus_embedding(dataframe, graphs, do_binarize, do_mean_subtract, do_ptr, do_augment, set_scale);
 
 %% SAVING BLOCKS %%
@@ -136,6 +136,13 @@ out_file=fullfile(save_dir,out_name);
 percexplain=main_embedding_median_eigen';
 [~] = format_embedded_data_file(dataframe,test_criteria,percexplain,out_file,'globalnorepeat');
 regional_paths.median_ase_model_explains=out_file;
+
+
+out_name=sprintf('Global_ASE_Model_Explains_%i%i%i%i.csv',do_binarize,do_mean_subtract,do_ptr,do_augment);
+out_file=fullfile(save_dir,out_name);
+percexplain=main_embedding_global_eigen';
+[~] = format_embedded_data_file(dataframe,test_criteria,percexplain,out_file,'globalnorepeat');
+regional_paths.global_ase_model_explains=out_file;
 
 %% Save Distance
 

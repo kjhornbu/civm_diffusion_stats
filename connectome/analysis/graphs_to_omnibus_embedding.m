@@ -1,7 +1,7 @@
 function [graphs, ase_Regional, ase_Global, ...
     mds_Global, mds_Regional, mds_Regional_bilat, ...
     Dist_Global, Dist_Regional, Dist_Regional_bilat, ...
-    main_embedding_median_eigen,eigen_Global, eigen_Regional, eigen_Regional_bilat] = ...
+    main_embedding_median_eigen,main_embedding_global_eigen,eigen_Global, eigen_Regional, eigen_Regional_bilat] = ...
     graphs_to_omnibus_embedding(df, graphs, do_binarize, do_mean_subtract, do_ptr, do_augment, scale)
 
 n_graphs=size(df,1);
@@ -96,7 +96,7 @@ omni=(T+T2)/2; %[1 1.5 2 2.5; 1.5 2 2.5 3; 2 2.5 3 3.5; 2.5 3 3.5 4]
 % number
 elbow_grab=12;
 for n=1:n_graphs
-    [V(:,n), ~] = sort(eig(sqrt(squeeze(A(n,:,:))*ctranspose(squeeze(A(n,:,:))))),'descend'); 
+    [V(:,n), ~] = sort(eig(sqrt(squeeze(A(n,:,:))*ctranspose(squeeze(A(n,:,:))))),'descend'); %This is doing a quick and dirty polar decomposition of each specimen to determine how many terms need to be kept
     x = length(getElbows(squeeze(V(:,n)),elbow_grab));
     if x<elbow_grab
         elbow_grab = x;
@@ -292,6 +292,8 @@ end
 
 V=sort(eig(sqrt(Dist_Global*transpose(Dist_Global))),'descend');
 elb=getElbows(V,3); %-- this doesn't have as much of the analysis
+
+main_embedding_global_eigen=V(1:elb(2))/sum(V);
 
 [U,D,~]=svds(Dist_Global,elb(2)); 
 ase_Global=U*sqrt(D);

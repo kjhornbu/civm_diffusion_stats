@@ -25,7 +25,7 @@ assert(numel(varargin)==0 || strcmp(user,'jjc29'),...
     'Only james knows why varargin is there and has options in it.');
 % pretend we've parsed options, and found an assume nlsam option.
 opts=struct;
-opts.assumeNLSAM=false;
+opts.assumeNLSAM=true;
 
 if ~exist(save_dir,'dir')
     mkdir(save_dir);
@@ -57,6 +57,7 @@ if exist(dataframe_path,'file')
     end
 end
 
+%% Need to get rid of James stuff because it is erroring out redoing data sheets for things... his example is not typical use?
 if ~keep_last_dataframe
 
     %Clean James goop better here? This isn't what I intended at all at
@@ -473,7 +474,18 @@ oneRM_done=0;
 
 %Check groupings for n in them if <2 then cannot actually do 1-remove
 %testing without breaking the test.
-grouping_names=[stats_test_manova.group_name,stats_test_manova.subgroup_name];
+
+use_subgroup=isfield(stats_test_manova,'subgroup_name');
+use_group=isfield(stats_test_manova,'group_name');
+if use_group==1
+    if use_subgroup==1
+        grouping_names=[stats_test_manova.group_name,stats_test_manova.subgroup_name];
+    else
+        grouping_names=[stats_test_manova.group_name];
+    end
+else
+    warning('No Groups with Names defined, you need at least one!')
+end
 grouping_models=stats_test_manova.matrix{1};
 
 group_keeper=zeros(height(grouping_models),1);
