@@ -29,9 +29,9 @@ else
     vertex_idx=ones(data_height,1);
 end
 
-for n=1:sum(logical_X_finder)
-    s_X(n)=std(Data.(strcat('X',num2str(n))));
-end
+% for n=1:sum(logical_X_finder)
+%     s_X(n)=std(Data.(strcat('X',num2str(n))));
+% end
 
 [~,group_name_hold,group_name_idx_hold] = find_group_information_from_groupingcriteria(Data,groups_to_hold);
 [~,group_name_compare,group_name_idx_compare] = find_group_information_from_groupingcriteria(Data,groups_to_compare);
@@ -78,6 +78,8 @@ count_n=1;
 for p=1:width(groups_idx)
     for n = 1:numel(vertex)
         for m = 1:sum(logical_X_finder)
+            s_X(m,n)=std(Data.(strcat('X',num2str(m)))(vertex_idx==n));
+
             coordinate=and(vertex_idx==n,groups_idx(:,p));
             coordinate_positional=find(coordinate);
             temp_data=Data.(strcat('X',num2str(m)))(coordinate);
@@ -89,11 +91,14 @@ for p=1:width(groups_idx)
                 output.vertex(count_n)=vertex(n);
             end
 
+
             output.(strcat('raw_X',num2str(m),'_mean'))(count_n)=mean(temp_data,'omitnan');
             output.(strcat('raw_X',num2str(m),'_std'))(count_n)=std(temp_data,'omitnan');
 
-            output.(strcat('scaled_X',num2str(m),'_mean'))(count_n)=mean(temp_data./s_X(m),'omitnan');
-            output.(strcat('scaled_X',num2str(m),'_std'))(count_n)=std(temp_data./s_X(m),'omitnan');
+            output.(strcat('Scaling_Term_X',num2str(m)))(count_n)=s_X(m,n);
+
+            output.(strcat('scaled_X',num2str(m),'_mean'))(count_n)=mean(temp_data./s_X(m,n),'omitnan');
+            output.(strcat('scaled_X',num2str(m),'_std'))(count_n)=std(temp_data./s_X(m,n),'omitnan');
         end
         count_n=count_n+1;
     end
@@ -117,8 +122,10 @@ for o=1:width(groups_to_hold_idx)
                 output.(strcat('raw_X',num2str(m),'_mean'))(count_n)=mean(temp_data,'omitnan');
                 output.(strcat('raw_X',num2str(m),'_std'))(count_n)=std(temp_data,'omitnan');
 
-                output.(strcat('scaled_X',num2str(m),'_mean'))(count_n)=mean(temp_data./s_X(m),'omitnan');
-                output.(strcat('scaled_X',num2str(m),'_std'))(count_n)=std(temp_data./s_X(m),'omitnan');
+                output.(strcat('Scaling_Term_X',num2str(m)))(count_n)=s_X(m,n);
+
+                output.(strcat('scaled_X',num2str(m),'_mean'))(count_n)=mean(temp_data./s_X(m,n),'omitnan');
+                output.(strcat('scaled_X',num2str(m),'_std'))(count_n)=std(temp_data./s_X(m,n),'omitnan');
             end
             count_n=count_n+1;
         end

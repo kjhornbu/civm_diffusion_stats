@@ -235,6 +235,7 @@ global_paths.mds_fig=saved_fig_paths; %BUT this isn't the same as the ASE that w
 
 %% Applying Zscoring to the data
 if ~isempty(zscore_configuration) &&  ~isempty(zscore_configuration{1})
+    % Honestly sho
     %updates the global and regional paths to the zscored form if
     %needed. -- search for Zscore in name for later rather than
     %having a flag
@@ -244,7 +245,7 @@ if ~isempty(zscore_configuration) &&  ~isempty(zscore_configuration{1})
     % NOW there is only ONE test critera, that is why this has a cell of 1 going into the zscore applicator
     % 
     % When you finish testing, you should track down and clean that up.
-    warning('zscoring function currently is untested');
+    warning('zscoring function currently is untested -- honestly you probably should not use it and just add a variable to the model for the term');
     [regional_paths, global_paths] = Zscore_Applied_to_ASE(save_dir,dataframe,test_criteria,zscore_configuration{1},do_binarize,do_mean_subtract,do_ptr,do_augment,regional_paths, global_paths,ase_regional,ase_global);
 end
 
