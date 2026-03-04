@@ -16,7 +16,11 @@ vertex=reshape(vertex,[],2);
 for n=1:size(vertex,1)
     for m=1:2
         if mod(m,2)==1
-            idx=find((selection_group_idx==postional_idx_selection & compare_group_A_idx==positional_idx_A)==1);
+            try
+                idx=find((selection_group_idx==postional_idx_selection & compare_group_A_idx==positional_idx_A)==1);
+            catch
+                keyboard;
+            end
         elseif mod(m,2)==0
             idx=find((selection_group_idx==postional_idx_selection & compare_group_B_idx==positional_idx_B)==1);
         end

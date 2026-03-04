@@ -76,7 +76,7 @@ xticklabels(select_ipsilateral_contra)
 
 max_VAL=max(max(matrix_2_print));
 
-colormap jet
+colormap parula
 colorbar;
 caxis([0 max_VAL]);
 
