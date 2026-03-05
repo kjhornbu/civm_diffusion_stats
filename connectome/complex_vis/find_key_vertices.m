@@ -14,20 +14,21 @@ idx_NOT_uncharted=[~cellfun(@isempty,ontology_Order.GN_Symbol);~cellfun(@isempty
 idx=reg_match(matrix_2_print_names,'cohenD');
 matrix_2_print_single_c=matrix_2_print{idx};
 Cohen_Matrix_Criteria=mean(matrix_2_print_single_c);
+idx_NOT_nan=~isnan(Cohen_Matrix_Criteria); %If there are nan's that leak through remove them here
 
-idx_10pct_noUncharted_inOntologyOrder=idx_raw&idx_NOT_uncharted;
-pos_idx_10pct_noUncharted_inOntologyOrder=find(idx_10pct_noUncharted_inOntologyOrder);
+idx_10pct_noUncharted_nonan_inOntologyOrder=idx_raw&idx_NOT_uncharted&idx_NOT_nan;
+pos_idx_10pct_noUncharted_nonan_inOntologyOrder=find(idx_10pct_noUncharted_nonan_inOntologyOrder);
 
 %% Filtering to Top 15 Vertices within the Node
 N=15;
-if sum(idx_10pct_noUncharted_inOntologyOrder)>N
+if sum(idx_10pct_noUncharted_nonan_inOntologyOrder)>N
     %[~,b]=sort(matrix_Criteria(idx_10pct_noUncharted_inOntologyOrder),'descend');
-    [~,b]=sort(Cohen_Matrix_Criteria(idx_10pct_noUncharted_inOntologyOrder),'descend','ComparisonMethod','abs','MissingPlacement','last');
-    idx_10pct_noUncharted_inOntologyOrder_TopN=zeros(size(idx_10pct_noUncharted_inOntologyOrder));
-    idx_10pct_noUncharted_inOntologyOrder_TopN(pos_idx_10pct_noUncharted_inOntologyOrder(b(1:N)))=1;
+    [~,b]=sort(Cohen_Matrix_Criteria(idx_10pct_noUncharted_nonan_inOntologyOrder),'descend','ComparisonMethod','abs','MissingPlacement','last'); %the isnan checker should take care of the nan but in anyway "aces" should be low value for sorting.
+    idx_10pct_noUncharted_inOntologyOrder_TopN=zeros(size(idx_10pct_noUncharted_nonan_inOntologyOrder));
+    idx_10pct_noUncharted_inOntologyOrder_TopN(pos_idx_10pct_noUncharted_nonan_inOntologyOrder(b(1:N)))=1;
     idx_top=idx_10pct_noUncharted_inOntologyOrder_TopN>0;
 else
-    idx_top=idx_10pct_noUncharted_inOntologyOrder;
+    idx_top=idx_10pct_noUncharted_nonan_inOntologyOrder;
 end
 
 positional_idx_top=find(idx_top);
