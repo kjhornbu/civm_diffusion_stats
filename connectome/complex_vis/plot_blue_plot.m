@@ -1,6 +1,28 @@
-function [figure_entries,make_Left_Axis] = plot_blue_plot_get_key_vertex_details(directory,vertex,matrix_2_print,selection_pull,data_y_labels,ontology_Order,make_Left_Axis,idx_inOntologyOrder)
+function [figure_entries,make_Left_Axis] = plot_blue_plot(directory,vertex,matrix_2_print,selection_pull,data_y_labels,ontology_Order,make_Left_Axis,idx_inOntologyOrder)
 width=3;%width=2*3.3;  -- What width do you want the figures to be (at minimum -- if the font doesn't fit on the graph it will make it bigger).
 fontsize=8; %apparent final font size in the figure (typically viewed on mac)
+
+%{
+The set colors as part of the white yellow orange range
+start_color=[1,1,1];
+middle_color=[1,1,0];
+end_color=[1,0.5,0];
+%}
+
+% Components we need to do the shifting
+Y_2_O_CG=linspace(1,0.5,128);
+W_2_Y_CB=linspace(1,0,128);
+
+%Putting all together channel by channel
+color_map_white_yellow_orange(:,1)=ones(1,256,1);
+
+color_map_white_yellow_orange(1:128,2)=ones(1,128,1);
+color_map_white_yellow_orange(129:256,2)=Y_2_O_CG;
+
+color_map_white_yellow_orange(1:128,3)=W_2_Y_CB;
+color_map_white_yellow_orange(129:256,3)=zeros(1,128,1);
+
+new_colormap=color_map_white_yellow_orange;
 
 %% Preliminary Setups
 if ispc
@@ -76,7 +98,7 @@ xticklabels(select_ipsilateral_contra)
 
 max_VAL=max(max(matrix_2_print));
 
-colormap parula
+colormap(new_colormap);
 colorbar;
 caxis([0 max_VAL]);
 
@@ -85,12 +107,14 @@ figure_entries.vertex=vertex(1,1);
 figure_entries.maxval=max_VAL;
 figure_entries.minval=0;
 
+% these are the lines on the plot originally they were white shifting to
+% black for the super white representation.
 hold on
-plot([(size(matrix_2_print,2)/2)+0.5 (size(matrix_2_print,2)/2)+0.5],[0 size(matrix_2_print,1)+1],'color',[1 1 1]);
+plot([(size(matrix_2_print,2)/2)+0.5 (size(matrix_2_print,2)/2)+0.5],[0 size(matrix_2_print,1)+1],'color',[0 0 0]);
 
 for m=1:selection_Number
     if m ~= selection_Number
-        plot([0 size(matrix_2_print,2)+1],[(2*m)+0.5 (2*m)+0.5],'color',[1 1 1]);
+        plot([0 size(matrix_2_print,2)+1],[(2*m)+0.5 (2*m)+0.5],'color',[0 0 0]);
     end
 end
 
@@ -145,6 +169,54 @@ close all;
 
 if make_Left_Axis
     make_Left_Axis=false;
+
+    % Make the ontology axis
+    middle_break=height(ontology_Order);
+
+    for levels=1:max(ontology_Order.ontology_level)
+
+        [a,~,c]=unique(ontology_Order.(strcat('level',num2str(levels))));
+
+        not_empty_idx=~cellfun(@isempty,a);
+        not_empty_pos_idx=find(not_empty_idx);
+
+            f3a=figure;
+            EntryA=(width-((45/alt_print_num)/0.775))*printfactor; %width
+            EntryB=0.25*printfactor; %height
+            set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'InnerPosition',[check_size(1) check_size(2) EntryA*print_num EntryB*print_num]); %*0.80625 for 4 inches
+            hold on
+
+            axis([0.5 360.5 0 1]);
+            line([0,0],[0 1],'Color','w');
+
+        for m=1:numel(not_empty_pos_idx)
+            bar_entries=c==not_empty_pos_idx(m);
+            idx_bar_entries=find(bar_entries);
+            %idx_bar_entries_starts at 1 so -1+0.5 so begins at correct
+            %spot
+            start_bar_entries=idx_bar_entries(1)-0.5;
+            % and end bar is just extended by 0.5
+            stop_bar_entries=idx_bar_entries(end)+0.5;
+
+            middle_bar_entries=mean([stop_bar_entries,start_bar_entries]);
+
+            % Ipsa
+            rectangle("Position",[start_bar_entries 0 stop_bar_entries-start_bar_entries,1],"FaceColor",[1 1 1],"EdgeColor",[0 0 0])
+            text(middle_bar_entries,0.5,a{not_empty_pos_idx(m)},'HorizontalAlignment','center','FontSize',fontsize/2,'FontName','FixedWidth','Rotation', 90);
+            %Contra
+            rectangle("Position",[middle_break+start_bar_entries 0 stop_bar_entries-start_bar_entries,1],"FaceColor",[1 1 1],"EdgeColor",[0 0 0])
+            text(middle_break+middle_bar_entries,0.5,a{not_empty_pos_idx(m)},'HorizontalAlignment','center','FontSize',fontsize/2,'FontName','FixedWidth','Rotation', 90); 
+        end
+
+        xticks(0);
+        xticklabels("");
+        yticks(0);
+        yticklabels("");
+
+        print(f3a, fullfile(directory,'annotations',strcat('ontology_Level',num2str(levels),'.svg')),'-dsvg','-vector');
+    end
+    close all;
+
     EntryA=3.3*printfactor;
     EntryB=((fontsize*2)/alt_print_num)*2*selection_Number*printfactor;
 

@@ -75,6 +75,7 @@ elseif strcmp(atlas_name,'symmetric15um')
     slice_levels=[168,222,276,329]; %in Symmetric 15 RCCF Entry points (0:535)*0.015-4.0125
 end
 %{
+Original processing order of the data
 ColorSlice_Figure_Generation/make_LUT_4_slicegen.m:function [LUT] = make_LUT(type,Statistical_Results,Data_Column,file_path)
 ColorSlice_Figure_Generation/save_color_slice.m:function [] = save_color_slice(img_slice,filename)
 ColorSlice_Figure_Generation/slice_colorer.m:function [img_slice] = slice_colorer(LUT_path,slice_data)

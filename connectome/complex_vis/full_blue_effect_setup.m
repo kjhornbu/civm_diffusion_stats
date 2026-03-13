@@ -2,7 +2,7 @@ function [output_connectome,output_difference,output_plot_vertex_LUT] = full_blu
 
 graphs=load_graph(dataframe);
 if data_scaling
-    graphs=graphs.*dataframe.scale;
+    graphs=graphs.*dataframe.scale; % not pulling from the saved graphs --- we are getting it from the dataframe (ie typically the archive)
 end
 
 ontology_Order=civm_read_table("Ontology_Order_EdgeStrengthPlots.csv");

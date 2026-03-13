@@ -89,6 +89,11 @@ for p=1:width(groups_idx)
             output.GroupCount(count_n)=numel(coordinate_positional);
             if numel(vertex)~=1
                 output.vertex(count_n)=vertex(n);
+                if vertex(n)>180
+                    output.ROI(count_n)=vertex(n)-180+1000;
+                else
+                    output.ROI(count_n)=vertex(n);
+                end
             end
 
 
@@ -117,6 +122,11 @@ for o=1:width(groups_to_hold_idx)
                 output.GroupCount(count_n)=numel(coordinate_positional);
                 if numel(vertex)~=1
                     output.vertex(count_n)=vertex(n);
+                    if vertex(n)>180
+                        output.ROI(count_n)=vertex(n)-180+1000;
+                    else
+                        output.ROI(count_n)=vertex(n);
+                    end
                 end
 
                 output.(strcat('raw_X',num2str(m),'_mean'))(count_n)=mean(temp_data,'omitnan');
