@@ -44,7 +44,7 @@ compare_group_B='Old';
 
 %Convert to "Better Names"
 compare_group_A_Prime='Young';
-compare_group_B_Prime='Middle-Aged';
+compare_group_B_Prime='Old';
 
 [output_connectome,output_difference,compare_group_A,compare_group_B]=adjust_grouping_names(output_connectome,output_difference,compare_group_A,compare_group_A_Prime,compare_group_B,compare_group_B_Prime);
 

@@ -9,7 +9,8 @@ ontology_Order=civm_read_table("Ontology_Order_EdgeStrengthPlots.csv");
 [ontology_Order,total_Ordering] = find_proper_ontology_order(ontology_Order,size(graphs,2)/2);
 
 for n=1:numel(comparison)
-    if isempty(comparison(n).stratification)
+
+    if ~isfield(comparison(n),'stratification')||isempty(comparison(n).stratification)
         % case for dealing with "all" which is we don't stratify
         selection_name ='All';
         selection_group_idx=ones(height(dataframe),1);
@@ -56,6 +57,9 @@ end
 output_connectome=vertcat(output_connectome{:});
 output_difference=vertcat(output_difference{:});
 
+
+max_entry=max(horzcat(output_connectome.data{:}));
+
 %% Generate Plots -- basically do this unit over and over again to make figures with different selection pull and different directories.
 make_Left_Axis=1;
 make_LUT_img=1;
@@ -68,14 +72,14 @@ compare_group_A_pull=unique(output_difference.compare_group_A,'stable');
 compare_group_B_pull=unique(output_difference.compare_group_B,'stable');
 
 for n=1:numel(meaningful_nodes)
-    [matrix_2_print_blue,data_y_labels] = setup_matrix2print(output_connectome,selection_pull,meaningful_nodes(n),total_Ordering,'blue','',compare_group_A_pull,compare_group_B_pull);
+    [matrix_2_print_edge,data_y_labels] = setup_matrix2print(output_connectome,selection_pull,meaningful_nodes(n),total_Ordering,'edge','',compare_group_A_pull,compare_group_B_pull);
     [matrix_2_print_cohenD,data_y_labels_cohenD] = setup_matrix2print(output_difference,selection_pull,meaningful_nodes(n),total_Ordering,'effect','cohenD_difference',compare_group_A_pull,compare_group_B_pull);
     [matrix_2_print_percent,data_y_labels_percent] = setup_matrix2print(output_difference,selection_pull,meaningful_nodes(n),total_Ordering,'effect','percent_difference',compare_group_A_pull,compare_group_B_pull);
 
-    matrix_2_print={matrix_2_print_blue;matrix_2_print_cohenD;matrix_2_print_percent};
-    matrix_2_print_names={'blue','cohenD','percent'};
+    matrix_2_print={matrix_2_print_edge;matrix_2_print_cohenD;matrix_2_print_percent};
+    matrix_2_print_names={'edge','cohenD','percent'};
 
-    [idx_10pct_noUncharted_inOntologyOrder_Top15,positional_idx_10pct_noUncharted_inOntologyOrder_Top15,node_keyvertices_entries] = find_key_vertices(meaningful_nodes(n),matrix_2_print,matrix_2_print_names,ontology_Order);
+    [idx_aboveThreshold,idx_10pct_noUncharted_inOntologyOrder_Top15,positional_idx_10pct_noUncharted_inOntologyOrder_Top15,node_keyvertices_entries] = find_key_vertices(meaningful_nodes(n),matrix_2_print,matrix_2_print_names,ontology_Order);
 
     %setup LUT of output plot vertices per each key node
     if ~isempty(node_keyvertices_entries)
@@ -83,8 +87,8 @@ for n=1:numel(meaningful_nodes)
         output_plot_vertex_LUT(offset+[1:height(node_keyvertices_entries)],:)=node_keyvertices_entries;
 
 
-        %The blue plot doesn't need a wrapper since we dont' make a LUT for it or only pull out key regions
-        [~,make_Left_Axis] = plot_blue_plot(directory,meaningful_nodes(n),matrix_2_print_blue,selection_pull,data_y_labels,ontology_Order,make_Left_Axis,idx_10pct_noUncharted_inOntologyOrder_Top15);
+        %The edge plot doesn't need a wrapper since we dont' make a LUT for it or only pull out key regions
+        [~,make_Left_Axis] = plot_edge_plot(directory,meaningful_nodes(n),matrix_2_print_edge,selection_pull,data_y_labels,ontology_Order,idx_aboveThreshold,make_Left_Axis,idx_10pct_noUncharted_inOntologyOrder_Top15);
         [~,make_LUT_img] = setup_difference_plot(directory,meaningful_nodes(n),data_y_labels_cohenD,matrix_2_print_cohenD,positional_idx_10pct_noUncharted_inOntologyOrder_Top15,'cohenD_difference',ontology_Order,make_LUT_img);
 
         if n==1

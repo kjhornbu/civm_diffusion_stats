@@ -21,8 +21,6 @@ for n=1:height(ontology_Order)
     end
 end
 
-
-
 Just_Before=find((ontology_Order.L_Vertex==idx_postion_before)==1);
 temp_before=ontology_Order(1:Just_Before,:);
 temp_after=ontology_Order(Just_Before+1:end,:);
@@ -30,7 +28,7 @@ temp_after=ontology_Order(Just_Before+1:end,:);
 clear ontology_Order
 
 ontology_Order=temp_before;
-layer_names={'B','BRN','B','wmt','B','cra'};
+layer_names={'B','BRN','B','wmt','B','cra'}; %These are the layer names for the missing region in the ontology
 
 for m=1:max(ontology_Order.ontology_level)
     if m<=numel(layer_names)/2

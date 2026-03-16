@@ -1,22 +1,30 @@
-function [idx_top, positional_idx_top,node_keyvertices_entries] = find_key_vertices(key_node,matrix_2_print,matrix_2_print_names,ontology_Order)
+function [idx_aboveThreshold,idx_top, positional_idx_top,node_keyvertices_entries] = find_key_vertices(key_node,matrix_2_print,matrix_2_print_names,ontology_Order)
 
 %% What if instead we bake into this where the high signal is... that is we want at least 50% of the large effect vertices seen in the node but not noise vertices... that would be like
 % Thresholding on 1% of the signal 
 
-idx=reg_match(matrix_2_print_names,'blue');
+idx=reg_match(matrix_2_print_names,'edge');
 matrix_2_print_single=matrix_2_print{idx};
 Matrix_Criteria=mean(matrix_2_print_single);
 
-idx_raw=(Matrix_Criteria./max(Matrix_Criteria))>0.01;
+idx_aboveThreshold=(Matrix_Criteria./max(Matrix_Criteria))>0.01;
+
 idx_NOT_uncharted=[~cellfun(@isempty,ontology_Order.GN_Symbol);~cellfun(@isempty,ontology_Order.GN_Symbol)]';
 
 %Check effect size for nodes...
 idx=reg_match(matrix_2_print_names,'cohenD');
 matrix_2_print_single_c=matrix_2_print{idx};
-Cohen_Matrix_Criteria=mean(matrix_2_print_single_c);
+if size(matrix_2_print_single_c,1)>1
+    Cohen_Matrix_Criteria=mean(matrix_2_print_single_c);
+else
+    %If only one row then we don't take the mean just keep the row because
+    %we care about the responses for each vertex separately
+    Cohen_Matrix_Criteria=matrix_2_print_single_c;
+end
+
 idx_NOT_nan=~isnan(Cohen_Matrix_Criteria); %If there are nan's that leak through remove them here
 
-idx_10pct_noUncharted_nonan_inOntologyOrder=idx_raw&idx_NOT_uncharted&idx_NOT_nan;
+idx_10pct_noUncharted_nonan_inOntologyOrder=idx_aboveThreshold&idx_NOT_uncharted&idx_NOT_nan;
 pos_idx_10pct_noUncharted_nonan_inOntologyOrder=find(idx_10pct_noUncharted_nonan_inOntologyOrder);
 
 %% Filtering to Top 15 Vertices within the Node
