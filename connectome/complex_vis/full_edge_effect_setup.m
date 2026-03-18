@@ -6,7 +6,7 @@ if data_scaling
 end
 
 %ontology_Order=civm_read_table("Ontology_Order_EdgeStrengthPlots.csv");
-ontology_Order=civm_read_table("Z:\All_Staff\18.gaj.42\Ontology_Layout_DMBA_20260317_RobFixedOrder.txt");
+ontology_Order=civm_read_table("Ontology_Layout_DMBA_20260317_RobFixedOrder.txt");
 [ontology_Order,total_Ordering] = find_proper_ontology_order(ontology_Order,size(graphs,2)/2);
 
 for n=1:numel(comparison)
