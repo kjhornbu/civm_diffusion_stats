@@ -28,8 +28,8 @@ save_dir=fullfile(project_dir,'FullAnalysis_20260224');
 
 %% uncomment to allow which part of pipeline desired to run. 
 %which_tests=list2cell('Scalar'); %does only scalar stats
-% which_tests=list2cell('Connectome'); %does only connectome stats
-which_tests=list2cell('Scalar Connectome'); %does both scalar and connectome stats
+ which_tests=list2cell('Connectome'); %does only connectome stats
+%which_tests=list2cell('Scalar Connectome'); %does both scalar and connectome stats
 
 optional_suffix=true;
 suffix='RCCF';

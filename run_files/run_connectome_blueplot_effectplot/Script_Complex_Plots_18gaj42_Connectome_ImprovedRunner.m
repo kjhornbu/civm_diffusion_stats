@@ -26,7 +26,7 @@ clear comparison;
 comparison(1).grouping.Basis.('Age_Class')='Young';
 comparison(1).grouping.UnderTest.('Age_Class')='Old';
 
-[~,~,~] = full_blue_effect_setup(directory,dataframe,data_scaling,comparison,meaningful_nodes);
+[~,~,~] = full_edge_effect_setup(directory,dataframe,data_scaling,comparison,meaningful_nodes);
 
 %% Pick Strains to Use
 distance_values=civm_read_table("Z:\All_Staff\18.gaj.42\FullAnalysis_20260224\MDS\MDS_Distances\REGIONAL_MDS_centroid_to_centroid_Distance_All_Strains+All.csv");
@@ -124,7 +124,7 @@ comparison(7).stratification.('Strain')=STRAIN_set{6};
 comparison(7).grouping.Basis.('Age_Class')='Young';
 comparison(7).grouping.UnderTest.('Age_Class')='Old';
 
-[~,~,~] = full_blue_effect_setup(directory,dataframe,data_scaling,comparison,meaningful_nodes);
+[~,~,~] = full_edge_effect_setup(directory,dataframe,data_scaling,comparison,meaningful_nodes);
 
 
 %% All + Sex Comparisions
@@ -145,4 +145,4 @@ comparison(3).stratification.('Sex')='F';
 comparison(3).grouping.Basis.('Age_Class')='Young';
 comparison(3).grouping.UnderTest.('Age_Class')='Old';
 
-[~,~,~] = full_blue_effect_setup(directory,dataframe,data_scaling,comparison,meaningful_nodes);
+[~,~,~] = full_edge_effect_setup(directory,dataframe,data_scaling,comparison,meaningful_nodes);

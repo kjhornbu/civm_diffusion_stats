@@ -1,11 +1,12 @@
-function [output_connectome,output_difference,output_plot_vertex_LUT] = full_blue_effect_setup(directory,dataframe,data_scaling,comparison,meaningful_nodes)
+function [output_connectome,output_difference,output_plot_vertex_LUT] = full_edge_effect_setup(directory,dataframe,data_scaling,comparison,meaningful_nodes)
 
 graphs=load_graph(dataframe);
 if data_scaling
     graphs=graphs.*dataframe.scale; % not pulling from the saved graphs --- we are getting it from the dataframe (ie typically the archive)
 end
 
-ontology_Order=civm_read_table("Ontology_Order_EdgeStrengthPlots.csv");
+%ontology_Order=civm_read_table("Ontology_Order_EdgeStrengthPlots.csv");
+ontology_Order=civm_read_table("Z:\All_Staff\18.gaj.42\Ontology_Layout_DMBA_20260317_RobFixedOrder.txt");
 [ontology_Order,total_Ordering] = find_proper_ontology_order(ontology_Order,size(graphs,2)/2);
 
 for n=1:numel(comparison)
@@ -57,8 +58,15 @@ end
 output_connectome=vertcat(output_connectome{:});
 output_difference=vertcat(output_difference{:});
 
+%Give data on a 0:0.995 scale rather than 0 to 100 which stretches out the
+%top signal
+ max_entry_data=horzcat(output_connectome.data{:});
+% [a,b]=ecdf(max_entry_data);
+% [~,idx]=min(abs(a-0.995));
+% 
+% max_entry=b(idx);
 
-max_entry=max(horzcat(output_connectome.data{:}));
+max_entry=max(max_entry_data,[],'all');
 
 %% Generate Plots -- basically do this unit over and over again to make figures with different selection pull and different directories.
 make_Left_Axis=1;
@@ -71,6 +79,7 @@ selection_pull=unique(output_connectome.selection_group,'stable');
 compare_group_A_pull=unique(output_difference.compare_group_A,'stable');
 compare_group_B_pull=unique(output_difference.compare_group_B,'stable');
 
+figure_output=table;
 for n=1:numel(meaningful_nodes)
     [matrix_2_print_edge,data_y_labels] = setup_matrix2print(output_connectome,selection_pull,meaningful_nodes(n),total_Ordering,'edge','',compare_group_A_pull,compare_group_B_pull);
     [matrix_2_print_cohenD,data_y_labels_cohenD] = setup_matrix2print(output_difference,selection_pull,meaningful_nodes(n),total_Ordering,'effect','cohenD_difference',compare_group_A_pull,compare_group_B_pull);
@@ -88,8 +97,15 @@ for n=1:numel(meaningful_nodes)
 
 
         %The edge plot doesn't need a wrapper since we dont' make a LUT for it or only pull out key regions
-        [~,make_Left_Axis] = plot_edge_plot(directory,meaningful_nodes(n),matrix_2_print_edge,selection_pull,data_y_labels,ontology_Order,idx_aboveThreshold,make_Left_Axis,idx_10pct_noUncharted_inOntologyOrder_Top15);
+        [figure_entries,make_Left_Axis] = plot_edge_plot(directory,meaningful_nodes(n),matrix_2_print_edge,selection_pull,data_y_labels,ontology_Order,idx_aboveThreshold,make_Left_Axis,idx_10pct_noUncharted_inOntologyOrder_Top15,max_entry);
         [~,make_LUT_img] = setup_difference_plot(directory,meaningful_nodes(n),data_y_labels_cohenD,matrix_2_print_cohenD,positional_idx_10pct_noUncharted_inOntologyOrder_Top15,'cohenD_difference',ontology_Order,make_LUT_img);
+        
+        if n==1
+            figure_output=figure_entries;
+        else
+            figure_output(figureoffset+[1:height(figure_entries)],:)=figure_entries;
+        end
+        figureoffset=height(figure_output);
 
         if n==1
             %Allow both effect difference plots to have LUTs generated on first
@@ -101,5 +117,6 @@ for n=1:numel(meaningful_nodes)
     end
 end
 
+civm_write_table(figure_output,fullfile(directory,strcat('EdgeStrength_FigureProperties',datestr(datetime("today")),'.csv')));
 civm_write_table(output_plot_vertex_LUT,fullfile(directory,strcat('Top15Vertices_ForEachNode_',datestr(datetime("today")),'.csv')));
 end

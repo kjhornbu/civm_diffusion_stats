@@ -1,4 +1,4 @@
-function [figure_entries,make_Left_Axis] = plot_blue_plot(directory,vertex,matrix_2_print,selection_pull,data_y_labels,ontology_Order,idx_aboveThreshold,make_Left_Axis,idx_inOntologyOrder)
+function [figure_entries,make_Left_Axis] = plot_edge_plot(directory,vertex,matrix_2_print,selection_pull,data_y_labels,ontology_Order,idx_aboveThreshold,make_Left_Axis,idx_inOntologyOrder,max_entry)
 width=3;%width=2*3.3;  -- What width do you want the figures to be (at minimum -- if the font doesn't fit on the graph it will make it bigger).
 fontsize=8; %apparent final font size in the figure (typically viewed on mac)
 
@@ -125,7 +125,8 @@ end
 
 set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB]);
 
-imagesc(matrix_2_print);
+max_VAL=max(max(matrix_2_print));
+imagesc(matrix_2_print/max_VAL);
 
 yticks(1:height(matrix_2_print))
 yticklabels(data_y_labels)
@@ -133,15 +134,15 @@ yticklabels(data_y_labels)
 xticks(select_vertex)
 xticklabels(select_ipsilateral_contra)
 
-max_VAL=max(max(matrix_2_print));
-
 colormap(new_colormap);
 colorbar;
-caxis([0 max_VAL]);
+caxis([0 1]);
 
 figure_entries.figure=directory;
 figure_entries.vertex=vertex(1,1);
-figure_entries.maxval=max_VAL;
+figure_entries.maxval_inFigure=max_VAL;
+figure_entries.maxval_acrossAllFigures=max_entry;
+figure_entries.ratio_inversusacross=max_VAL/max_entry;
 figure_entries.minval=0;
 
 % these are the lines on the plot originally they were white shifting to
