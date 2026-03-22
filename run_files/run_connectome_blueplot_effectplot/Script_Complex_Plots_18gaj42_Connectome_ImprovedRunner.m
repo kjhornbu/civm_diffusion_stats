@@ -13,13 +13,13 @@ data_scaling=1;
 % pval_idx=pval_table.pval_BH<0.05;
 % meaningful_nodes=pval_table.ROI(and(source_idx,pval_idx));
 
-meaningful_nodes=[1:174,176:180,1001:1174,1176:1180];
-
+%meaningful_nodes=[1:174,176:180,1001:1174,1176:1180];
+meaningful_nodes=156;
 meaningful_nodes(meaningful_nodes>1000)=meaningful_nodes(meaningful_nodes>1000)-1000;
 meaningful_nodes=unique(meaningful_nodes); %only 1 hemisphere
 
 %% Run All Comparision
-directory=fullfile(working_folder,'All_EdgeStrengthPlots_EffectPlots');
+directory=fullfile(working_folder,'All_EdgeStrengthPlots_EffectPlots--Higher CutOff');
 mkdir(directory);
 clear comparison;
 
