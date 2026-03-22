@@ -1,7 +1,7 @@
 function [figure_entries,make_Left_Axis] = plot_edge_plot(directory,vertex,matrix_2_print,selection_pull,data_y_labels,ontology_Order,idx_aboveThreshold,make_Left_Axis,idx_inOntologyOrder,max_entry)
 width=3;%width=2*3.3;  -- What width do you want the figures to be (at minimum -- if the font doesn't fit on the graph it will make it bigger).
 fontsize=8; %apparent final font size in the figure (typically viewed on mac)
-
+tiny_font=1;
 %{
 The set colors as part of the white yellow orange range
 start_color=[1,1,1];
@@ -58,6 +58,7 @@ if ispc
     print_num=96;
     alt_print_num=72;
     fontsize=fontsize*printfactor;
+    tiny_font=tiny_font*printfactor;
 end
 if ismac
     printfactor=1;
@@ -177,25 +178,51 @@ axis([0.5 360.5 0 1]);
 
 line([0,0],[0 1],'Color','w');
 
+%% line form vertex annotations
 for vertex_set=1:numel(sort_position)
     if sort_position(vertex_set)>180
         if ~isempty(ontology_Order.GN_Symbol{sort_position(vertex_set)-180})
             name_temp=strsplit(ontology_Order.GN_Symbol{sort_position(vertex_set)-180},{'-B','-L','-R'});
-            text(positioning(vertex_set),0.9,name_temp{1},'HorizontalAlignment','center','FontSize',fontsize,'FontName','FixedWidth');
-            line([sort_position(vertex_set),positioning(vertex_set)],[0 0.8-((fontsize-4.5)/alt_print_num)]);
         else
             keyboard; %% added to protect for if uncharted leaks in accidently
         end
     else
         if ~isempty(ontology_Order.GN_Symbol{sort_position(vertex_set)})
             name_temp=strsplit(ontology_Order.GN_Symbol{sort_position(vertex_set)},{'-B','-L','-R'});
-            text(positioning(vertex_set),0.9,name_temp{1},'HorizontalAlignment','center','FontSize',fontsize,'FontName','FixedWidth');
-            line([sort_position(vertex_set),positioning(vertex_set)],[0 0.8-((fontsize-4.5)/alt_print_num)]);
         else
             keyboard; %% added to protect for if uncharted leaks in accidently
         end
     end
+
+    text(positioning(vertex_set),0.5,name_temp{1},'HorizontalAlignment','center','FontSize',fontsize,'FontName','FixedWidth');
+    line([sort_position(vertex_set),positioning(vertex_set)],[0 0.4-((fontsize-4.5)/alt_print_num)],'LineWidth',0.25);
 end
+
+%% number form vertex annotations
+% for vertex_set=1:numel(sort_position)
+%     if sort_position(vertex_set)>180
+%         if ~isempty(ontology_Order.GN_Symbol{sort_position(vertex_set)-180})
+%             name_temp=strsplit(ontology_Order.GN_Symbol{sort_position(vertex_set)-180},{'-B','-L','-R'});
+%         else
+%             keyboard; %% added to protect for if uncharted leaks in accidently
+%         end
+%     else
+%         if ~isempty(ontology_Order.GN_Symbol{sort_position(vertex_set)})
+%             name_temp=strsplit(ontology_Order.GN_Symbol{sort_position(vertex_set)},{'-B','-L','-R'});
+%         else
+%             keyboard; %% added to protect for if uncharted leaks in accidently
+%         end
+%     end
+%     text(positioning(vertex_set),0.9,num2str(vertex_set),'HorizontalAlignment','center','FontSize',fontsize,'FontName','FixedWidth');
+%     text(positioning(vertex_set),0.5,name_temp{1},'HorizontalAlignment','center','FontSize',fontsize,'FontName','FixedWidth');
+% 
+%     if mod(vertex_set,2)
+%         text(sort_position(vertex_set),0.1,num2str(vertex_set),'HorizontalAlignment','center','FontSize',tiny_font,'FontName','FixedWidth');
+%     else
+%         text(sort_position(vertex_set),0.3,num2str(vertex_set),'HorizontalAlignment','center','FontSize',tiny_font,'FontName','FixedWidth');
+%         line([sort_position(vertex_set),sort_position(vertex_set)],[0 0.2-((tiny_font-4.5)/alt_print_num)],'LineWidth',0.25);
+%     end
+% end
 
 xticks(0);
 xticklabels("");

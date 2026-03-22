@@ -51,7 +51,9 @@ f.Position(4)=f.Position(4)+0.4;
 
 for m=1:selection_Number
     for n=1:numel(positional_idx_regions)
-        rectangle('Position',[n,((m-1)/selection_Number), 1, 1/selection_Number],'FaceColor',[LUT.c_r(m,n),LUT.c_g(m,n),LUT.c_b(m,n)],'EdgeColor',[1 1 1]);
+        rectangle('Position',[n,((m-1)/selection_Number), 1, 1/selection_Number],'FaceColor',[LUT.c_r(m,n),LUT.c_g(m,n),LUT.c_b(m,n)],'EdgeColor',[0.5 0.5 0.5]);
+        % Changed edge color to grey [0.5 0.5 0.5] instead of white[1 1 1]
+        % 2026-03-20 KH
     end
 end
 

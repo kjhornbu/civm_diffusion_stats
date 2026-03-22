@@ -7,7 +7,7 @@ idx=reg_match(matrix_2_print_names,'edge');
 matrix_2_print_single=matrix_2_print{idx};
 Matrix_Criteria=mean(matrix_2_print_single);
 
-idx_aboveThreshold=(Matrix_Criteria./max(Matrix_Criteria))>0.01;
+idx_aboveThreshold=(Matrix_Criteria./max(Matrix_Criteria))>0.1;
 
 idx_NOT_uncharted=[~cellfun(@isempty,ontology_Order.GN_Symbol);~cellfun(@isempty,ontology_Order.GN_Symbol)]';
 

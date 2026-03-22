@@ -117,6 +117,13 @@ for n=1:numel(meaningful_nodes)
     end
 end
 
+output_connectome.idx_in_dataframe=[];
+output_connectome.indiv_specimen_data=[];
+output_connectome.indiv_specimen_std=[];
+
+civm_write_table(output_connectome,fullfile(directory,strcat('OutputConnectome_',datestr(datetime("today")),'.csv')));
+civm_write_table(output_difference,fullfile(directory,strcat('OutputDifferences_',datestr(datetime("today")),'.csv')));
+
 civm_write_table(figure_output,fullfile(directory,strcat('EdgeStrength_FigureProperties',datestr(datetime("today")),'.csv')));
 civm_write_table(output_plot_vertex_LUT,fullfile(directory,strcat('Top15Vertices_ForEachNode_',datestr(datetime("today")),'.csv')));
 end

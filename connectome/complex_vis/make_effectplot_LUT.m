@@ -79,9 +79,10 @@ for n=1:size(matrix_2_print,1)
             end
 
             if  data == 0
-                LUT.c_r(n,m) = 250/255;
-                LUT.c_g(n,m) = 250/255;
-                LUT.c_b(n,m) = 250/255;
+                % Made center data more gray 2026-03-20
+                LUT.c_r(n,m) = 170;%250/255;
+                LUT.c_g(n,m) = 170;%250/255;
+                LUT.c_b(n,m) = 170;%250/255;
                 LUT.c_a(n,m) = 1;
             else
                 LUT.c_r(n,m) = colors(bin_postional_idx).r;
