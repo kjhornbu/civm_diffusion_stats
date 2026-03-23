@@ -58,6 +58,9 @@ end
 output_connectome=vertcat(output_connectome{:});
 output_difference=vertcat(output_difference{:});
 
+% plot traditional square connectome on the output_connectome data
+
+
 %Give data on a 0:0.995 scale rather than 0 to 100 which stretches out the
 %top signal
  max_entry_data=horzcat(output_connectome.data{:});
@@ -78,6 +81,9 @@ output_plot_vertex_LUT=table;
 selection_pull=unique(output_connectome.selection_group,'stable');
 compare_group_A_pull=unique(output_difference.compare_group_A,'stable');
 compare_group_B_pull=unique(output_difference.compare_group_B,'stable');
+
+% plot traditional square connectome on the output_connectome data
+plot_FullConnectome_contralateral_ipsilateral(directory,output_connectome,selection_pull,total_Ordering);
 
 figure_output=table;
 for n=1:numel(meaningful_nodes)
