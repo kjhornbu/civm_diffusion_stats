@@ -3,12 +3,14 @@ function [idx_aboveThreshold,idx_top, positional_idx_top,node_keyvertices_entrie
 %% What if instead we bake into this where the high signal is... that is we want at least 50% of the large effect vertices seen in the node but not noise vertices... that would be like
 % Thresholding on 1% of the signal 
 
+idx=reg_match(matrix_2_print_names,'raw_diff');
+matrix_2_print_single_rd=abs(matrix_2_print{idx});
+
 idx=reg_match(matrix_2_print_names,'edge');
 matrix_2_print_single=matrix_2_print{idx};
 Matrix_Criteria=mean(matrix_2_print_single);
 
-idx_aboveThreshold=(Matrix_Criteria./max(Matrix_Criteria))>0.1;
-
+idx_aboveThreshold=(Matrix_Criteria./max(Matrix_Criteria))>0.01;
 idx_NOT_uncharted=[~cellfun(@isempty,ontology_Order.GN_Symbol);~cellfun(@isempty,ontology_Order.GN_Symbol)]';
 
 %Check effect size for nodes...
@@ -23,6 +25,8 @@ else
 end
 
 idx_NOT_nan=~isnan(Cohen_Matrix_Criteria); %If there are nan's that leak through remove them here
+
+
 
 idx_10pct_noUncharted_nonan_inOntologyOrder=idx_aboveThreshold&idx_NOT_uncharted&idx_NOT_nan;
 pos_idx_10pct_noUncharted_nonan_inOntologyOrder=find(idx_10pct_noUncharted_nonan_inOntologyOrder);
