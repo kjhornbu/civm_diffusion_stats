@@ -1,4 +1,4 @@
-function [] = plot_FullConnectome_contralateral_ipslateral(directory,output_connectome,total_Ordering)
+function [] = plot_FullConnectome_contralateral_ipsilateral(directory,output_connectome,total_Ordering)
 fontsize=8;
 width=3;
 

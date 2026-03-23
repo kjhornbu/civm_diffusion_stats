@@ -83,7 +83,7 @@ compare_group_A_pull=unique(output_difference.compare_group_A,'stable');
 compare_group_B_pull=unique(output_difference.compare_group_B,'stable');
 
 % plot traditional square connectome on the output_connectome data
-plot_FullConnectome_contralateral_ipsilateral(directory,output_connectome,selection_pull,total_Ordering);
+plot_FullConnectome_contralateral_ipsilateral(directory,output_connectome,total_Ordering);
 
 figure_output=table;
 for n=1:numel(meaningful_nodes)
