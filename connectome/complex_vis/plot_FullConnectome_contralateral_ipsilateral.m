@@ -1,6 +1,7 @@
-function [] = plot_FullConnectome_contralateral_ipsilateral(directory,output_connectome,total_Ordering)
+function [] = plot_FullConnectome_contralateral_ipsilateral(directory,output_connectome,total_Ordering,ontology_Order)
 fontsize=8;
 width=3;
+make_Axis=1;
 
 %% Preliminary Setups
 if ispc
@@ -15,14 +16,12 @@ if ismac
     alt_print_num=72; % you are most likely going to be viewing this on a mac in our lab, so you don't need to figure out pixels in pc
 end
 
-
 select_ROI=[100 180.5 1100];
 
 select_vertex(select_ROI>1000)=select_ROI(select_ROI>1000)-1000+180;
 select_vertex(select_ROI<1000)=select_ROI(select_ROI<1000);
 
 select_ipsilateral_contra={'ipsilateral','','contralateral'};
-
 
 [value_compare,~,idx_compare]=unique(output_connectome.compare_group);
 [value_selection,~,idx_selection]=unique(output_connectome.selection_group);
@@ -40,9 +39,8 @@ for m=1:numel(value_compare)
             setup_connectome=zeros(length_of_data);
 
             for re_index=1:length_of_data(1)
-               setup_connectome(re_index,:)=output_connectome.data{total_Ordering_half_hemi(re_index)}(total_Ordering);
+                setup_connectome(re_index,:)=output_connectome.data{total_Ordering_half_hemi(re_index)}(total_Ordering);
             end
-
 
             f=figure;
 
@@ -60,14 +58,12 @@ for m=1:numel(value_compare)
             xticklabels(select_ipsilateral_contra)
 
             colormap('jet');
-            
+            check_size=f.InnerPosition;
             set(gca,'FontSize',fontsize,'FontName','Arial','TickDir','out');
-
             print(f, fullfile(directory,strcat('SquareConnectomeof_',value_selection{n},'_',value_compare{m},'NoColorBar.svg')),'-dsvg','-vector');
             print(f, fullfile(directory,strcat('SquareConnectomeof_',value_selection{n},'_',value_compare{m},'NoColorBar.eps')),'-depsc','-vector');
 
             colorbar;
-
             print(f, fullfile(directory,strcat('SquareConnectomeof_',value_selection{n},'_',value_compare{m},'.svg')),'-dsvg','-vector');
             print(f, fullfile(directory,strcat('SquareConnectomeof_',value_selection{n},'_',value_compare{m},'.eps')),'-depsc','-vector');
 
@@ -75,7 +71,54 @@ for m=1:numel(value_compare)
             continue;
         end
 
+        if make_Axis
+            make_Axis=false;
+            % Make the ontology axis
+            middle_break=height(ontology_Order);
 
+            for levels=1:max(ontology_Order.ontology_level)
+
+                [a,~,c]=unique(ontology_Order.(strcat('level',num2str(levels))));
+
+                not_empty_idx=~cellfun(@isempty,a);
+                not_empty_pos_idx=find(not_empty_idx);
+
+                f3a=figure;
+                EntryA=width*printfactor; %width
+                EntryB=0.25*printfactor; %height
+                set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'InnerPosition',[check_size(1) check_size(2) EntryA*print_num EntryB*print_num]); %*0.80625 for 4 inches
+                hold on
+
+                axis([0.5 360.5 0 1]);
+                line([0,0],[0 1],'Color','w');
+
+                for position=1:numel(not_empty_pos_idx)
+                    bar_entries=c==not_empty_pos_idx(position);
+                    idx_bar_entries=find(bar_entries);
+                    %idx_bar_entries_starts at 1 so -1+0.5 so begins at correct
+                    %spot
+                    start_bar_entries=idx_bar_entries(1)-0.5;
+                    % and end bar is just extended by 0.5
+                    stop_bar_entries=idx_bar_entries(end)+0.5;
+
+                    middle_bar_entries=mean([stop_bar_entries,start_bar_entries]);
+
+                    % Ipsa
+                    rectangle("Position",[start_bar_entries 0 stop_bar_entries-start_bar_entries,1],"FaceColor",[1 1 1],"EdgeColor",[0 0 0])
+                    text(middle_bar_entries,0.5,a{not_empty_pos_idx(position)},'HorizontalAlignment','center','FontSize',fontsize/2,'FontName','FixedWidth','Rotation', 90);
+                    %Contra
+                    rectangle("Position",[middle_break+start_bar_entries 0 stop_bar_entries-start_bar_entries,1],"FaceColor",[1 1 1],"EdgeColor",[0 0 0])
+                    text(middle_break+middle_bar_entries,0.5,a{not_empty_pos_idx(position)},'HorizontalAlignment','center','FontSize',fontsize/2,'FontName','FixedWidth','Rotation', 90);
+                end
+
+                xticks(0);
+                xticklabels("");
+                yticks(0);
+                yticklabels("");
+
+                print(f3a, fullfile(directory,'annotations',strcat('ontology_Level',num2str(levels),'full_size.svg')),'-dsvg','-vector');
+            end
+        end
     end
 end
 

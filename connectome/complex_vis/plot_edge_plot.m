@@ -281,6 +281,7 @@ if make_Left_Axis
         yticklabels("");
 
         print(f3a, fullfile(directory,'annotations',strcat('ontology_Level',num2str(levels),'.svg')),'-dsvg','-vector');
+
     end
     close all;
 

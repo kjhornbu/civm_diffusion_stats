@@ -76,14 +76,15 @@ make_Left_Axis=1;
 make_LUT_img=1;
 output_plot_vertex_LUT=table;
 
+
+% plot traditional square connectome on the output_connectome data
+plot_FullConnectome_contralateral_ipsilateral(directory,output_connectome,total_Ordering,ontology_Order);
+
 %get all options out of the setup data in the order they were placed in the
 %table
 selection_pull=unique(output_connectome.selection_group,'stable');
 compare_group_A_pull=unique(output_difference.compare_group_A,'stable');
 compare_group_B_pull=unique(output_difference.compare_group_B,'stable');
-
-% plot traditional square connectome on the output_connectome data
-plot_FullConnectome_contralateral_ipsilateral(directory,output_connectome,total_Ordering);
 
 figure_output=table;
 for n=1:numel(meaningful_nodes)
