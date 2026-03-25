@@ -12,10 +12,13 @@ end
 
 %% Preliminary Setups -- set font factors
 if ispc
-    printfactor=(72/96);
+    %printfactor=(72/96);
+    printfactor=1;
+    printfactor=(96/72);
+    printfactor=(1+(72/96))/2;
     print_num=96;
     alt_print_num=72;
-    fontsize=fontsize*printfactor;
+    %fontsize=fontsize*printfactor;
 
 end
 if ismac
@@ -43,7 +46,7 @@ f=figure;
 EntryA=width*printfactor; %width
 EntryB=((fontsize*1.5)/alt_print_num)*selection_Number*printfactor; %height
 
-set(gcf,'Units', 'inches','PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'Position',[0 0 EntryA EntryB]);
+set(gcf,'Units', 'inches','PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'Position',[0 0 EntryA EntryB],'PaperPositionMode', 'manual');
 hold on
 
 f.PaperPosition(4)=f.PaperPosition(4)+0.4;
@@ -133,7 +136,7 @@ xticklabels("");
 
 legend("off");
 
-print(f, fullfile(directory,difference_criteria,strcat('ROI_',num2str(vertex(1,1)),'_',Structure,'_Difference_via_',difference_criteria,'_Key_Edges.svg')),'-dsvg','-vector');
+print(f, fullfile(directory,difference_criteria,strcat('ROI_',num2str(vertex(1,1)),'_',Structure,'_Difference_via_',difference_criteria,'_Key_Edges.eps')),'-depsc','-vector');
 close all
 
 end

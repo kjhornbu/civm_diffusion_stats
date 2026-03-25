@@ -3,17 +3,28 @@ fontsize=8;
 width=3;
 make_Axis=1;
 
-%% Preliminary Setups
+directory_full=fullfile(directory,'connectome_plot');
+
+if ~exist(directory_full,'dir')
+    mkdir(directory_full);
+end
+
+
+% Preliminary Setups -- set font factors
 if ispc
-    printfactor=(72/96);
+    %printfactor=(72/96);
+    printfactor=1;
+    printfactor=(96/72);
+    printfactor=(1+(72/96))/2;
     print_num=96;
     alt_print_num=72;
-    fontsize=fontsize*printfactor;
+    %fontsize=fontsize*printfactor;
+
 end
 if ismac
     printfactor=1;
     print_num=72;
-    alt_print_num=72; % you are most likely going to be viewing this on a mac in our lab, so you don't need to figure out pixels in pc
+    alt_print_num=72;
 end
 
 select_ROI=[100 180.5 1100];
@@ -39,7 +50,7 @@ for m=1:numel(value_compare)
             setup_connectome=zeros(length_of_data);
 
             for re_index=1:length_of_data(1)
-                setup_connectome(re_index,:)=output_connectome.data{total_Ordering_half_hemi(re_index)}(total_Ordering);
+                setup_connectome(re_index,:)=output_connectome.data{positional_idx(total_Ordering_half_hemi(re_index))}(total_Ordering);
             end
 
             f=figure;
@@ -47,7 +58,7 @@ for m=1:numel(value_compare)
             EntryA=width*printfactor; %width
             EntryB=width*printfactor*1/2; %height
 
-            set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB]);
+            set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'PaperPositionMode', 'manual');
 
             imagesc(log10(setup_connectome));
 
@@ -58,14 +69,14 @@ for m=1:numel(value_compare)
             xticklabels(select_ipsilateral_contra)
 
             colormap('jet');
+            caxis([-1 5.5]);
+
             check_size=f.InnerPosition;
             set(gca,'FontSize',fontsize,'FontName','Arial','TickDir','out');
-            print(f, fullfile(directory,strcat('SquareConnectomeof_',value_selection{n},'_',value_compare{m},'NoColorBar.svg')),'-dsvg','-vector');
-            print(f, fullfile(directory,strcat('SquareConnectomeof_',value_selection{n},'_',value_compare{m},'NoColorBar.eps')),'-depsc','-vector');
+            print(f, fullfile(directory_full,strcat('SquareConnectomeof_',value_selection{n},'_',value_compare{m},'NoColorBar.eps')),'-depsc','-vector');
 
             colorbar;
-            print(f, fullfile(directory,strcat('SquareConnectomeof_',value_selection{n},'_',value_compare{m},'.svg')),'-dsvg','-vector');
-            print(f, fullfile(directory,strcat('SquareConnectomeof_',value_selection{n},'_',value_compare{m},'.eps')),'-depsc','-vector');
+            print(f, fullfile(directory_full,strcat('SquareConnectomeof_',value_selection{n},'_',value_compare{m},'.eps')),'-depsc','-vector');
 
         else
             continue;
@@ -86,7 +97,7 @@ for m=1:numel(value_compare)
                 f3a=figure;
                 EntryA=width*printfactor; %width
                 EntryB=0.25*printfactor; %height
-                set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'InnerPosition',[check_size(1) check_size(2) EntryA*print_num EntryB*print_num]); %*0.80625 for 4 inches
+                set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'InnerPosition',[check_size(1) check_size(2) EntryA*print_num EntryB*print_num],'PaperPositionMode', 'manual'); %*0.80625 for 4 inches
                 hold on
 
                 axis([0.5 360.5 0 1]);
@@ -116,11 +127,12 @@ for m=1:numel(value_compare)
                 yticks(0);
                 yticklabels("");
 
-                print(f3a, fullfile(directory,'annotations',strcat('ontology_Level',num2str(levels),'full_size.svg')),'-dsvg','-vector');
+                print(f3a, fullfile(directory_full,strcat('ontology_Level',num2str(levels),'_forConnectomePlot.eps')),'-depsc','-vector');
             end
         end
     end
 end
 
+close all;
 
 end

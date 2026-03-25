@@ -54,11 +54,14 @@ new_colormap=color_map_white_gold_berry;
 
 %% Preliminary Setups
 if ispc
-    printfactor=(72/96);
+    %printfactor=(72/96);
+    printfactor=1;
+    printfactor=(96/72);
+    printfactor=(1+(72/96))/2;
     print_num=96;
     alt_print_num=72;
-    fontsize=fontsize*printfactor;
-    tiny_font=tiny_font*printfactor;
+    %fontsize=fontsize*printfactor;
+    %tiny_font=tiny_font*printfactor;
 end
 if ismac
     printfactor=1;
@@ -124,7 +127,7 @@ else
     %up, 
 end
 
-set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB]);
+set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'PaperPositionMode', 'manual');
 
 max_VAL=max(max(matrix_2_print));
 imagesc(matrix_2_print/max_VAL);
@@ -159,7 +162,7 @@ end
 
 check_size=f.InnerPosition;
 set(gca,'FontSize',fontsize,'FontName','Arial','TickDir','out');
-print(f, fullfile(directory,'edge_strength_plot',strcat('ROI_',num2str(vertex(1,1)),'_',Structure,'_Means.svg')),'-dsvg','-vector');
+print(f, fullfile(directory,'edge_strength_plot',strcat('ROI_',num2str(vertex(1,1)),'_',Structure,'_Means.eps')),'-depsc','-vector');
 close all;
 
 %% Make output plots -- Average Mean Plots (Blue) -- ANNOTATIONS Labels (THE KEY VERTICES!!!).
@@ -167,7 +170,7 @@ f2=figure;
 EntryA=(width-((45/alt_print_num)/0.775))*printfactor; %width
 EntryB=0.5*printfactor; %height
 
-set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'InnerPosition',[check_size(1) check_size(2) EntryA*print_num EntryB*print_num]); %*0.80625 for 4 inches
+set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'InnerPosition',[check_size(1) check_size(2) EntryA*print_num EntryB*print_num],'PaperPositionMode', 'manual'); %*0.80625 for 4 inches
 
 positioning=linspace(0,360,N+1);
 positioning=positioning+(positioning(2)-positioning(1))/2;
@@ -177,26 +180,6 @@ rectangle("Position",[0.5 0 360.5,1],"FaceColor",[1 1 1],"EdgeColor",[1 1 1])
 axis([0.5 360.5 0 1]);
 
 line([0,0],[0 1],'Color','w');
-
-% %% line form vertex annotations
-% for vertex_set=1:numel(sort_position)
-%     if sort_position(vertex_set)>180
-%         if ~isempty(ontology_Order.GN_Symbol{sort_position(vertex_set)-180})
-%             name_temp=strsplit(ontology_Order.GN_Symbol{sort_position(vertex_set)-180},{'-B','-L','-R'});
-%         else
-%             keyboard; %% added to protect for if uncharted leaks in accidently
-%         end
-%     else
-%         if ~isempty(ontology_Order.GN_Symbol{sort_position(vertex_set)})
-%             name_temp=strsplit(ontology_Order.GN_Symbol{sort_position(vertex_set)},{'-B','-L','-R'});
-%         else
-%             keyboard; %% added to protect for if uncharted leaks in accidently
-%         end
-%     end
-% 
-%     text(positioning(vertex_set),0.5,name_temp{1},'HorizontalAlignment','center','FontSize',fontsize,'FontName','FixedWidth');
-%     line([sort_position(vertex_set),positioning(vertex_set)],[0 0.4-((fontsize-4.5)/alt_print_num)],'LineWidth',0.25);
-% end
 
 %% number form vertex annotations
 for vertex_set=1:numel(sort_position)
@@ -229,7 +212,6 @@ xticklabels("");
 yticks(0);
 yticklabels("");
 
-print(f2, fullfile(directory,'annotations',strcat('ANNOTATIONS_ROI_',num2str(vertex(1,1)),'_',Structure,'_Means.svg')),'-dsvg','-vector');
 print(f2, fullfile(directory,'annotations',strcat('ANNOTATIONS_ROI_',num2str(vertex(1,1)),'_',Structure,'_Means.eps')),'-depsc','-vector');
 
 close all;
@@ -250,7 +232,7 @@ if make_Left_Axis
             f3a=figure;
             EntryA=(width-((45/alt_print_num)/0.775))*printfactor; %width
             EntryB=0.25*printfactor; %height
-            set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'InnerPosition',[check_size(1) check_size(2) EntryA*print_num EntryB*print_num]); %*0.80625 for 4 inches
+            set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'InnerPosition',[check_size(1) check_size(2) EntryA*print_num EntryB*print_num],'PaperPositionMode', 'manual'); %*0.80625 for 4 inches
             hold on
 
             axis([0.5 360.5 0 1]);
@@ -280,7 +262,7 @@ if make_Left_Axis
         yticks(0);
         yticklabels("");
 
-        print(f3a, fullfile(directory,'annotations',strcat('ontology_Level',num2str(levels),'.svg')),'-dsvg','-vector');
+        print(f3a, fullfile(directory,'annotations',strcat('ontology_Level',num2str(levels),'.eps')),'-depsc','-vector');
 
     end
     close all;
@@ -298,7 +280,7 @@ if make_Left_Axis
 
     %% Make output plots -- Average Mean Plots (Blue) -- Left Super labels for Y axis.
     f3=figure;
-    set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'InnerPosition',[check_size(1) check_size(2) EntryA*print_num EntryB*print_num]);
+    set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'InnerPosition',[check_size(1) check_size(2) EntryA*print_num EntryB*print_num],'PaperPositionMode', 'manual');
 
     rectangle("Position",[0 0.5 0.5 2*(selection_Number)+0.5],"FaceColor",[1 1 1],"EdgeColor",[1 1 1])
     axis([0 0.5 0.5 2*(selection_Number)+0.5]);
@@ -315,12 +297,12 @@ if make_Left_Axis
     yticks(0);
     yticklabels("");
 
-    print(f3, fullfile(directory,'annotations',strcat('ANNOTATIONS_LEFTAXIS_A_Means.svg')),'-dsvg','-vector');
+    print(f3, fullfile(directory,'annotations',strcat('ANNOTATIONS_LEFTAXIS_A_Means.eps')),'-depsc','-vector');
     close all;
 
     %% Make output plots -- Average Mean Plots (Blue) -- Left Super labels for Y axis.
     f3=figure;
-    set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'InnerPosition',[check_size(1) check_size(2) EntryA*print_num EntryB*print_num]);
+    set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'InnerPosition',[check_size(1) check_size(2) EntryA*print_num EntryB*print_num],'PaperPositionMode', 'manual');
 
     rectangle("Position",[0 0.5 0.5 2*(selection_Number)+0.5],"FaceColor",[1 1 1],"EdgeColor",[1 1 1])
     axis([0 0.5 0.5 2*(selection_Number)+0.5]);
@@ -337,12 +319,12 @@ if make_Left_Axis
     yticks(0);
     yticklabels("");
 
-    print(f3, fullfile(directory,'annotations',strcat('ANNOTATIONS_LEFTAXIS_B_Means.svg')),'-dsvg','-vector');
+    print(f3, fullfile(directory,'annotations',strcat('ANNOTATIONS_LEFTAXIS_B_Means.eps')),'-depsc','-vector');
     close all;
 
     %% Make output plots -- Average Mean Plots (Blue) -- Left Super labels for Y axis.
     f3=figure;
-    set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'InnerPosition',[check_size(1) check_size(2) EntryA*print_num EntryB*print_num]);
+    set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'InnerPosition',[check_size(1) check_size(2) EntryA*print_num EntryB*print_num],'PaperPositionMode', 'manual');
 
     rectangle("Position",[0 0.5 0.5 2*(selection_Number)+0.5],"FaceColor",[1 1 1],"EdgeColor",[1 1 1])
     axis([0 0.5 0.5 2*(selection_Number)+0.5]);
@@ -361,7 +343,7 @@ if make_Left_Axis
     yticks(0);
     yticklabels("");
 
-    print(f3, fullfile(directory,'annotations',strcat('ANNOTATIONS_LEFTAXIS_C_Means.svg')),'-dsvg','-vector');
+    print(f3, fullfile(directory,'annotations',strcat('ANNOTATIONS_LEFTAXIS_C_Means.eps')),'-depsc','-vector');
     close all;
 end
 end
