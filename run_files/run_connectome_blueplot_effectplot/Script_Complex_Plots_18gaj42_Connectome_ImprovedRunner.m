@@ -12,14 +12,16 @@ data_scaling=1;
 % source_idx=~cellfun(@isempty,regexpi(pval_table.source_of_variation,'Age_Class'));
 % pval_idx=pval_table.pval_BH<0.05;
 % meaningful_nodes=pval_table.ROI(and(source_idx,pval_idx));
+% 
+% meaningful_nodes=[1:174,176:180,1001:1174,1176:1180];
+% %meaningful_nodes=156;
+% meaningful_nodes(meaningful_nodes>1000)=meaningful_nodes(meaningful_nodes>1000)-1000;
+% meaningful_nodes=unique(meaningful_nodes); %only 1 hemisphere
 
-%meaningful_nodes=[1:174,176:180,1001:1174,1176:1180];
-meaningful_nodes=156;
-meaningful_nodes(meaningful_nodes>1000)=meaningful_nodes(meaningful_nodes>1000)-1000;
-meaningful_nodes=unique(meaningful_nodes); %only 1 hemisphere
+meaningful_nodes=[9 26]; %ACC-L VCP-L
 
 %% Run All Comparision
-directory=fullfile(working_folder,'All_EdgeStrengthPlots_EffectPlots--Higher CutOff');
+directory=fullfile(working_folder,'All_EdgeStrengthPlots_EffectPlots_ClaudeConnections');
 mkdir(directory);
 clear comparison;
 
@@ -93,7 +95,7 @@ STRAIN_set{6}=strain_values{b(end)};
 %prior ordering
 %('All BXD24 BXD34 BXD60 BXD101 BXD65b BXD29');
 
-directory=fullfile(working_folder,'All+6Strain_EdgeStrengthPlots_EffectPlots');
+directory=fullfile(working_folder,'All+6Strain_EdgeStrengthPlots_EffectPlots_w1pct');
 mkdir(directory);
 clear comparison;
 
@@ -129,7 +131,7 @@ comparison(7).grouping.UnderTest.('Age_Class')='Old';
 
 %% All + Sex Comparisions
 
-directory=fullfile(working_folder,'All+SexStratified_EdgeStrengthPlots_EffectPlots');
+directory=fullfile(working_folder,'All+SexStratified_EdgeStrengthPlots_EffectPlots_w1pct');
 mkdir(directory);
 
 clear comparison;

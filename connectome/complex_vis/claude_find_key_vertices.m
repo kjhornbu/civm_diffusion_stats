@@ -9,7 +9,7 @@ ordered_ROI_total=[ordered_ROI; ordered_ROI+180];
 
 %for each of the matrix2 print graphics zero out  or nan out the not useful
 %regions The nan-out in CohenD will allow you to completely exclude these
-%regions. 
+%regions. -- Should we be only doing the zeroed out data from now on? 
 for n=1:height(matrix_2_print)
     temp_matrix_2_print=matrix_2_print{n};
     if reg_match(matrix_2_print_names{n},'cohenD')
