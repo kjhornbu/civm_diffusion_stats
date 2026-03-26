@@ -2,6 +2,7 @@ function [temp_key,connections_for_key_inLUT,output_ontology_set] = claude_found
 %finds the regions with the given abbreviations in the claude look up
 %sheets as it compares with the ontology. reorders the parsed ontology into
 %a front to back of brain ordering.
+ontology_Order.ontology_order=[1:height(ontology_Order)]';
 
 key_idx=ontology_Order.ROI==key_node; 
 key_positional_idx=find(key_idx);
@@ -35,6 +36,6 @@ for n=1:height(connections_for_key_inLUT)
     end
 end
 
-output_ontology_set=sortrows(output_ontology_set,'start_of_bar','descend');
+output_ontology_set=sortrows(output_ontology_set,'start_of_bar','descend'); %so these are in ontology order now
 
 end

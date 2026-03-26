@@ -152,6 +152,11 @@ figure_entries.minval=0;
 % these are the lines on the plot originally they were white shifting to
 % black for the super white representation.
 hold on
+% registration marks for regions
+plot(sort_position([5]),1,'ko');
+plot(sort_position([10]),1,'ko');
+plot(sort_position([15]),1,'ko');
+
 plot([(size(matrix_2_print,2)/2)+0.5 (size(matrix_2_print,2)/2)+0.5],[0 size(matrix_2_print,1)+1],'color',[0 0 0]);
 
 for m=1:selection_Number

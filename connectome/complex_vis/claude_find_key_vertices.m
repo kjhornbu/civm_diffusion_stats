@@ -4,8 +4,8 @@ function [idx_aboveThreshold,idx_top, positional_idx_top,node_keyvertices_entrie
 
 %Always have the left and right versions of each region included in the
 %dataset.
-ordered_ROI=sort(output_ontology_set.ROI);
-ordered_ROI_total=[ordered_ROI; ordered_ROI+180];
+%Which one is the positioning in the ontology that we are keeping or
+ordered_total=[output_ontology_set.ontology_order;output_ontology_set.ontology_order+180];
 
 %for each of the matrix2 print graphics zero out  or nan out the not useful
 %regions The nan-out in CohenD will allow you to completely exclude these
@@ -17,7 +17,10 @@ for n=1:height(matrix_2_print)
     else
         data_saver=zeros(size(temp_matrix_2_print));
     end
-    data_saver(:,ordered_ROI_total)=temp_matrix_2_print(:,ordered_ROI_total);
+    % but is the matrix_2_print in ROI order or ontology order!!!!!!!!
+    % Matrix_2_print is in ontology order so we grab the way we grab from
+    % the L/R vertex setup.
+    data_saver(:,ordered_total)=temp_matrix_2_print(:,ordered_total);
     matrix_2_print{n}=data_saver;
 end
 %run through the normal vertex finder to grab a Top 15 list
