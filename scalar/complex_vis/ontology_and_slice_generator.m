@@ -39,7 +39,7 @@ slicer_lookup=civm_read_table(atlas_lookup_file,[],[],true);
 reset_cols=[{'ROI'},{{'voxel_presence','none'}}];
 [success,ontology_lookup,name_to_idx,name_to_onto]=ontology_resolve_implied_rows(slicer_lookup,reset_cols);
 
-if ~( exist('label_nrrd','var') && strcmp(label_nrrd.header_path,atlas_label_file) )
+if exist('label_nrrd','var') && ~isa(label_nrrd,'nrrd')
     label_nrrd=nrrd(atlas_label_file);
 end
 
@@ -57,6 +57,7 @@ LUT_type = column_setup(:,1);
 % Careful, while these look like regular expressions(and they are) they are
 % ALSO keywords which must match exactly. We'll improve that code when we
 % can.
+
 selected_parents = {'^(CEN-B|CCX-B)$','DIE-B','^(RVG-B|MID-B|HBR-B|CBN-B|CBX-B)$','wmt-B','BRN-B'};
 % the order the selected parents will be insterted into the specialized
 % composite_ontology_w_slice.py code. Change these indicies accordingly.
@@ -161,8 +162,8 @@ for i_column=1:numel(columns_to_plot)
                     % alternatively, those COULD be coded in for the
                     % complex config.
                     if reg_match(LUT_type{i_column}{1},'percent_change')
-                        c_mm={'min',-0.1,'max',0.1};
-                        c_neutral={'neutral',[-0.01, 0.01]};%KH Shifted from 0.05 to 0.01 on 202600130 to better represent CHDI
+                        c_mm={'min',-0.1,'max',0.1}; % This is the color range
+                        c_neutral={'neutral',[-0.025, 0.025]};%KH Shifted from 0.05 to 0.01 on 202600130 to better represent CHDI-- and 2.5% on 20260327 You should do this within the name of the color itself
                     elseif reg_match(LUT_type{i_column}{1},'cohenD')
                         % inital range proposed by yuqi
                         c_mm={'min',-2,'max',2};
@@ -268,6 +269,7 @@ for i_column=1:numel(columns_to_plot)
             % Lookup plotting **before** we stuff it into the anonymous
             % function stack.
             % lookup_plot(table2struct(stat_colors),out_bar,bar_plot_opts{:});
+            %These break if we re-runstuff
             if ~exist(out_lut.tbl,'file')
                 civm_write_table(stat_colors,out_lut.tbl,false,true,{},'quiet');
             end

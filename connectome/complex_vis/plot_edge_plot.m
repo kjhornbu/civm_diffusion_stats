@@ -153,9 +153,9 @@ figure_entries.minval=0;
 % black for the super white representation.
 hold on
 % registration marks for regions
-plot(sort_position([5]),1,'ko');
-plot(sort_position([10]),1,'ko');
-plot(sort_position([15]),1,'ko');
+plot(sort_position(5),1,'ko');
+plot(sort_position(10),1,'ko');
+plot(sort_position(15),1,'ko');
 
 plot([(size(matrix_2_print,2)/2)+0.5 (size(matrix_2_print,2)/2)+0.5],[0 size(matrix_2_print,1)+1],'color',[0 0 0]);
 
@@ -205,8 +205,8 @@ for vertex_set=1:numel(sort_position)
     text(positioning(vertex_set),0.5,name_temp{1},'HorizontalAlignment','center','FontSize',fontsize,'FontName','FixedWidth');
 
     if mod(vertex_set,5)==0
-        text(sort_position(vertex_set),0.3,'o','HorizontalAlignment','center','FontSize',tiny_font,'FontName','FixedWidth');
-        line([sort_position(vertex_set),sort_position(vertex_set)],[0 0.2],'LineWidth',0.25,'Color','k');
+        %text(sort_position(vertex_set),0.3,'o','HorizontalAlignment','center','FontSize',tiny_font,'FontName','FixedWidth');
+        line([sort_position(vertex_set),sort_position(vertex_set)],[0 0.3],'LineWidth',0.25,'Color','k');
     else
         line([sort_position(vertex_set),sort_position(vertex_set)],[0 0.2],'LineWidth',0.25,'Color','k');
     end
