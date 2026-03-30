@@ -3,9 +3,9 @@ clear variables;
 
 %% Preliminaries
 studyID='17.gaj.40';
-project_dir='Z:\All_Staff\18.gaj.42';
-google_doc="Z:\All_Staff\17.gaj.40\google_sheet_captures\17.gaj.40 - Sheet1_2024-05-21.tsv";
-cleaned_google_doc_path=fullfile(project_dir,'google_sheet_captures',strcat('Edited_B6_D2_Mice_Sheet',char(datetime('today')),'.txt'));
+project_dir='B:\17.gaj.40';
+google_doc="Z:\All_Staff\17.gaj.40\google_sheet_captures\17.gaj.40_20260327.tsv";
+cleaned_google_doc_path=fullfile('Z:\All_Staff\17.gaj.40','google_sheet_captures',strcat('Edited_B6_D2_Mice_Sheet',char(datetime('today')),'.txt'));
 %if the day has changed since you ran this you want to make sure you set this to the fixed path!!!
 
 dataframe_path=fullfile(project_dir, ['17gaj40_DataFrame_Windows_ProtocolSheet_',char(datetime('today')),'.txt']);
@@ -24,7 +24,7 @@ atlas_ontology_path=fullfile(getenv("WORKSTATION_HOME"),'static_data','atlas','s
 pval_threshold=0.05;
 pval_cols=list2cell('pval_BH pval');
 user='Kathryn Hornburg ';
-save_dir=fullfile(project_dir,'OnlyB6s_Comparision_forScannerType');
+save_dir=fullfile(project_dir,'D2_v_B6');
 
 %% uncomment to allow which part of pipeline desired to run. 
 %which_tests=list2cell('Scalar'); %does only scalar stats

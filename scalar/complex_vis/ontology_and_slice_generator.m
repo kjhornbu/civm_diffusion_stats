@@ -213,6 +213,10 @@ for i_column=1:numel(columns_to_plot)
                 C_colorbar_dir={scalar_complex_vis_dir};
                 stat_colors=lookup_pvalue(LUT_type{i_column}{1});
                 bar_plot_opts={'proportional',false};
+            elseif reg_match(LUT_type{i_column}{1},'^(singleside_cohen)$')
+                C_colorbar_dir={scalar_complex_vis_dir};
+                stat_colors=lookup_cohen(LUT_type{i_column}{1});
+                bar_plot_opts={'proportional',false};
             elseif reg_match(LUT_type{i_column}{1},change_data_type)
                 C_colorbar_dir=[C_metric_dir,'ColorBars'];
                 % todo: check lut_type params for neutral, when it exists we

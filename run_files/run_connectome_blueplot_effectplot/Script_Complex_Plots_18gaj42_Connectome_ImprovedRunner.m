@@ -21,7 +21,7 @@ data_scaling=1;
 meaningful_nodes=[9 26]; %ACC-L VCP-L
 
 %% Run All Comparision
-directory=fullfile(working_folder,'All_EdgeStrengthPlots_EffectPlots_ClaudeConnections');
+directory=fullfile(working_folder,'All_EdgeStrengthPlots_EffectPlots_ClaudeConnectionsT2');
 mkdir(directory);
 clear comparison;
 

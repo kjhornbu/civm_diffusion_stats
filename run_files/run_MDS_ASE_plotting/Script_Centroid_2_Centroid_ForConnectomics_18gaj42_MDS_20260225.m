@@ -301,7 +301,6 @@ end
 %civm_write_table(output_global_overall,'Z:\All_Staff\18.gaj.42\GLOBAL_MDS_centroid_to_centroid_Distance_All_Strains+All.csv');
 
 
-
 %% With Individually defined scale factors: 
 
 idx_group=~cellfun(@isempty,regexpi(output_regional.hold,'All'));
