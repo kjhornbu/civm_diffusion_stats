@@ -1,7 +1,4 @@
-function [ ] = civm_diffusion_stats(user, studyID, google_doc, cleaned_google_doc_path,...
-    dataframe_path, setup_file, polished_sheets, project_research_archive, ...
-    atlas_ontology_path, pval_cols, pval_threshold, save_dir, which_tests, ...
-    optional_suffix, suffix, varargin)
+function [ ] = civm_diffusion_stats(varargin)
 % Expected that google_doc is a file which civm_read_table will load
 % will save updated copy to cleaned_google_doc_path
 % from cleaned googledoc, will build and save dataframe sheet to dataframe.
@@ -21,18 +18,85 @@ function [ ] = civm_diffusion_stats(user, studyID, google_doc, cleaned_google_do
 % pval_cols, pval_threshold, save_dir, cleaned_google_doc_path,
 % dataframe_path
 
-assert(numel(varargin)==0 || strcmp(user,'jjc29'),...
-    'Only james knows why varargin is there and has options in it.');
 % pretend we've parsed options, and found an assume nlsam option.
-opts=struct;
-opts.assumeNLSAM=true;
+% Input Options Parser
+p = inputParser;
+
+%{
+
+StudyProperties={ "google_doc" "cleaned_google_doc" "dataframe"} "at least one of these is required" "if missing lower level thats fine if have higher"
+    
+ModelProperties={"config_file"} 
+
+CleanedStats={"project_research_archive" "polished sheet path" }
+
+OutputLocation= save_dir;
+
+OptionalOptions=("studyID" "required",'Override_LabelLUT" PATH, "PvalThreshold", "Pvalcols", "AnalysisPipeline" "isSuffixOptional" "suffix" "Allow Missing" default false}_
+
+user, studyID, google_doc, cleaned_google_doc_path,...
+    dataframe_path, config_file, polished_sheet_path, project_research_archive, ...
+    atlas_ontology_path, pval_cols, pval_threshold, save_dir, which_tests, ...
+    optional_suffix, suffix,
+%}
+
+% === Positional arguments ===
+addRequired(p, 'studyID', @(x) ischar(x) || isstring(x));
+addRequired(p, 'dataframePath', @(x) ischar(x) || isstring(x));
+addRequired(p, 'googleDocPath', @(x) ischar(x) || isstring(x));
+addRequired(p, 'cleanedGoogleDocPath', @(x) ischar(x) || isstring(x));
+addRequired(p, 'configFile', @(x) ischar(x) || isstring(x));
+addRequired(p, 'statSaveDir', @(x) ischar(x) || isstring(x));
+addRequired(p, 'researchArchivePath', @(x) ischar(x) || isstring(x));
+addRequired(p, 'polishedSheetPath', @(x) ischar(x) || isstring(x));
+
+
+% Add parameters -- Optional Options
+addParameter(p, 'overrideLabelLUT', [], @(x) ischar(x) || isstring(x));
+addParameter(p, 'pvalThreshold', 0.05, @(x) isnumeric(x) && numel(x) == 1 && x>=0 && x <=1);
+addParameter(p, 'pvalType', list2cell('pval_BH pval'), @(x) ischar(x) || isstring(x) || iscell(x));
+addParameter(p, 'analysisPipelineType', list2cell('Scalar Connectome'), @(x) ischar(x) || isstring(x) || iscell(x));
+addParameter(p, 'isSuffixOptional', false,  @(x) isscalar(x) && ismember(x, [false, true]));
+addParameter(p, 'suffix',[], @(x) ischar(x) || isstring(x) || iscell(x));
+addParameter(p, 'allowMissing', false,  @(x) isscalar(x) && ismember(x, [false, true])); %If you are missing stuff you are caring about change option to true
+addParameter(p, 'assumeNLSAM', false,  @(x) isscalar(x) && ismember(x, [false, true])); %hey if you are missing all your data you need to look for NLSAM (change to true)
+
+if isempty(getenv('USER')), user_name=getenv('USERNAME'); end
+addParameter(p, 'user', user_name, @(x) ischar(x) || isstring(x) || iscell(x)); %hey if you are missing all your data you need to look for NLSAM (change to true)
+
+
+%addParameter(p, 'directionality', 'double', @(x) ( ischar(x) || isstring(x) ) && reg_match(x,'negative|double|positive') );
+
+% Parse input
+parse(p, varargin{:});
+
+opts=p.Results; 
+
+%Unpack back into variable form
+user=opts.user;
+studyID=opts.studyID;
+google_doc=opts.googleDocPath;
+cleaned_google_doc_path=opts.cleanedGoogleDocPath;
+dataframe_path=opts.dataframePath;
+config_file=opts.configFile;
+polished_sheet_path=opts.polishedSheetPath;
+project_research_archive=opts.researchArchivePath;
+atlas_ontology_path=opts.overrideLabelLUT;
+pval_cols=opts.pvalType;
+pval_threshold=opts.pvalThreshold;
+save_dir=opts.statSaveDir;
+which_tests=opts.analysisPipelineType;
+optional_suffix=opts.isSuffixOptional;
+suffix=opts.suffix;
+
 
 if ~exist(save_dir,'dir')
     mkdir(save_dir);
 end
 
+
 %% Data setup -- User Input form
-keep_last_dataframe = 0;
+keep_last_dataframe = 0; % if 0 we are NOT keeping the last data frame, if 1 we ARE keeping the last dataframe
 if exist(dataframe_path,'file')
     [keep_last_dataframe] = do_dataframe_ui(dataframe_path);
     if ~keep_last_dataframe
@@ -41,7 +105,7 @@ if exist(dataframe_path,'file')
         idate=datetime(info.date);
         idate.Format='yyyy-MM-dd''T''HHmm';
         old_file_path=fullfile(path,sprintf('%s_%s%s',name,char(idate),extension));
-        movefile(dataframe_path,old_file_path)
+        movefile(dataframe_path,old_file_path) %stashing prior dataframe at same name location
     else
         %Clear out any lingering names in the dataframe table related to
         %the past group/subgrouping.
@@ -59,7 +123,6 @@ end
 
 %% Need to get rid of James stuff because it is erroring out redoing data sheets for things... his example is not typical use?
 if ~keep_last_dataframe
-
     %Clean James goop better here? This isn't what I intended at all at
     %this point... it was to write with a saving of the old entry
     if ~exist(cleaned_google_doc_path,'file')
@@ -144,32 +207,32 @@ if ~keep_last_dataframe
     end
 
     % take cloudnotebook and convert into a dataframe
-    cloudnotebook_to_dataframe('CIVM_Scan_ID',cleaned_google_doc_path,atlas_ontology_path,polished_sheets,dataframe_path,project_research_archive,optional_suffix,suffix)
+    cloudnotebook_to_dataframe('CIVM_Scan_ID',cleaned_google_doc_path,atlas_ontology_path,polished_sheet_path,dataframe_path,project_research_archive,optional_suffix,suffix,opts.allowMissing)
 end
 
 %% Stats Setup
 % set a setup.mat path where we can save the configuration data, to let
 % people skip it next time.
-if isempty(setup_file)
+if isempty(config_file)
     [~,n,~]=fileparts(dataframe_path);
-    setup_file=fullfile(save_dir,sprintf('%s_setup.mat',n));
+    config_file=fullfile(save_dir,sprintf('%s_setup.mat',n));
 end
 clear n;
 % check thing exists -- intialize to do it.
 keep_last_setup=0;
-if exist(setup_file,'file')
+if exist(config_file,'file')
     % prompt for keeping configuration (1 == keep)
-    keep_last_setup=do_configuration_ui(setup_file);
+    keep_last_setup=do_configuration_ui(config_file);
 
     if ~keep_last_setup
         % when NOT keeping, rename the previous to contain its save date so
         % we can tell what we ran and when.
-        info=dir(setup_file);
-        [p,n,~]=fileparts(setup_file);
+        info=dir(config_file);
+        [p,n,~]=fileparts(config_file);
         idate=datetime(info.date);
         idate.Format='yyyy-MM-dd''T''HHmm';
         old_file=fullfile(p,sprintf('%s_setup_%s.mat',n,char(idate)));
-        movefile(setup_file,old_file)
+        movefile(config_file,old_file)
         clear info idate old_file;
     end
 end
@@ -181,10 +244,10 @@ if ~keep_last_setup
     [pairwise_criteria]=pairwise_compare_ui_apply2summary(configuration_struct,dataframe_path);
 
     %save pairwise_criteria, configuration struct
-    save(setup_file,'pairwise_criteria','configuration_struct','-mat');
+    save(config_file,'pairwise_criteria','configuration_struct','-mat');
 else
     % load pairwise_criteria, configuration struct
-    load(setup_file,'pairwise_criteria','configuration_struct');
+    load(config_file,'pairwise_criteria','configuration_struct');
 end
 
 [group, subgroup, test_criteria, test_remove_criteria, stats_test_scalar, stats_test_manova, plot_criteria, studymodel, compare_criteria, Summary_Criteria] = ...
@@ -235,10 +298,10 @@ if sum(reg_match(which_tests,'^(Scalar)$'))>0
     % easy to screw up scalar sheet paths
     %output_paths=fullfile(save_dir,'Scalar_Data_Sheet_Paths.csv');
     % less easy to screw up.
-    [~,setup_name,~]=fileparts(setup_file);
+    [~,setup_name,~]=fileparts(config_file);
     %output_paths=fullfile(save_dir,'Scalar_Data_Sheet_Paths.csv');
     output_paths=fullfile(save_dir,sprintf('%s_Scalar_Sheet_Paths.csv',setup_name));
-    if ~file_time_check(output_paths, 'newer', setup_file)
+    if ~file_time_check(output_paths, 'newer', config_file)
         output_paths_table=scalar_processing_main(dataframe,save_scalar,group,subgroup,test_criteria,test_remove_criteria,stats_test_scalar);
 
         %save output path tables to a location

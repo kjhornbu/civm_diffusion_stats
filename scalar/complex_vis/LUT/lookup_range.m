@@ -29,7 +29,7 @@ function lut_range = lookup_range(varargin)
 p = inputParser;
 
 % === Positional arguments ===
-addRequired(p, 'desired_steps', @(x) isscalar(x) && isnumeric(x) && x >= 0 && x <= 255 && mod(x,1)==0);
+addRequired(p, 'desired_steps', @(x) isscalar(x) && isnumeric(x) && x >= 0 && x <= 255 && mod(x,1)==0); %forcing to a literal interger value
 %addOptional(p, 'neutrals', 0,  @(x) isscalar(x) && ismember(x, [0, 1, 2]));
 
 % Add parameters

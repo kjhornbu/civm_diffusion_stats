@@ -3,7 +3,8 @@ function [] = cloudnotebook_to_dataframe(unique_column,input_doc, ...
     polished_sheets, ...
     dataframe_path, ...
     stats_archive, ...
-    optional_suffix,suffix)
+    optional_suffix,suffix,...
+   opts.allowMissing)
 
 
 % stats_archive is either the "research" directory for this
@@ -216,11 +217,16 @@ end
 [p,n,e]=fileparts(dataframe_path);
 missing_path = fullfile(p,sprintf('MISSING_%s%s', n, e));
 missing_frame=dataFrame(missing_data_idx,:);
-if nnz(missing_data_idx)
+if nnz(missing_data_idx) && opts.allowMissing==0
     warning('Not all entries found');
     disp(missing_frame);
     civm_write_table(missing_frame, missing_path);
-    warning('Not all entries found, see above.');
+    error('Not all entries found. Terminating Execution due to Missing Specimen. If you wish to continue with Missing Specimen, add optional input "allowMissing" as true');
+elseif nnz(missing_data_idx) && opts.allowMissing==1
+    warning('Not all entries found');
+    disp(missing_frame);
+    civm_write_table(missing_frame, missing_path);
+    warning('Not all entries found, see above. Proceeding with Analysis!');
     pause(3);
 elseif exist(missing_path,'file')
     delete(missing_path);
