@@ -1,4 +1,4 @@
-function [] = cloudnotebook_table_ui(input_doc,output_path)
+function [] = cloudnotebook_table_ui(input_doc,output_path,input_name)
 
 %Makes the summary table form of the cloudnotebook
 
@@ -12,11 +12,14 @@ end
 
 %Plot/Visualize the Summary Table
 fig=uifigure('Position',[100 100 2150 550]);
-main_grid = uigridlayout(fig,[3,1]);
+main_grid = uigridlayout(fig,[4,1]);
 main_grid.ColumnWidth = {'1x'};
-main_grid.RowHeight = {'1x',65,65};
+main_grid.RowHeight = {65,'1x',65,65};
 
+tempName=strsplit(input_name,'Path');
+uil=uilabel(main_grid,'text',sprintf(['Currenting Editing  %s ... will save to %s.'],tempName{1},output_path));
 uit=uitable(main_grid);
+
 uit.Data=notebook_info.edit_table;
 
 %should be able to edit the entire table

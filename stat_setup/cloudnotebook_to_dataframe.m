@@ -1,11 +1,11 @@
 function [] = cloudnotebook_to_dataframe(unique_column,input_doc, ...
-    path_to_atlasontology, ...
-    polished_sheets, ...
-    dataframe_path, ...
-    stats_archive, ...
-    optional_suffix,suffix,...
    opts)
 
+%The main difference between a cloud notebook and a dataframe is just that
+%the dataframe has paths to data items within it.
+
+
+stats_archive=opts.researchArchivePath;
 
 % stats_archive is either the "research" directory for this
 % project in the primary CIVM archive, OR a folder which contains stats
@@ -19,7 +19,6 @@ function [] = cloudnotebook_to_dataframe(unique_column,input_doc, ...
 % specify multiple search locations. 
 % The first valid location found will be used. 
 
-
 if istable(input_doc)
     cloud_notebook=input_doc;
 else
@@ -27,8 +26,8 @@ else
 end
 
 %% load (simple) ontology and resolve implications
-if ~isempty(path_to_atlasontology)
-    atlasOntology=civm_read_table(path_to_atlasontology);
+if ~isempty(opts.overrideLabelLUT)
+    atlasOntology=civm_read_table(opts.overrideLabelLUT);
     reset_cols={ {'voxel_presence','none'} };
     [success, fullAtlasOntology, name_to_idx, name_to_onto] = ontology_resolve_implied_rows(atlasOntology, reset_cols, [], 'quiet');
     assert(success==1,'resolved implied rows of ontology data');
@@ -36,24 +35,21 @@ else
     fullAtlasOntology=[];
 end
 
-%%
-if ~exist(polished_sheets,'dir')
-    mkdir(polished_sheets);
-end
 
 % if data frame not created yet, OR cloud notebook is newer, build data
 % frame and polish.
+
 dataFrame=cloud_notebook;
 failures=0;
 
 m=1;
 for n=1:height(cloud_notebook)
 
-    [~,temp_connectome_data] = check_connectome_directory(m,n,stats_archive,cloud_notebook,unique_column,optional_suffix,suffix);
+    [~,temp_connectome_data] = check_connectome_directory(m,n,stats_archive,cloud_notebook,unique_column,opts);
 
     % Stats Polisher output, NOT where the files currently live.
-    polished_stats=fullfile(polished_sheets, [cloud_notebook.(unique_column){n},'stats.txt']);
-    polished_e1stats=fullfile(polished_sheets, [cloud_notebook.(unique_column){n},'e1stats.txt']);
+    polished_stats=fullfile(opts.polishedSheetPath, [cloud_notebook.(unique_column){n},'stats.txt']);
+    polished_e1stats=fullfile(opts.polishedSheetPath, [cloud_notebook.(unique_column){n},'e1stats.txt']);
     
     % assign paths and variables to output dataframe
     dataFrame.vcount(n)=360; % This could be functionalized!!!!!
@@ -67,8 +63,8 @@ for n=1:height(cloud_notebook)
 
         dataFrame.stat_path{n}=polished_stats;
         dataFrame.stat_path_erode{n}=polished_e1stats;
-        if ~isempty(path_to_atlasontology)
-            dataFrame.label_lookup_path{n}=path_to_atlasontology;
+        if ~isempty(opts.overrideLabelLUT)
+            dataFrame.label_lookup_path{n}=opts.overrideLabelLUT;
         else
             dataFrame.label_lookup_path{n}=temp_connectome_data.lookup;
         end
@@ -111,7 +107,7 @@ for n=1:height(cloud_notebook)
             end
             dataFrame.stat_path{n}=polished_stats;
             %dataFrame.stat_path_erode{n}=polished_e1stats;
-            dataFrame.label_lookup_path{n}=path_to_atlasontology;
+            dataFrame.label_lookup_path{n}=opts.overrideLabelLUT;
             % dataFrame.label_path{n}=temp_connectome_data.labels;
             dataFrame.connectome_obj{n}=temp_connectome_data;
         end
@@ -132,7 +128,6 @@ found_labels=ismember('label_path',dataFrame.Properties.VariableNames);
 assert(found_stats||found_connectomes, ...
     'No stats or connectome files assigned, maybe the archive is not connected? Are you sure labels and connectomes have been created?');
 
-%dataFrame(missing_data_idx,:)=[];
 %% Polish stats files.
 if found_stats
     missing_erode_stats_idx=false(height(dataFrame),1);
@@ -227,7 +222,7 @@ if found_labels
 end
 % Save the missing entries to the "missing" data fram to record clearly
 % they were excluded for misisng data, then remove them.
-[p,n,e]=fileparts(dataframe_path);
+[p,n,e]=fileparts(opts.dataframePath);
 missing_path = fullfile(p,sprintf('MISSING_%s%s', n, e));
 missing_frame=dataFrame(missing_data_idx,:);
 if nnz(missing_data_idx) && opts.allowMissing==0
@@ -251,16 +246,16 @@ dataFrame.Properties.VariableNames=matlab.lang.makeValidName(dataFrame.Propertie
 dataFrame=dataFrame(~missing_data_idx,:);
 
 %% dataframe creation complete, save.
-civm_write_table(dataFrame,dataframe_path);
+civm_write_table(dataFrame,opts.dataframePath);
 end
 
-function [archive_idx,temp_connectome_data] = check_connectome_directory(m,n,project_research_archive,cloud_notebook,unique_column,optional_suffix,suffix)
+function [archive_idx,temp_connectome_data] = check_connectome_directory(m,n,project_research_archive,cloud_notebook,unique_column,opts)
 %Checks all possible project research archives given by user for where data
 %is saved.
 if iscell(project_research_archive)
-    temp_connectome_data=connectome_dir(project_research_archive{m},[cloud_notebook.(unique_column){n} 'NLSAM'],'optional_suffix',optional_suffix,'suffix',suffix);
+    temp_connectome_data=connectome_dir(project_research_archive{m},[cloud_notebook.(unique_column){n} 'NLSAM'],'optional_suffix',opts.isSuffixOptional,'suffix',opts.suffix);
     if isempty(temp_connectome_data.labels) % If not NLSAMed then it is without
-        temp_connectome_data=connectome_dir(project_research_archive{m},[cloud_notebook.(unique_column){n}],'optional_suffix',optional_suffix,'suffix',suffix);
+        temp_connectome_data=connectome_dir(project_research_archive{m},[cloud_notebook.(unique_column){n}],'optional_suffix',opts.isSuffixOptional,'suffix',opts.suffix);
     end
     archive_idx=m;
 
@@ -269,13 +264,13 @@ if iscell(project_research_archive)
             return;
         else
             % lol, recursion instead of loop
-            [archive_idx,temp_connectome_data] = check_connectome_directory(m+1,n,project_research_archive,cloud_notebook,unique_column,optional_suffix,suffix);
+            [archive_idx,temp_connectome_data] = check_connectome_directory(m+1,n,project_research_archive,cloud_notebook,unique_column,opts);
         end
     end
 else
-    temp_connectome_data=connectome_dir(project_research_archive,[cloud_notebook.(unique_column){n} 'NLSAM'],'optional_suffix',optional_suffix,'suffix',suffix);
+    temp_connectome_data=connectome_dir(project_research_archive,[cloud_notebook.(unique_column){n} 'NLSAM'],'optional_suffix',opts.isSuffixOptional,'suffix',opts.suffix);
     if isempty(temp_connectome_data.labels) %If not NLSAMed then it is without
-        temp_connectome_data=connectome_dir(project_research_archive,[cloud_notebook.(unique_column){n}],'optional_suffix',optional_suffix,'suffix',suffix);
+        temp_connectome_data=connectome_dir(project_research_archive,[cloud_notebook.(unique_column){n}],'optional_suffix',opts.isSuffixOptional,'suffix',opts.suffix);
     end
     archive_idx = 1;
 end
