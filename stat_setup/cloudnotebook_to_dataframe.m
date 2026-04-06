@@ -4,7 +4,7 @@ function [] = cloudnotebook_to_dataframe(unique_column,input_doc, ...
     dataframe_path, ...
     stats_archive, ...
     optional_suffix,suffix,...
-   opts.allowMissing)
+   opts)
 
 
 % stats_archive is either the "research" directory for this
@@ -27,10 +27,14 @@ else
 end
 
 %% load (simple) ontology and resolve implications
-atlasOntology=civm_read_table(path_to_atlasontology);
-reset_cols={ {'voxel_presence','none'} };
-[success, fullAtlasOntology, name_to_idx, name_to_onto] = ontology_resolve_implied_rows(atlasOntology, reset_cols, [], 'quiet');
-assert(success==1,'resolved implied rows of ontology data');
+if ~isempty(path_to_atlasontology)
+    atlasOntology=civm_read_table(path_to_atlasontology);
+    reset_cols={ {'voxel_presence','none'} };
+    [success, fullAtlasOntology, name_to_idx, name_to_onto] = ontology_resolve_implied_rows(atlasOntology, reset_cols, [], 'quiet');
+    assert(success==1,'resolved implied rows of ontology data');
+else
+    fullAtlasOntology=[];
+end
 
 %%
 if ~exist(polished_sheets,'dir')
@@ -63,7 +67,11 @@ for n=1:height(cloud_notebook)
 
         dataFrame.stat_path{n}=polished_stats;
         dataFrame.stat_path_erode{n}=polished_e1stats;
-        dataFrame.label_lookup_path{n}=path_to_atlasontology;
+        if ~isempty(path_to_atlasontology)
+            dataFrame.label_lookup_path{n}=path_to_atlasontology;
+        else
+            dataFrame.label_lookup_path{n}=temp_connectome_data.lookup;
+        end
         dataFrame.label_path{n}=temp_connectome_data.labels; %WE NEED THIS FOR CONNECTOMES!!!! WHY DO YOU COMMENT IT OUT JAMES/HARRISON? NEED TO FIX HOW WE GET SCALES FOR CONNECTOME FIRST 
         dataFrame.connectome_obj{n}=temp_connectome_data;
     elseif numel(fieldnames(temp_connectome_data.headfile)) == 0 && ...
@@ -139,8 +147,13 @@ if found_stats
         df_stat_path_erode=cell(size(df_stat_path));
     end
     parfor n=1:numel(df_connectome_obj)
-
+        
+        temp_atlas_data=fullAtlasOntology;
         temp_connectome_data=df_connectome_obj{n};
+        if isempty(temp_atlas_data)
+            temp_atlas_data=temp_connectome_data.lookup;
+        end
+
         polished_stats=df_stat_path{n};
         polished_e1stats=df_stat_path_erode{n};
         if isempty(temp_connectome_data) || ~exist(temp_connectome_data.stats,'file')
@@ -152,11 +165,11 @@ if found_stats
         % have to use the new check because if the file does not exist we
         % return false.
         if ~file_time_check(polished_stats, 'newer', temp_connectome_data.stats)
-            stats_polisher(temp_connectome_data.stats,fullAtlasOntology,polished_stats); %,project_research_archive
+            stats_polisher(temp_connectome_data.stats,temp_atlas_data,polished_stats); %,project_research_archive
         end
         if ~isempty(temp_connectome_data.e1_stats)
             if ~file_time_check(polished_e1stats, 'newer', temp_connectome_data.e1_stats)
-                stats_polisher(temp_connectome_data.e1_stats,fullAtlasOntology,polished_e1stats);
+                stats_polisher(temp_connectome_data.e1_stats,temp_atlas_data,polished_e1stats);
             end
         end
     end

@@ -41,17 +41,20 @@ user, studyID, google_doc, cleaned_google_doc_path,...
 %}
 
 % === Positional arguments ===
-addRequired(p, 'studyID', @(x) ischar(x) || isstring(x));
-addRequired(p, 'dataframePath', @(x) ischar(x) || isstring(x));
-addRequired(p, 'googleDocPath', @(x) ischar(x) || isstring(x));
-addRequired(p, 'cleanedGoogleDocPath', @(x) ischar(x) || isstring(x));
-addRequired(p, 'configFile', @(x) ischar(x) || isstring(x));
-addRequired(p, 'statSaveDir', @(x) ischar(x) || isstring(x));
-addRequired(p, 'researchArchivePath', @(x) ischar(x) || isstring(x));
-addRequired(p, 'polishedSheetPath', @(x) ischar(x) || isstring(x));
+addRequired(p, 'studyID', @(x) ischar(x) || isstring(x)); %what the study will be called
+addRequired(p, 'statSaveDir', @(x) ischar(x) || isstring(x)); %where the data is going to be saved
 
+% Add parameters -- Optional Options that are not positionally dependant 
 
-% Add parameters -- Optional Options
+addParameter(p, 'configFile', @(x) ischar(x) || isstring(x));
+
+addParameter(p, 'dataframePath', @(x) ischar(x) || isstring(x));
+addParameter(p, 'cleanedGoogleDocPath', @(x) ischar(x) || isstring(x));
+addParameter(p, 'googleDocPath', @(x) ischar(x) || isstring(x));
+
+addParameter(p, 'polishedSheetPath',[], @(x) ischar(x) || isstring(x));
+addParameter(p, 'researchArchivePath',[], @(x) ischar(x) || isstring(x)|| iscell(x));
+
 addParameter(p, 'overrideLabelLUT', [], @(x) ischar(x) || isstring(x));
 addParameter(p, 'pvalThreshold', 0.05, @(x) isnumeric(x) && numel(x) == 1 && x>=0 && x <=1);
 addParameter(p, 'pvalType', list2cell('pval_BH pval'), @(x) ischar(x) || isstring(x) || iscell(x));
@@ -62,8 +65,7 @@ addParameter(p, 'allowMissing', false,  @(x) isscalar(x) && ismember(x, [false, 
 addParameter(p, 'assumeNLSAM', false,  @(x) isscalar(x) && ismember(x, [false, true])); %hey if you are missing all your data you need to look for NLSAM (change to true)
 
 if isempty(getenv('USER')), user_name=getenv('USERNAME'); end
-addParameter(p, 'user', user_name, @(x) ischar(x) || isstring(x) || iscell(x)); %hey if you are missing all your data you need to look for NLSAM (change to true)
-
+addParameter(p, 'user', user_name, @(x) ischar(x) || isstring(x) || iscell(x)); 
 
 %addParameter(p, 'directionality', 'double', @(x) ( ischar(x) || isstring(x) ) && reg_match(x,'negative|double|positive') );
 
@@ -71,6 +73,8 @@ addParameter(p, 'user', user_name, @(x) ischar(x) || isstring(x) || iscell(x)); 
 parse(p, varargin{:});
 
 opts=p.Results; 
+
+opts = optsErrorChecking(opts);
 
 %Unpack back into variable form
 user=opts.user;
@@ -88,7 +92,6 @@ save_dir=opts.statSaveDir;
 which_tests=opts.analysisPipelineType;
 optional_suffix=opts.isSuffixOptional;
 suffix=opts.suffix;
-
 
 if ~exist(save_dir,'dir')
     mkdir(save_dir);
@@ -341,7 +344,7 @@ if sum(reg_match(which_tests,'^(Scalar)$'))>0
     end
     output_paths_table=output_paths_with_compare;
 
-    %% TO DO: Put complex figure generation here
+    %% Complex figure generation for Scalar Bilateral Non Erode
     % they are so dependant for ordering to put together but at least getting
     % the components  here would be a good thing.
 
