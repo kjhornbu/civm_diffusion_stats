@@ -101,7 +101,7 @@ for m=1:numel(opts.using_series)
     %% Do a data handler to make a new version if a dataframe or a cleanedgoogleDocPath
     if m==1
         if exist(opts.(opts.using),'file') && ~reg_match(opts.using,'^(googleDocPath)$')
-            [opts.keep_last_frame] = do_dataframe_ui(opts.(opts.using),opts.using);
+            [opts.keep_last_frame] = do_frame_ui(opts.(opts.using),opts.using);
             if ~opts.keep_last_frame
                 [path,name,extension]=fileparts(opts.(opts.using));
                 info=dir(opts.(opts.using));
@@ -166,7 +166,7 @@ if ~opts.keep_last_frame % if 0 we are NOT keeping the last data frame, if 1 we 
             end
 
             %do visualization to do final cleanup of cloudnotebook
-            cloudnotebook_table_ui(notebook,opts.(opts.using_series{m}),opts.using_series{m});
+            edit_frame_ui(notebook,opts.(opts.using_series{m}),opts.using_series{m});
 
         elseif reg_match(opts.using_series{m},'^(dataframePath)$')
             % if we've not loaded a bunch of notebooks and combined them
@@ -174,7 +174,7 @@ if ~opts.keep_last_frame % if 0 we are NOT keeping the last data frame, if 1 we 
             notebook=civm_read_table(opts.cleanedGoogleDocPath);
             % force all columns to be treated as text.
 
-            cloudnotebook_table_ui(notebook,opts.(opts.using_series{m}),opts.using_series{m});
+            edit_frame_ui(notebook,opts.(opts.using_series{m}),opts.using_series{m});
             cloudnotebook_to_dataframe('CIVM_Scan_ID',opts.(opts.using_series{m}),opts);
         end
     end
@@ -208,7 +208,7 @@ else
             if m==1
                 continue;
             else
-            cloudnotebook_table_ui(notebook,opts.(opts.using_series{m}),opts.using_series{m});
+            edit_frame_ui(notebook,opts.(opts.using_series{m}),opts.using_series{m});
             end
 
         elseif reg_match(opts.using_series{m},'^(dataframePath)$')
@@ -220,7 +220,7 @@ else
             if m==1
                 continue;
             else
-                cloudnotebook_table_ui(notebook,opts.(opts.using_series{m}),opts.using_series{m});
+                edit_frame_ui(notebook,opts.(opts.using_series{m}),opts.using_series{m});
                 cloudnotebook_to_dataframe('CIVM_Scan_ID',opts.(opts.using_series{m}),opts);
             end
         end
@@ -745,7 +745,9 @@ else
 
                 % actual run omnimanova process for 1 remove
                 parfor s=1:num_specimen
+           
                     [regional_paths,global_paths]=full_omni_manova_process(param_list_1_rm{s}{:});
+
                     name{s}=strcat('No_',removed_specimen{s});
                     regional_path{s}=regional_paths.pval;
                     global_path{s}=global_paths.pval;

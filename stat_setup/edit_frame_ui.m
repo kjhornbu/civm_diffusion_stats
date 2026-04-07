@@ -1,4 +1,4 @@
-function [] = cloudnotebook_table_ui(input_doc,output_path,input_name)
+function [] = edit_frame_ui(input_doc,output_path,input_name)
 
 %Makes the summary table form of the cloudnotebook
 

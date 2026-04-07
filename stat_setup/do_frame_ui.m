@@ -1,4 +1,4 @@
-function [keep_last_frame] = do_dataframe_ui(setup_file,setup_file_type)
+function [keep_last_frame] = do_frame_ui(setup_file,setup_file_type)
 
 fig=uifigure('Position',[100 100 2150 550]);
 
