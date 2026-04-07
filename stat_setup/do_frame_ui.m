@@ -8,7 +8,7 @@ main_grid.RowHeight = {'1x','1x',65};
 main_grid.ColumnWidth = {'1x'};
 
 uil=uilabel(main_grid,'text',sprintf(['A %s file exists for this project at: %s.\n\n' ...
-    'DO YOU WANT TO MAKE A NEW %s FILE?'],setup_file_type,setup_file,setup_file_type));
+    'DO YOU WANT TO MAKE A NEW %s FILE TO BE SAVED AT THIS LOCATION?'],setup_file_type,setup_file,setup_file_type));
 
 yes_no_buttons = uibuttongroup(main_grid);
 rb1 = uiradiobutton(yes_no_buttons,'Position',[10 60 91 15]);

@@ -46,7 +46,7 @@ addRequired(p, 'statSaveDir', @(x) ischar(x) || isstring(x)); %where the data is
 
 % Add parameters -- Optional Options that are not positionally dependant 
 
-addParameter(p, 'configFile', @(x) ischar(x) || isstring(x));
+addParameter(p, 'configFile','', @(x) ischar(x) || isstring(x));
 
 addParameter(p, 'dataframePath', @(x) ischar(x) || isstring(x));
 addParameter(p, 'cleanedGoogleDocPath', @(x) ischar(x) || isstring(x));
@@ -78,10 +78,12 @@ opts = optsErrorChecking(opts);
 
 %Unpack back into variable form
 user=opts.user;
-studyID=opts.studyID;
+studyID=opts.studyID; 
 
 dataframe_path=opts.dataframePath;
 config_file=opts.configFile;
+save_dir=opts.statSaveDir;
+
 % google_doc=opts.googleDocPath;
 %cleaned_google_doc_path=opts.cleanedGoogleDocPath;
 % polished_sheet_path=opts.polishedSheetPath;
@@ -92,9 +94,6 @@ config_file=opts.configFile;
 % which_tests=opts.analysisPipelineType;
 % optional_suffix=opts.isSuffixOptional;
 % suffix=opts.suffix;
-
-save_dir=opts.statSaveDir;
-
 
 opts.keep_last_frame = 0; % if 0 we are NOT keeping the last data frame, if 1 we ARE keeping the last dataframe
 for m=1:numel(opts.using_series)
@@ -513,6 +512,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
 
             col_types={'cohenD','percent_change'};
             column_setup = {
+                'singleside_cohen','cohenF'
                 'pvalue_extended', 'pval'
                 'pvalue_extended', 'pval_BH'%This was pvalue regular before but as rob loves getting all the exact pvalues, I did more
                 };
@@ -781,7 +781,8 @@ end
     % they are so dependant for ordering to put together but at least getting
     % the components  here would be a good thing.
 
-    %This should be at least the blue figures
+    %This should be at least the blue figures for the key stuff maybe MDS
+    %plots? 
 
     %% TO DO: Summary PPt for Connectomes
 

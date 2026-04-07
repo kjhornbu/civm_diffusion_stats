@@ -15,6 +15,8 @@ if nnz(pvalTypeIdx)<numel(pvalTypeIdx)
     error('%d pvalue types are not the correct term. Allowed options are: pval_BH, pval or 1xN of options cell array ',numel(pvalTypeIdx)-nnz(pvalTypeIdx))
 end
 
+%The dataframe is saved in the  main folder
+[path,name,~]=fileparts(opts.statSaveDir);
 %% Check data sheets
 if ~isempty(opts.dataframePath) &&  exist(opts.dataframePath,'file')
      %use dataframePath 
@@ -26,12 +28,29 @@ else
         % Make a dataframePath and save to default location to output
         % directory or the dataframePathProvided
         opts.using='cleanedGoogleDocPath';
+
+        if isempty(opts.dataframePath)
+            opts.dataframePath=fullfile(path,strcat('dataframe_',char(datetime('today')),'.txt'));
+        end
+
     else
         if ~isempty(opts.googleDocPath) && exist(opts.googleDocPath,'file')
             %use googleDocPath
             % Make a cleanedGoogleDocPath and save
             % Make a dataframePath and save
             opts.using='googleDocPath';
+
+
+            if isempty(opts.dataframePath)
+                opts.dataframePath=fullfile(path,strcat('dataframe_',char(datetime('today')),'.txt'));
+            end
+            %if we don't have a cleaned Google Doc path it gets saved next
+            %to the googledDocPath
+            [path,name,extension]=fileparts(opts.googleDocPath);
+            if isempty(opts.cleanedGoogleDocPath)
+                opts.cleanedGoogleDocPath=fullfile(path,strcat('Edited_',name,extension));
+            end
+
         else
             %ERROR
             error('You need to provide at least 1 datapath file: the google document (googleDocPath), a cleaned google document (cleanedGoogleDocPath), or a specific precreated dataframe (dataframePath).');
