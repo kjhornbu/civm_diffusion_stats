@@ -34,18 +34,14 @@ OutputLocation= save_dir;
 
 OptionalOptions=("studyID" "required",'Override_LabelLUT" PATH, "PvalThreshold", "Pvalcols", "AnalysisPipeline" "isSuffixOptional" "suffix" "Allow Missing" default false}_
 
-user, studyID, google_doc, cleaned_google_doc_path,...
-    dataframe_path, config_file, polished_sheet_path, project_research_archive, ...
-    atlas_ontology_path, pval_cols, pval_threshold, save_dir, which_tests, ...
-    optional_suffix, suffix,
 %}
 
 % === Positional arguments ===
 addRequired(p, 'studyID', @(x) ischar(x) || isstring(x)); %what the study will be called
 addRequired(p, 'statSaveDir', @(x) ischar(x) || isstring(x)); %where the data is going to be saved
 
-% Add parameters -- Optional Options that are not positionally dependant 
-
+% Add parameters -- Kinda optional but depends! (not positionally
+% dependant)
 addParameter(p, 'configFile','', @(x) ischar(x) || isstring(x));
 
 addParameter(p, 'dataframePath', @(x) ischar(x) || isstring(x));
@@ -55,6 +51,7 @@ addParameter(p, 'googleDocPath', @(x) ischar(x) || isstring(x));
 addParameter(p, 'polishedSheetPath',[], @(x) ischar(x) || isstring(x));
 addParameter(p, 'researchArchivePath',[], @(x) ischar(x) || isstring(x)|| iscell(x));
 
+% Add parameters -- Optional Options that are not positionally dependant 
 addParameter(p, 'overrideLabelLUT', [], @(x) ischar(x) || isstring(x));
 addParameter(p, 'pvalThreshold', 0.05, @(x) isnumeric(x) && numel(x) == 1 && x>=0 && x <=1);
 addParameter(p, 'pvalType', list2cell('pval_BH pval'), @(x) ischar(x) || isstring(x) || iscell(x));

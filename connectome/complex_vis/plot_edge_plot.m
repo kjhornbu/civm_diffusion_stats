@@ -52,6 +52,17 @@ color_map_white_gold_berry(6:10,3)=G_2_B_CB(2:end);
 
 new_colormap=color_map_white_gold_berry;
 
+idx=linspace(0,100,256)<=[10:10:100]';
+
+for n=size(idx,1):-1:1
+    stretch_map(idx(n,:)==1)=n;
+end
+
+%stretch_map=round(linspace(1,size(new_colormap,1),256));
+
+
+new_stretched_colormap=new_colormap(stretch_map,:);
+
 %% Preliminary Setups
 if ispc
     %printfactor=(72/96);
@@ -115,6 +126,14 @@ select_vertex(select_ROI>1000)=select_ROI(select_ROI>1000)-1000+180;
 select_vertex(select_ROI<1000)=select_ROI(select_ROI<1000);
 
 select_ipsilateral_contra={'ipsilateral','','contralateral'};
+
+max_VAL=max(max(matrix_2_print));
+value=matrix_2_print./max_VAL;
+
+scaled_value=(value-0)./(1--0); %The min and max of the caxis we are using for the full figure
+% Convert matrix to indexed image (indices 1 to 256)
+A_indexed = uint8(255 * (scaled_value) + 1);
+imwrite(A_indexed, new_stretched_colormap, fullfile(directory,'edge_strength_plot',strcat('ROI_',num2str(vertex(1,1)),'_',Structure,'_colored_matrix.png')));
 
 %% Make output plots -- Average Mean Plots (Blue)
 f=figure;

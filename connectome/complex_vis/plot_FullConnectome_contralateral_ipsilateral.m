@@ -27,6 +27,11 @@ if ismac
     alt_print_num=72;
 end
 
+% 
+% set_horz_slice_logical=reg_match(ontology_Order.GN_Symbol,'SUB');
+% set_horz_slice_positional=find(set_horz_slice_logical);
+% select_node={'*'}; %Where we are putting a marker on the plot
+
 select_ROI=[100 180.5 1100];
 
 select_vertex(select_ROI>1000)=select_ROI(select_ROI>1000)-1000+180;
@@ -40,7 +45,6 @@ select_ipsilateral_contra={'ipsilateral','','contralateral'};
 length_of_data=[numel(output_connectome.data{1})/2,numel(output_connectome.data{1})];
 total_Ordering_half_hemi=total_Ordering(1:length_of_data(1));
 
-
 for m=1:numel(value_compare)
     for n=1:numel(value_selection)
         logical_idx=and(idx_compare==m,idx_selection==n);
@@ -53,6 +57,16 @@ for m=1:numel(value_compare)
                 setup_connectome(re_index,:)=output_connectome.data{positional_idx(total_Ordering_half_hemi(re_index))}(total_Ordering);
             end
 
+            value=log10(setup_connectome);
+            
+            map = jet(256);
+            scaled_value=(value--1)./(5.5--1); %The min and max of the caxis we are using for the full figure
+            % Convert matrix to indexed image (indices 1 to 256)
+            A_indexed = uint8(255 * (scaled_value) + 1);
+            imwrite(A_indexed, map, fullfile(directory_full,strcat(value_selection{n},'_',value_compare{m},'colored_matrix.png')));
+
+            %imwrite(A_indexed(set_horz_slice_positional,:), map, fullfile(directory_full,strcat(value_selection{n},'_',value_compare{m},'colored_matrix_SUB.png')));
+
             f=figure;
 
             EntryA=width*printfactor; %width
@@ -60,15 +74,19 @@ for m=1:numel(value_compare)
 
             set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 EntryA EntryB],'PaperPositionMode', 'manual');
 
-            imagesc(log10(setup_connectome));
+            imagesc(log10(setup_connectome)); %we would have to render the color ourselves here. 
 
             yticks(0)
             yticklabels('')
+
+%             yticks(set_horz_slice_positional)
+%             yticklabels(select_node)
 
             xticks(select_vertex)
             xticklabels(select_ipsilateral_contra)
 
             colormap('jet');
+
             caxis([-1 5.5]);
 
             check_size=f.InnerPosition;

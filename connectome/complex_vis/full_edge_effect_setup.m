@@ -61,10 +61,6 @@ output_difference=vertcat(output_difference{:});
 %Give data on a 0:0.995 scale rather than 0 to 100 which stretches out the
 %top signal
  max_entry_data=horzcat(output_connectome.data{:});
-% [a,b]=ecdf(max_entry_data);
-% [~,idx]=min(abs(a-0.995));ß
-% 
-% max_entry=b(idx);
 
 max_entry=max(max_entry_data,[],'all');
 
