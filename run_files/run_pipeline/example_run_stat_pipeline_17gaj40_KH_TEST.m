@@ -21,7 +21,7 @@ polished_sheets=fullfile(project_dir,'polished_sheets'); %where the polished she
 
 project_research_archive{1}=fullfile('A:/',studyID,'research');
 atlas_ontology_path=fullfile(getenv("WORKSTATION_HOME"),'static_data','atlas','symmetric15um','labels','RCCF','symmetric15um_RCCF_labels_lookup.txt'); 
-statSaveDir=fullfile(project_dir,'TESTv2_D2_v_B6');
+statSaveDir=fullfile(project_dir,'TESTv3_D2_v_B6');
 
 studyParams={
   studyID,...
