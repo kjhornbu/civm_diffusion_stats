@@ -59,9 +59,11 @@ default_scalarContrast(1).List=list2cell("volume_mm3 volume_fraction fa_mean ad_
 default_scalarContrast(2).Name={'Erode'}; 
 default_scalarContrast(2).Column={'stat_path_erode'}; 
 default_scalarContrast(2).List=list2cell("fa_mean ad_mean md_mean rd_mean");
-%
-%
-%
+%The former QSDR that harrison used.
+%default_scalarContrast(3).Name={'QSDR'}; 
+%default_scalarContrast(3).Column={'stat_path'}; 
+%default_scalarContrast(3).List=strcatlist2cell(strrep('dti_fa,ad,md,rd,iso,qa,rdi,t-inc-ad,t-inc-md,t-inc-rd,t-inc-gfa,t-inc-dti-fa,t-inc-iso,t-inc-qa,t-dec-ad,t-dec-md,t-dec-rd,t-dec-gfa,t-dec-dti-fa,t-dec-iso,t-dec-qa','-','_')),'_mean');
+
 addParameter(p,'scalarContrastMetrics',default_scalarContrast, @(x) isstruct(x));
 
 %addParameter(p, 'directionality', 'double', @(x) ( ischar(x) || isstring(x) ) && reg_match(x,'negative|double|positive') );
@@ -79,6 +81,7 @@ dataframe_path=opts.dataframePath;
 config_file=opts.configFile;
 save_dir=opts.statSaveDir;
 
+%% Data setup -- User Input form
 opts.keep_last_frame = 0; % if 0 we are NOT keeping the last data frame, if 1 we ARE keeping the last dataframe
 for m=1:numel(opts.using_series)
     %% Do a data handler to make a new version if a dataframe or a cleanedgoogleDocPath
@@ -123,11 +126,61 @@ end
 
 if ~opts.keep_last_frame % if 0 we are NOT keeping the last data frame, if 1 we ARE keeping the last dataframe
     for m=1:numel(opts.using_series)
-
         if reg_match(opts.using_series{m},'^(googleDocPath)$')
             notebook=civm_read_table(opts.(opts.using_series{m}));
             % force all columns to be treated as text.
             notebook=column2text(notebook,notebook.Properties.VariableNames);
+
+            %James combing stuff together code
+            if iscell(notebook) && 1 < numel(notebook)
+                warning('%s\n\t%s\n','experimental conjoining of data sheets.','THESE MUST BE HIGHLY COMPATIBLE FOR THIS TO WORK');
+                % should I enter auto-debug for any thing requiring user intervention with
+                % helpful suggestions?
+                db_inplace(mfilename,'auto-debug for experimental feature. DO NOT provide cell arrays of sheets if you dont want this.');
+                % load all, get column headings into cell of struct
+                docs=cell([numel(notebook),1]);
+                fields=cell([numel(notebook),1]);
+                field_matching_required=zeros(size(notebook),'logical');
+                colname_match_data=cell([numel(notebook),1]);
+                for idx_d=1:numel(notebook)
+                    docs{idx_d}=civm_read_table(notebook{idx_d});
+                    % force all columns to be treated as text.
+                    docs{idx_d}=column2text(docs{idx_d},docs{idx_d}.Properties.VariableNames);
+                    fields{idx_d}=docs{idx_d}.Properties.VariableNames;
+                    [not_uniform,idx_1,idx_n]=setxor(fields{1},fields{idx_d},'stable');
+                    if numel( not_uniform )
+                        field_matching_required(idx_d)=true;
+                        colname_match_data(idx_d)={{idx_1,idx_n}};
+                    end
+                end
+                % allow user to somehow pick which columns could conjoin...
+                if any(field_matching_required)
+                    all_columns=unique([fields{:}],'stable');
+                    non_matching=cell2table(cell([0,numel(all_columns)]),'VariableNames',all_columns);
+                    for idx_d=1:numel(notebook)
+                        %[columns_to_add,idx_all]=setxor(all_columns,fields{idx_d},'stable');
+                        [common_column_names,idx_all,idx_n]=intersect(all_columns,fields{idx_d},'stable');
+                        %[idx_1,idx_n]=colname_match_data{idx_d}{:}
+                        row_dat=zeros([1,numel(all_columns)],'logical');
+                        row_dat(idx_all)=true;
+                        non_matching(idx_d,:)=num2cell(row_dat);
+
+                        % just invent columns as empties :-p
+                        idx_all=find(~row_dat);
+                        for idx_a=idx_all
+                            col_name=all_columns{idx_a};
+                            %fprintf('\t%s',col_name);
+                            docs{idx_d}.(col_name)=repmat({''},[height(docs{idx_d}),1]);
+                        end
+                    end
+
+                end
+                cloud_notebook=concat_tables({},docs{:});
+                clear docs fields field_matching_required colname_match_data idx_d idx_all idx_a idx_n col_name non_matching idx_1 all_columns not_uniform;
+            elseif iscell(notebook)
+                notebook=uncell(notebook);
+            end
+
             notebook = civm_metadata_cleanup(notebook,opts.extendedStudyColumns);
             if opts.assumeNLSAM
                 % alternative options, tryNLSAM where we would at some later point
@@ -143,9 +196,20 @@ if ~opts.keep_last_frame % if 0 we are NOT keeping the last data frame, if 1 we 
             if ~exist('notebook','var')
                 % if we've not loaded a bunch of notebooks and combined them
                 % already, load the notebook now.
-                notebook=civm_read_table(opts.(opts.using_series{m}));
+                notebook=civm_read_table(opts.('googleDocPath'));
                 % force all columns to be treated as text.
                 notebook=column2text(notebook,notebook.Properties.VariableNames);
+
+                notebook = civm_metadata_cleanup(notebook,opts.extendedStudyColumns);
+                if opts.assumeNLSAM
+                    % alternative options, tryNLSAM where we would at some later point
+                    % try with and without NLSAM, although James doesnt like that due to the ambiguouity.
+                    % assumes nlsam is not part of runno, and adds it.
+                    %cloud_notebook.CIVM_Scan_ID=cellfun(@(x) sprintf('%sNLSAM',x),cloud_notebook.CIVM_Scan_ID,'UniformOutput',false);
+                    % forces nlsam at end of runno, but doesnt accidentially add it
+                    % when it already exists.
+                    notebook.CIVM_Scan_ID=cellfun(@(x) regexprep(x,'^(.*?)(NLSAM)?$',"$1NLSAM"),notebook.CIVM_Scan_ID,'UniformOutput',false);
+                end
             end
 
             %do visualization to do final cleanup of cloudnotebook
@@ -191,7 +255,7 @@ else
             if m==1
                 continue;
             else
-            edit_frame_ui(notebook,opts.(opts.using_series{m}),opts.using_series{m});
+                edit_frame_ui(notebook,opts.(opts.using_series{m}),opts.using_series{m});
             end
 
         elseif reg_match(opts.using_series{m},'^(dataframePath)$')
@@ -199,7 +263,6 @@ else
             % already, load the notebook now.
             notebook=civm_read_table(opts.cleanedGoogleDocPath);
             % force all columns to be treated as text.
-
             if m==1
                 continue;
             else
@@ -209,122 +272,6 @@ else
         end
     end
 end
-
-
-% %% Data setup -- User Input form
-% keep_last_dataframe = 0; % if 0 we are NOT keeping the last data frame, if 1 we ARE keeping the last dataframe
-% if exist(dataframe_path,'file')
-%     [keep_last_dataframe] = do_dataframe_ui(dataframe_path);
-%     if ~keep_last_dataframe
-%         [path,name,extension]=fileparts(dataframe_path);
-%         info=dir(dataframe_path);
-%         idate=datetime(info.date);
-%         idate.Format='yyyy-MM-dd''T''HHmm';
-%         old_file_path=fullfile(path,sprintf('%s_%s%s',name,char(idate),extension));
-%         movefile(dataframe_path,old_file_path) %stashing prior dataframe at same name location
-%     else
-%         %Clear out any lingering names in the dataframe table related to
-%         %the past group/subgrouping.
-%         dataframe=civm_read_table(dataframe_path);
-%         not_empty_logical=~cellfun(@isempty,dataframe.Properties.VariableDescriptions);
-%         not_empty_positional=find(not_empty_logical);
-% 
-%         for n=1:numel(not_empty_positional)
-%             dataframe.Properties.VariableDescriptions(not_empty_positional(n))={''};
-%         end
-% 
-%         civm_write_table(dataframe,dataframe_path);
-%     end
-% end
-
-% %% Need to get rid of James stuff because it is erroring out redoing data sheets for things... his example is not typical use?
-% if ~keep_last_dataframe
-%     %Clean James goop better here? This isn't what I intended at all at
-%     %this point... it was to write with a saving of the old entry
-%     if ~exist(cleaned_google_doc_path,'file')
-%         %Do standard metadata cleanup
-%         extendedStudyColumns={};
-%         warning('james is playing with this :D');
-%         % warning: james is playing with this :D
-%         % I'm looking to combine(smartly?) any mostly-compatible googlesheet...
-%         % not that I know how to tell if they're mostly compatible.
-%         % The use case is; a project which has more than one sheet, most of
-%         % the columns exist in both. I think I'll use blanks for fields which are
-%         % not present in both.
-%         if iscell(google_doc) && 1 < numel(google_doc)
-%             warning('%s\n\t%s\n','experimental conjoining of data sheets.','THESE MUST BE HIGHLY COMPATIBLE FOR THIS TO WORK');
-%             % should I enter auto-debug for any thing requiring user intervention with
-%             % helpful suggestions?
-%             db_inplace(mfilename,'auto-debug for experimental feature. DO NOT provide cell arrays of sheets if you dont want this.');
-%             % load all, get column headings into cell of struct
-%             docs=cell([numel(google_doc),1]);
-%             fields=cell([numel(google_doc),1]);
-%             field_matching_required=zeros(size(google_doc),'logical');
-%             colname_match_data=cell([numel(google_doc),1]);
-%             for idx_d=1:numel(google_doc)
-%                 docs{idx_d}=civm_read_table(google_doc{idx_d});
-%                 % force all columns to be treated as text.
-%                 docs{idx_d}=column2text(docs{idx_d},docs{idx_d}.Properties.VariableNames);
-%                 fields{idx_d}=docs{idx_d}.Properties.VariableNames;
-%                 [not_uniform,idx_1,idx_n]=setxor(fields{1},fields{idx_d},'stable');
-%                 if numel( not_uniform )
-%                     field_matching_required(idx_d)=true;
-%                     colname_match_data(idx_d)={{idx_1,idx_n}};
-%                 end
-%             end
-%             % allow user to somehow pick which columns could conjoin...
-%             if any(field_matching_required)
-%                 all_columns=unique([fields{:}],'stable');
-%                 non_matching=cell2table(cell([0,numel(all_columns)]),'VariableNames',all_columns);
-%                 for idx_d=1:numel(google_doc)
-%                     %[columns_to_add,idx_all]=setxor(all_columns,fields{idx_d},'stable');
-%                     [common_column_names,idx_all,idx_n]=intersect(all_columns,fields{idx_d},'stable');
-%                     %[idx_1,idx_n]=colname_match_data{idx_d}{:}
-%                     row_dat=zeros([1,numel(all_columns)],'logical');
-%                     row_dat(idx_all)=true;
-%                     non_matching(idx_d,:)=num2cell(row_dat);
-% 
-%                     % just invent columns as empties :-p
-%                     idx_all=find(~row_dat);
-%                     for idx_a=idx_all
-%                         col_name=all_columns{idx_a};
-%                         %fprintf('\t%s',col_name);
-%                         docs{idx_d}.(col_name)=repmat({''},[height(docs{idx_d}),1]);
-%                     end
-%                 end
-% 
-%             end
-%             cloud_notebook=concat_tables({},docs{:});
-%             clear docs fields field_matching_required colname_match_data idx_d idx_all idx_a idx_n col_name non_matching idx_1 all_columns not_uniform;
-%         elseif iscell(google_doc)
-%             google_doc=uncell(google_doc);
-%         end
-%         if ~exist('cloud_notebook','var')
-%             % if we've not loaded a bunch of notebooks and combined them
-%             % already, load the notebook now.
-%             cloud_notebook=civm_read_table(google_doc);
-%             % force all columns to be treated as text.
-%             cloud_notebook=column2text(cloud_notebook,cloud_notebook.Properties.VariableNames);
-%         end
-% 
-%         cloud_notebook = civm_metadata_cleanup(cloud_notebook,extendedStudyColumns);
-%         if opts.assumeNLSAM
-%             % alternative options, tryNLSAM where we would at some later point
-%             % try with and without NLSAM, although James doesnt like that due to the ambiguouity.
-%             % assumes nlsam is not part of runno, and adds it.
-%             %cloud_notebook.CIVM_Scan_ID=cellfun(@(x) sprintf('%sNLSAM',x),cloud_notebook.CIVM_Scan_ID,'UniformOutput',false);
-%             % forces nlsam at end of runno, but doesnt accidentially add it
-%             % when it already exists.
-%             cloud_notebook.CIVM_Scan_ID=cellfun(@(x) regexprep(x,'^(.*?)(NLSAM)?$',"$1NLSAM"),cloud_notebook.CIVM_Scan_ID,'UniformOutput',false);
-%         end
-% 
-%         %do visualization to do final cleanup of cloudnotebook
-%         cloudnotebook_table_ui(cloud_notebook,opts.cleanedGoogleDocPath);
-%     end
-% 
-%     % take cloudnotebook and convert into a dataframe
-%     cloudnotebook_to_dataframe('CIVM_Scan_ID',opts.cleanedGoogleDocPath,opts)
-% end
 
 %% Stats Setup
 % set a setup.mat path where we can save the configuration data, to let
@@ -347,7 +294,7 @@ if exist(config_file,'file')
         [p,n,~]=fileparts(config_file);
         idate=datetime(info.date);
         idate.Format='yyyy-MM-dd''T''HHmm';
-        old_file=fullfile(p,sprintf('%s_from_%s.mat',n,char(idate)));
+        old_file=fullfile(p,sprintf('%s_%s.mat',n,char(idate)));
         movefile(config_file,old_file)
         clear info idate old_file;
     end
@@ -366,8 +313,7 @@ else
     load(config_file,'pairwise_criteria','configuration_struct');
 end
 
-%save opts so can redo
-
+%save opts so can redo fully
 temp_opt=strsplit(config_file,'.mat');
 opts_file=strcat(temp_opt{1},'_opts.mat');
 
@@ -378,7 +324,7 @@ if exist(opts_file,'file')
     [p,n,~]=fileparts(opts_file);
     idate=datetime(info.date);
     idate.Format='yyyy-MM-dd''T''HHmm';
-    old_file=fullfile(p,sprintf('%s_from_%s.mat',n,char(idate)));
+    old_file=fullfile(p,sprintf('%s_%s.mat',n,char(idate)));
     movefile(opts_file,old_file)
     clear info idate old_file;
 end
@@ -533,11 +479,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
             % of our figures (as it was programmed at the time). If we change that
             % orgzanization wed have to update the composite code.
             try
-                label_nrrd = ontology_and_slice_generator(group_stats_file, column_setup, scalar_complex_vis_dir, previously_loaded_labelfile{:});
-                % this is ONLY useful if we re-run.
-                if exist('label_nrrd','var')
-                    previously_loaded_labelfile={label_nrrd};
-                end
+                ontology_and_slice_generator(group_stats_file, column_setup, scalar_complex_vis_dir, previously_loaded_labelfile);
             catch merr
                 warning(merr.message);
                 fprintf('ontology and slice gen failed, see above\n');
@@ -729,7 +671,18 @@ else
 
                 % actual run omnimanova process for 1 remove
                 %We keep having problems where with a character parsing
-                %that I 
+                %the error in question
+                %{
+                Error using civm_diffusion_stats/parfor%consume_1
+Conversion to char from cell is not possible.
+
+Error in civm_diffusion_stats (line 662)
+                parfor s=1:num_specimen
+
+Error in example_run_stat_pipeline_205xFAD01_KH_QA_20260408_AllTogether (line 37)
+civm_diffusion_stats(studyParams{:});
+                %}
+
                 parfor s=1:num_specimen
            
                     [regional_paths,global_paths]=full_omni_manova_process(param_list_1_rm{s}{:});
@@ -738,6 +691,7 @@ else
                     regional_path{s}=regional_paths.pval;
                     global_path{s}=global_paths.pval;
                 end
+                
                 Paths_Pval.(connectome_outputs{n}).name((1:numel(name))+1)=name;
                 Paths_Pval.(connectome_outputs{n}).regional((1:numel(name))+1)=regional_path;
                 Paths_Pval.(connectome_outputs{n}).global((1:numel(name))+1)=global_path;

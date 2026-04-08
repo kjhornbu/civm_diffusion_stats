@@ -125,18 +125,6 @@ for o=1:numel(voxel_wise)
     %% Refilter the Subject data table to Just "interesting" contrasts
 
     ideal_contrast_list=all_ideal_contrast_list{o};
-
-%     if strcmp(voxel_wise{o},'Non_Erode')
-%         ideal_contrast_list=list2cell("volume_mm3 volume_fraction fa_mean ad_mean md_mean rd_mean");
-%     elseif strcmp(voxel_wise{o},'Erode')
-%         ideal_contrast_list=list2cell("fa_mean ad_mean md_mean rd_mean");
-%     elseif strcmp(voxel_wise{o},'QSDR')
-%         ideal_contrast_list=list2cell(strrep('dti_fa,ad,md,rd,iso,qa,rdi,t-inc-ad,t-inc-md,t-inc-rd,t-inc-gfa,t-inc-dti-fa,t-inc-iso,t-inc-qa,t-dec-ad,t-dec-md,t-dec-rd,t-dec-gfa,t-dec-dti-fa,t-dec-iso,t-dec-qa','-','_'));
-%         ideal_contrast_list=strcat(ideal_contrast_list,'_mean');
-%     else
-%         keyboard;
-%     end
-
     all_contrast_list='(_mean|voxels|volume_mm3|volume_fraction)$';
 
     %Finding contrast columns to keep
