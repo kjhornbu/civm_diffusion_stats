@@ -79,17 +79,6 @@ dataframe_path=opts.dataframePath;
 config_file=opts.configFile;
 save_dir=opts.statSaveDir;
 
-% google_doc=opts.googleDocPath;
-%cleaned_google_doc_path=opts.cleanedGoogleDocPath;
-% polished_sheet_path=opts.polishedSheetPath;
-% project_research_archive=opts.researchArchivePath;
-% atlas_ontology_path=opts.overrideLabelLUT;
-% pval_cols=opts.pvalType;
-% pval_threshold=opts.pvalThreshold;
-% which_tests=opts.analysisPipelineType;
-% optional_suffix=opts.isSuffixOptional;
-% suffix=opts.suffix;
-
 opts.keep_last_frame = 0; % if 0 we are NOT keeping the last data frame, if 1 we ARE keeping the last dataframe
 for m=1:numel(opts.using_series)
     %% Do a data handler to make a new version if a dataframe or a cleanedgoogleDocPath
@@ -358,7 +347,7 @@ if exist(config_file,'file')
         [p,n,~]=fileparts(config_file);
         idate=datetime(info.date);
         idate.Format='yyyy-MM-dd''T''HHmm';
-        old_file=fullfile(p,sprintf('%s_setup_%s.mat',n,char(idate)));
+        old_file=fullfile(p,sprintf('%s_from_%s.mat',n,char(idate)));
         movefile(config_file,old_file)
         clear info idate old_file;
     end
@@ -389,7 +378,7 @@ if exist(opts_file,'file')
     [p,n,~]=fileparts(opts_file);
     idate=datetime(info.date);
     idate.Format='yyyy-MM-dd''T''HHmm';
-    old_file=fullfile(p,sprintf('%s_setup_opts%s.mat',n,char(idate)));
+    old_file=fullfile(p,sprintf('%s_from_%s.mat',n,char(idate)));
     movefile(opts_file,old_file)
     clear info idate old_file;
 end
