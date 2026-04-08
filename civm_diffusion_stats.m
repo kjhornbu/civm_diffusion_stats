@@ -22,20 +22,6 @@ function [ ] = civm_diffusion_stats(varargin)
 % Input Options Parser
 p = inputParser;
 
-%{
-
-StudyProperties={ "google_doc" "cleaned_google_doc" "dataframe"} "at least one of these is required" "if missing lower level thats fine if have higher"
-    
-ModelProperties={"config_file"} 
-
-CleanedStats={"project_research_archive" "polished sheet path" }
-
-OutputLocation= save_dir;
-
-OptionalOptions=("studyID" "required",'Override_LabelLUT" PATH, "PvalThreshold", "Pvalcols", "AnalysisPipeline" "isSuffixOptional" "suffix" "Allow Missing" default false}_
-
-%}
-
 % === Positional arguments ===
 addRequired(p, 'studyID', @(x) ischar(x) || isstring(x)); %what the study will be called
 addRequired(p, 'statSaveDir', @(x) ischar(x) || isstring(x)); %where the data is going to be saved
@@ -65,6 +51,18 @@ if isempty(getenv('USER')), user_name=getenv('USERNAME'); end
 addParameter(p, 'user', user_name, @(x) ischar(x) || isstring(x) || iscell(x)); 
 
 addParameter(p,'extendedStudyColumns',{}, @(x) ischar(x) || isstring(x) || iscell(x));
+
+default_scalarContrast=struct;
+default_scalarContrast(1).Name={'Non_Erode'}; 
+default_scalarContrast(1).Column={'stat_path'};
+default_scalarContrast(1).List=list2cell("volume_mm3 volume_fraction fa_mean ad_mean md_mean rd_mean");
+default_scalarContrast(2).Name={'Erode'}; 
+default_scalarContrast(2).Column={'stat_path_erode'}; 
+default_scalarContrast(2).List=list2cell("fa_mean ad_mean md_mean rd_mean");
+%
+%
+%
+addParameter(p,'scalarContrastMetrics',default_scalarContrast, @(x) isstruct(x));
 
 %addParameter(p, 'directionality', 'double', @(x) ( ischar(x) || isstring(x) ) && reg_match(x,'negative|double|positive') );
 
@@ -450,7 +448,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
     %output_paths=fullfile(save_dir,'Scalar_Data_Sheet_Paths.csv');
     output_paths=fullfile(save_dir,sprintf('%s_Scalar_Sheet_Paths.csv',setup_name));
     if ~file_time_check(output_paths, 'newer', config_file)
-        output_paths_table=scalar_processing_main(dataframe,save_scalar,group,subgroup,test_criteria,test_remove_criteria,stats_test_scalar);
+        output_paths_table=scalar_processing_main(dataframe,save_scalar,group,subgroup,test_criteria,test_remove_criteria,stats_test_scalar,opts);
 
         %save output path tables to a location
         output_paths_table.hemisphere=cell2mat(output_paths_table.hemisphere);
@@ -741,6 +739,8 @@ else
                 end
 
                 % actual run omnimanova process for 1 remove
+                %We keep having problems where with a character parsing
+                %that I 
                 parfor s=1:num_specimen
            
                     [regional_paths,global_paths]=full_omni_manova_process(param_list_1_rm{s}{:});

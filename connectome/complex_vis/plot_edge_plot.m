@@ -68,7 +68,7 @@ if ispc
     %printfactor=(72/96);
     printfactor=1;
     printfactor=(96/72);
-    printfactor=(1+(72/96))/2;
+    printfactor=(1+(72/96))/2; %print factor for the eps
     print_num=96;
     alt_print_num=72;
     %fontsize=fontsize*printfactor;

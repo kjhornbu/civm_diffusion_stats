@@ -1,18 +1,33 @@
-function [output_path_table] = scalar_processing_main(dataframe,save_location,group,subgroup,test_conditions,remove_zscore_grouping,stats_test,stat_sheet_colname,measurement_space)
+function [output_path_table] = scalar_processing_main(dataframe,save_location,group,subgroup,test_conditions,remove_zscore_grouping,stats_test,opts)
 %bilat_result_table,left_result_table,right_result_table,bilat_result_table_BHFDR,left_result_table_BHFDR,right_result_table_BHFDR,bilat_multi_compare_table,left_multi_compare_table,right_multi_compare_table
 %% The meat of the script that generates the scalar analysis of the data set
-voxel_wise={'Non_Erode','Erode'};
-voxel_wise_keys={'stat_path','stat_path_erode'};
+
+%% process each stat type
+if exist('opts','var')
+    for n=1: numel(opts.scalarContrastMetrics)
+        voxel_wise{n} =opts.scalarContrastMetrics(n).Name{:};
+        voxel_wise_keys{n} =opts.scalarContrastMetrics(n).Column{:};
+        all_ideal_contrast_list{n}=opts.scalarContrastMetrics(n).List(:);
+    end
+end
+
+% voxel_wise={'Non_Erode','Erode'}
+% voxel_wise_keys={'stat_path','stat_path_erode'}
 
 %% check if erode stats are part of data frame, and skip with warning if not
 if isempty( column_find(dataframe,'^stat_path_erode$') )
     warning('There are NO Erode Stat Paths Specified -- NO Erode Region Data Summaries will be Generated');
     pause(3);
-    voxel_wise{2}=[];
-    voxel_wise_keys{2}=[];
+    idx=reg_match(voxel_wise,'^(Erode)$');
+    pos_idx=find(idx);
+
+    voxel_wise{pos_idx}=[];
+    voxel_wise_keys{pos_idx}=[];
+    all_ideal_contrast_list{pos_idx}=[];
 
     voxel_wise = voxel_wise(~cellfun('isempty',voxel_wise)) ;
     voxel_wise_keys = voxel_wise_keys(~cellfun('isempty',voxel_wise_keys)) ;
+    all_ideal_contrast_list = all_ideal_contrast_list(~cellfun('isempty',all_ideal_contrast_list)) ;
 end
 
 %% Check if too many input groupings
@@ -33,11 +48,8 @@ output_path_table.Posthoc={};
 output_path_table.GroupTable={};
 output_path_table.SubjectTable={};
 
-%% process each stat type
-if exist('stat_sheet_colname','var') && exist('measurement_space','var')
-    voxel_wise = {measurement_space};
-    voxel_wise_keys = {stat_sheet_colname};
-end
+
+
 for o=1:numel(voxel_wise)
     if o==1
         keep_save_location=save_location;
@@ -111,16 +123,19 @@ for o=1:numel(voxel_wise)
     subject_data_table_path=fullfile(save_location,'Subject_Data_Table.csv');
 
     %% Refilter the Subject data table to Just "interesting" contrasts
-    if strcmp(voxel_wise{o},'Non_Erode')
-        ideal_contrast_list=list2cell("volume_mm3 volume_fraction fa_mean ad_mean md_mean rd_mean");
-    elseif strcmp(voxel_wise{o},'Erode')
-        ideal_contrast_list=list2cell("fa_mean ad_mean md_mean rd_mean");
-    elseif strcmp(voxel_wise{o},'QSDR')
-        ideal_contrast_list=list2cell(strrep('dti_fa,ad,md,rd,iso,qa,rdi,t-inc-ad,t-inc-md,t-inc-rd,t-inc-gfa,t-inc-dti-fa,t-inc-iso,t-inc-qa,t-dec-ad,t-dec-md,t-dec-rd,t-dec-gfa,t-dec-dti-fa,t-dec-iso,t-dec-qa','-','_'));
-        ideal_contrast_list=strcat(ideal_contrast_list,'_mean');
-    else
-        keyboard;
-    end
+
+    ideal_contrast_list=all_ideal_contrast_list{o};
+
+%     if strcmp(voxel_wise{o},'Non_Erode')
+%         ideal_contrast_list=list2cell("volume_mm3 volume_fraction fa_mean ad_mean md_mean rd_mean");
+%     elseif strcmp(voxel_wise{o},'Erode')
+%         ideal_contrast_list=list2cell("fa_mean ad_mean md_mean rd_mean");
+%     elseif strcmp(voxel_wise{o},'QSDR')
+%         ideal_contrast_list=list2cell(strrep('dti_fa,ad,md,rd,iso,qa,rdi,t-inc-ad,t-inc-md,t-inc-rd,t-inc-gfa,t-inc-dti-fa,t-inc-iso,t-inc-qa,t-dec-ad,t-dec-md,t-dec-rd,t-dec-gfa,t-dec-dti-fa,t-dec-iso,t-dec-qa','-','_'));
+%         ideal_contrast_list=strcat(ideal_contrast_list,'_mean');
+%     else
+%         keyboard;
+%     end
 
     all_contrast_list='(_mean|voxels|volume_mm3|volume_fraction)$';
 
