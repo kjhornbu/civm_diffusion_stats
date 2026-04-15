@@ -134,6 +134,36 @@ civm_write_table(output_connectome,fullfile(directory,strcat('OutputConnectome_'
 civm_write_table(output_difference,fullfile(directory,strcat('OutputDifferences_',datestr(datetime("today")),'.csv')));
 
 civm_write_table(figure_output,fullfile(directory,strcat('EdgeStrength_FigureProperties',datestr(datetime("today")),'.csv')));
-civm_write_table(keep_missed_notes_claude_sheet,fullfile(directory,strcat('Missed_ClaudeNodes_',datestr(datetime("today")),'.csv')));
 civm_write_table(output_plot_vertex_LUT,fullfile(directory,strcat('Top15Vertices_ForEachNode_',datestr(datetime("today")),'.csv')));
+
+% Finish Missing Claude Sheet by cross checking
+atlas_ontology_path=fullfile(getenv("WORKSTATION_HOME"),'static_data','atlas','symmetric15um','labels','RCCF','symmetric15um_RCCF_labels_lookup.txt');
+atlas_ontology=civm_read_table(atlas_ontology_path);
+
+for n=1:height(keep_missed_notes_claude_sheet)
+    DMBA_idx_list=reg_match(atlas_ontology.GN_Symbol,strcat('^(',keep_missed_notes_claude_sheet.NODE{n},')$|^(',keep_missed_notes_claude_sheet.NODE{n},'-B)$'));
+    ALLEN_idx_list=reg_match(atlas_ontology.ARA_abbrev,strcat('^(',keep_missed_notes_claude_sheet.NODE{n},')$|^(',keep_missed_notes_claude_sheet.NODE{n},'-B)$'));
+
+    if nnz(DMBA_idx_list)
+        %display(nnz(DMBA_idx_list))
+        found_data=atlas_ontology(DMBA_idx_list,:);
+        if nnz(isnan(found_data.ROI))
+            keep_missed_notes_claude_sheet.status_of_missing{n}='Parent structure';
+        else
+            keyboard;
+        end
+    elseif nnz(ALLEN_idx_list)
+        %display(nnz(ALLEN_idx_list))
+        found_data=atlas_ontology(ALLEN_idx_list,:);
+        if nnz(isnan(found_data.ROI))
+            keep_missed_notes_claude_sheet.status_of_missing{n}='In Allen Brain Atlas';
+        else
+            keyboard;
+        end
+    else
+        keep_missed_notes_claude_sheet.status_of_missing{n}='Completely missing from ontology';
+    end
+end
+
+civm_write_table(keep_missed_notes_claude_sheet,fullfile(directory,strcat('Missed_ClaudeNodes_',datestr(datetime("today")),'.csv')));
 end
