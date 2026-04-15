@@ -14,10 +14,10 @@ stats_archive=opts.researchArchivePath;
 % James added the second case to support stats from the samba stats folder.
 % (This is a folder where samba measures all your labels while it is
 % processing.)
-% 
+%
 % For both archive and arbitrary directory, it can be a cell array to
-% specify multiple search locations. 
-% The first valid location found will be used. 
+% specify multiple search locations.
+% The first valid location found will be used.
 
 if istable(input_doc)
     cloud_notebook=input_doc;
@@ -50,12 +50,12 @@ for n=1:height(cloud_notebook)
     % Stats Polisher output, NOT where the files currently live.
     polished_stats=fullfile(opts.polishedSheetPath, [cloud_notebook.(unique_column){n},'stats.txt']);
     polished_e1stats=fullfile(opts.polishedSheetPath, [cloud_notebook.(unique_column){n},'e1stats.txt']);
-    
+
     % assign paths and variables to output dataframe
     dataFrame.vcount(n)=360; % This could be functionalized!!!!!
     dataFrame.ecount(n)=dataFrame.vcount(n)*dataFrame.vcount(n);
-    
-    if isfield(temp_connectome_data.headfile, 'ProgramDetails_dsi_studio_connectome_params_fiber_count')       
+
+    if isfield(temp_connectome_data.headfile, 'ProgramDetails_dsi_studio_connectome_params_fiber_count')
         % IF the headfile is found, it would have been loaded, if it was NOT
         % loaded, then we didnt find the connectome folder.
         dataFrame.tract_count(n)=temp_connectome_data.headfile.ProgramDetails_dsi_studio_connectome_params_fiber_count;
@@ -68,22 +68,22 @@ for n=1:height(cloud_notebook)
         else
             dataFrame.label_lookup_path{n}=temp_connectome_data.lookup;
         end
-        dataFrame.label_path{n}=temp_connectome_data.labels; %WE NEED THIS FOR CONNECTOMES!!!! WHY DO YOU COMMENT IT OUT JAMES/HARRISON? NEED TO FIX HOW WE GET SCALES FOR CONNECTOME FIRST 
+        dataFrame.label_path{n}=temp_connectome_data.labels; %WE NEED THIS FOR CONNECTOMES!!!! WHY DO YOU COMMENT IT OUT JAMES/HARRISON? NEED TO FIX HOW WE GET SCALES FOR CONNECTOME FIRST
         dataFrame.connectome_obj{n}=temp_connectome_data;
     elseif numel(fieldnames(temp_connectome_data.headfile)) == 0 && ...
             ~any(reg_match(stats_archive,'research[\/]?$'))
         % no fields in the headfile struct indicates the headfile was not loaded (and probably not found).
-        % This does NOT MEAN we're not looking at archive! 
+        % This does NOT MEAN we're not looking at archive!
         % We should only search extra in the stats_archive when we're
-        % not in the main CIVM archive to avoid getting stuck searching through all 
+        % not in the main CIVM archive to avoid getting stuck searching through all
         % dirs in the archive, which will take forever
         % So, we add the protection against looking at the base of research archive.
 
-        % This silly construct avoids unnecessary test for cell array. 
+        % This silly construct avoids unnecessary test for cell array.
         % This will force search_dirs to allways be a cell array, with at
         % least 1 entry.
         search_dirs={}; search_dirs=[search_dirs,stats_archive];
-        
+
         found_stat='NOFILE';
         idx_sd=1;
         while ~exist(found_stat,'file') && idx_sd <= numel(search_dirs)
@@ -92,7 +92,7 @@ for n=1:height(cloud_notebook)
             found=regexpdir(search_dirs{idx_sd},pattern);
             if numel(found)
                 % what about finding too many? Right now we'll just crash.
-                % Leaving that for now. 
+                % Leaving that for now.
                 found_stat=uncell(found);
                 break;
             end
@@ -121,10 +121,10 @@ found_e1stats=ismember('stat_path_erode',dataFrame.Properties.VariableNames);
 found_connectomes=ismember('connectome_file',dataFrame.Properties.VariableNames);
 found_labels=ismember('label_path',dataFrame.Properties.VariableNames);
 
-%% validate we found data to process, 
+%% validate we found data to process,
 % we need stats files, or connectome files in order to process
 % data, ideally we'd have both. This checks that at least some data was
-% found. Individual checks happen later. 
+% found. Individual checks happen later.
 assert(found_stats||found_connectomes, ...
     'No stats or connectome files assigned, maybe the archive is not connected? Are you sure labels and connectomes have been created?');
 
@@ -142,7 +142,7 @@ if found_stats
         df_stat_path_erode=cell(size(df_stat_path));
     end
     parfor n=1:numel(df_connectome_obj)
-        
+
         temp_atlas_data=fullAtlasOntology;
         temp_connectome_data=df_connectome_obj{n};
         if isempty(temp_atlas_data)
@@ -214,7 +214,7 @@ end
 if found_e1stats && nnz(missing_erode_stats_idx)>0
     dataFrame=removevars(dataFrame,'stat_path_erode');
 end
-% If any data had labels, expect that all should have had labels. 
+% If any data had labels, expect that all should have had labels.
 % This marks specimen that are missing labelsd.
 if found_labels
     missing_labels_idx=cellfun(@isempty,dataFrame.label_path);

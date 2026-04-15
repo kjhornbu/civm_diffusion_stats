@@ -28,9 +28,9 @@ if ismac
 end
 
 % 
-% set_horz_slice_logical=reg_match(ontology_Order.GN_Symbol,'SUB');
-% set_horz_slice_positional=find(set_horz_slice_logical);
-% select_node={'*'}; %Where we are putting a marker on the plot
+set_horz_slice_logical=reg_match(ontology_Order.GN_Symbol,'SUB');
+set_horz_slice_positional=find(set_horz_slice_logical);
+select_node={'*'}; %Where we are putting a marker on the plot
 
 select_ROI=[100 180.5 1100];
 
@@ -65,8 +65,6 @@ for m=1:numel(value_compare)
             A_indexed = uint8(255 * (scaled_value) + 1);
             imwrite(A_indexed, map, fullfile(directory_full,strcat(value_selection{n},'_',value_compare{m},'colored_matrix.png')));
 
-            %imwrite(A_indexed(set_horz_slice_positional,:), map, fullfile(directory_full,strcat(value_selection{n},'_',value_compare{m},'colored_matrix_SUB.png')));
-
             f=figure;
 
             EntryA=width*printfactor; %width
@@ -79,8 +77,8 @@ for m=1:numel(value_compare)
             yticks(0)
             yticklabels('')
 
-%             yticks(set_horz_slice_positional)
-%             yticklabels(select_node)
+            yticks(set_horz_slice_positional)
+            yticklabels(select_node)
 
             xticks(select_vertex)
             xticklabels(select_ipsilateral_contra)

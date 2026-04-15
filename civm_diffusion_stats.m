@@ -30,9 +30,9 @@ addRequired(p, 'statSaveDir', @(x) ischar(x) || isstring(x)); %where the data is
 % dependant)
 addParameter(p, 'configFile','', @(x) ischar(x) || isstring(x));
 
-addParameter(p, 'dataframePath', @(x) ischar(x) || isstring(x));
-addParameter(p, 'cleanedGoogleDocPath', @(x) ischar(x) || isstring(x));
-addParameter(p, 'googleDocPath', @(x) ischar(x) || isstring(x));
+addParameter(p, 'dataframePath',[], @(x) ischar(x) || isstring(x));
+addParameter(p, 'cleanedGoogleDocPath',[], @(x) ischar(x) || isstring(x));
+addParameter(p, 'googleDocPath',[], @(x) ischar(x) || isstring(x));
 
 addParameter(p, 'polishedSheetPath',[], @(x) ischar(x) || isstring(x));
 addParameter(p, 'researchArchivePath',[], @(x) ischar(x) || isstring(x)|| iscell(x));
@@ -59,6 +59,7 @@ default_scalarContrast(1).List=list2cell("volume_mm3 volume_fraction fa_mean ad_
 default_scalarContrast(2).Name={'Erode'}; 
 default_scalarContrast(2).Column={'stat_path_erode'}; 
 default_scalarContrast(2).List=list2cell("fa_mean ad_mean md_mean rd_mean");
+
 %The former QSDR that harrison used.
 %default_scalarContrast(3).Name={'QSDR'}; 
 %default_scalarContrast(3).Column={'stat_path'}; 
@@ -243,29 +244,33 @@ else
             end
 
         elseif reg_match(opts.using_series{m},'^(cleanedGoogleDocPath)$')
-            if ~exist('notebook','var')
-                % if we've not loaded a bunch of notebooks and combined them
-                % already, load the notebook now.
-                notebook=civm_read_table(opts.(opts.using_series{m}));
-                % force all columns to be treated as text.
-                notebook=column2text(notebook,notebook.Properties.VariableNames);
-            end
 
             %do visualization to do final cleanup of cloudnotebook
             if m==1
                 continue;
             else
+                if ~exist('notebook','var')
+                    % if we've not loaded a bunch of notebooks and combined them
+                    % already, load the notebook now.
+                    notebook=civm_read_table(opts.(opts.using_series{m}));
+                    % force all columns to be treated as text.
+                    notebook=column2text(notebook,notebook.Properties.VariableNames);
+                end
+
                 edit_frame_ui(notebook,opts.(opts.using_series{m}),opts.using_series{m});
             end
 
         elseif reg_match(opts.using_series{m},'^(dataframePath)$')
             % if we've not loaded a bunch of notebooks and combined them
             % already, load the notebook now.
-            notebook=civm_read_table(opts.cleanedGoogleDocPath);
             % force all columns to be treated as text.
             if m==1
                 continue;
             else
+                if ~exist('notebook','var')
+                    notebook=civm_read_table(opts.cleanedGoogleDocPath);
+                    notebook=column2text(notebook,notebook.Properties.VariableNames);
+                end
                 edit_frame_ui(notebook,opts.(opts.using_series{m}),opts.using_series{m});
                 cloudnotebook_to_dataframe('CIVM_Scan_ID',opts.(opts.using_series{m}),opts);
             end

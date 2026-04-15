@@ -41,13 +41,14 @@ for n=1:size(df,1)
             %load(df.(x){n});
 
             try
-            temp_connectome=dsiconnectivity(df.(x){n},required_rois);
-            %[connectivity] = add_missing_roi_mat_file_extension(temp_connectome,look_up_table);
-            graphs(n,:,:)=temp_connectome.connectivity(:,:);
+                temp_connectome=dsiconnectivity(df.(x){n},required_rois);
+                %[connectivity] = add_missing_roi_mat_file_extension(temp_connectome,look_up_table);
+                graphs(n,:,:)=temp_connectome.connectivity(:,:);
             catch
-               graphs(n,:,:)=-1*ones(360,360); % a flag for telling if the data is bad after loading... see if there are patterns to the badness
-               
-               %keyboard;
+                error('Make sure you have the directory holding the connectome files loaded!!!')
+                %graphs(n,:,:)=-1*ones(360,360); % a flag for telling if the data is bad after loading... see if there are patterns to the badness
+
+                %keyboard;
             end
 
         case '.xlsx'

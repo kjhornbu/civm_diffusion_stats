@@ -29,7 +29,7 @@ clear comparison;
 comparison(1).grouping.Basis.('Age_Class')='Young';
 comparison(1).grouping.UnderTest.('Age_Class')='Old';
 
-[~,~,~] = full_edge_effect_setup(directory,dataframe,data_scaling,comparison,meaningful_nodes);
+[~,~,~] = full_edge_effect_setup_claudeForm(directory,dataframe,data_scaling,comparison,meaningful_nodes);
 
 %% Pick Strains to Use
 distance_values=civm_read_table("Z:\All_Staff\18.gaj.42\FullAnalysis_20260224\MDS\MDS_Distances\REGIONAL_MDS_centroid_to_centroid_Distance_All_Strains+All.csv");
@@ -91,61 +91,3 @@ output.count_at_TopRank=sum(c==1:numel(a)')';
 STRAIN_set{4}=strain_values{b(end-2)};
 STRAIN_set{5}=strain_values{b(end-1)};
 STRAIN_set{6}=strain_values{b(end)};
-
-%% Run Strain Stratifed Comparision
-%prior ordering
-%('All BXD24 BXD34 BXD60 BXD101 BXD65b BXD29');
-
-directory=fullfile(working_folder,'All+6Strain_EdgeStrengthPlots_EffectPlots_w1pct');
-mkdir(directory);
-clear comparison;
-
-comparison(1).grouping.Basis.('Age_Class')='Young';
-comparison(1).grouping.UnderTest.('Age_Class')='Old';
-
-comparison(2).stratification.('Strain')=STRAIN_set{1};
-comparison(2).grouping.Basis.('Age_Class')='Young';
-comparison(2).grouping.UnderTest.('Age_Class')='Old';
-
-comparison(3).stratification.('Strain')=STRAIN_set{2};
-comparison(3).grouping.Basis.('Age_Class')='Young';
-comparison(3).grouping.UnderTest.('Age_Class')='Old';
-
-comparison(4).stratification.('Strain')=STRAIN_set{3};
-comparison(4).grouping.Basis.('Age_Class')='Young';
-comparison(4).grouping.UnderTest.('Age_Class')='Old';
-
-comparison(5).stratification.('Strain')=STRAIN_set{4};
-comparison(5).grouping.Basis.('Age_Class')='Young';
-comparison(5).grouping.UnderTest.('Age_Class')='Old';
-
-comparison(6).stratification.('Strain')=STRAIN_set{5};
-comparison(6).grouping.Basis.('Age_Class')='Young';
-comparison(6).grouping.UnderTest.('Age_Class')='Old';
-
-comparison(7).stratification.('Strain')=STRAIN_set{6};
-comparison(7).grouping.Basis.('Age_Class')='Young';
-comparison(7).grouping.UnderTest.('Age_Class')='Old';
-
-[~,~,~] = full_edge_effect_setup(directory,dataframe,data_scaling,comparison,meaningful_nodes);
-
-
-%% All + Sex Comparisions
-
-directory=fullfile(working_folder,'All+SexStratified_EdgeStrengthPlots_EffectPlots_w1pct');
-mkdir(directory);
-
-clear comparison;
-
-comparison(1).grouping.Basis.('Age_Class')='Young';
-comparison(1).grouping.UnderTest.('Age_Class')='Old';
-
-comparison(2).stratification.('Sex')='M';
-comparison(2).grouping.Basis.('Age_Class')='Young';
-comparison(2).grouping.UnderTest.('Age_Class')='Old';
-
-comparison(3).stratification.('Sex')='F';
-comparison(3).grouping.Basis.('Age_Class')='Young';
-comparison(3).grouping.UnderTest.('Age_Class')='Old';
-
-[~,~,~] = full_edge_effect_setup(directory,dataframe,data_scaling,comparison,meaningful_nodes);

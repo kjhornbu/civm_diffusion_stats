@@ -1,10 +1,8 @@
-function [data_table] = calculate_BHFDR(data_table)
+function [data_table] = calculate_BHFDR(data_table,ideal_contrast_list)
 
 %Check the data for the data_table;
 temp_contrast=data_table.contrast;
 temp_contrast(~cellfun(@isempty,regexpi(temp_contrast,{'normvol'})))={'volume_fraction'};
-
-ideal_contrast_list=list2cell("volume_mm3 volume_fraction fa_mean ad_mean md_mean rd_mean tdi_mean");
 
 for n=1:numel(ideal_contrast_list)
     contrast_idx(:,n)=~cellfun(@isempty,regexpi(temp_contrast,ideal_contrast_list{n}));
