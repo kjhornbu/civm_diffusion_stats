@@ -102,7 +102,6 @@ for n=1:numel(meaningful_nodes)
         offset=height(output_plot_vertex_LUT);
         output_plot_vertex_LUT(offset+[1:height(node_keyvertices_entries)],:)=node_keyvertices_entries;
 
-
         %The edge plot doesn't need a wrapper since we dont' make a LUT for it or only pull out key regions
         [figure_entries,make_Left_Axis] = plot_edge_plot(directory,meaningful_nodes(n),matrix_2_print_edge,selection_pull,data_y_labels,ontology_Order,idx_aboveThreshold,make_Left_Axis,idx_10pct_noUncharted_inOntologyOrder_Top15,max_entry);
         [~,make_LUT_img] = setup_difference_plot(directory,meaningful_nodes(n),data_y_labels_cohenD,matrix_2_print_cohenD,positional_idx_10pct_noUncharted_inOntologyOrder_Top15,'cohenD_difference',ontology_Order,make_LUT_img);
@@ -115,7 +114,7 @@ for n=1:numel(meaningful_nodes)
             keep_missed_notes_claude_sheet(claudeoffset+[1:height(missed_nodes_in_claudesheet)],:)=missed_nodes_in_claudesheet;
         end
         figureoffset=height(figure_output);
-        claudeoffset=height(missed_nodes_in_claudesheet);
+        claudeoffset=height(keep_missed_notes_claude_sheet);
 
         if n==1
             %Allow both effect difference plots to have LUTs generated on first

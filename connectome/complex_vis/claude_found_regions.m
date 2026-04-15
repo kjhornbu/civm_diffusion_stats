@@ -24,18 +24,24 @@ connections_for_key_inLUT.DIRECTION=[]; % Direction doesn't matter in diffusion 
 
 output_ontology_set=table;
 count=1;
-for n=1:height(connections_for_key_inLUT)
-    idx_region=reg_match(structure_allregion_parts(:,1),connections_for_key_inLUT.NODE{n});
-   
-    if sum(idx_region)
-        connections_for_key_inLUT.Found_In_DMBA(n)=1;
-        output_ontology_set(count,:)=ontology_Order(idx_region,:);
-        count=count+1;
-    else
-        connections_for_key_inLUT.Found_In_DMBA(n)=0;
+try
+    for n=1:height(connections_for_key_inLUT)
+        idx_region=reg_match(structure_allregion_parts(:,1),strcat('^(',connections_for_key_inLUT.NODE{n},')$'));
+        if sum(idx_region)
+            connections_for_key_inLUT.Found_In_DMBA(n)=1;
+            output_ontology_set(count,:)=ontology_Order(idx_region,:);
+            count=count+1;
+        else
+            connections_for_key_inLUT.Found_In_DMBA(n)=0;
+        end
     end
+catch
+    keyboard;
 end
 
-output_ontology_set=sortrows(output_ontology_set,'start_of_bar','descend'); %so these are in ontology order now
-
+try
+    output_ontology_set=sortrows(output_ontology_set,'start_of_bar','descend'); %so these are in ontology order now
+catch
+    keyboard;
+end
 end

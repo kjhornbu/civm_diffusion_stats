@@ -2,27 +2,6 @@ function [figure_entries,make_Left_Axis] = plot_edge_plot(directory,vertex,matri
 width=3;%width=2*3.3;  -- What width do you want the figures to be (at minimum -- if the font doesn't fit on the graph it will make it bigger).
 fontsize=8; %apparent final font size in the figure (typically viewed on mac)
 tiny_font=4;
-%{
-The set colors as part of the white yellow orange range
-start_color=[1,1,1];
-middle_color=[1,1,0];
-end_color=[1,0.5,0];
-
-% Components we need to do the shifting
-Y_2_O_CG=linspace(1,0.5,128);
-W_2_Y_CB=linspace(1,0,128);
-
-%Putting all together channel by channel
-color_map_white_yellow_orange(:,1)=ones(1,256,1);
-
-color_map_white_yellow_orange(1:128,2)=ones(1,128,1);
-color_map_white_yellow_orange(129:256,2)=Y_2_O_CG;
-
-color_map_white_yellow_orange(1:128,3)=W_2_Y_CB;
-color_map_white_yellow_orange(129:256,3)=zeros(1,128,1);
-new_colormap=color_map_white_yellow_orange;
-
-%}
 
 %{
 Use White Gold and Berry
@@ -58,9 +37,6 @@ for n=size(idx,1):-1:1
     stretch_map(idx(n,:)==1)=n;
 end
 
-%stretch_map=round(linspace(1,size(new_colormap,1),256));
-
-
 new_stretched_colormap=new_colormap(stretch_map,:);
 
 %% Preliminary Setups
@@ -80,7 +56,7 @@ if ismac
     alt_print_num=72; % you are most likely going to be viewing this on a mac in our lab, so you don't need to figure out pixels in pc
 end
 
-%Set Vertices below or == threhold to zero
+%Set Vertices below or == threhold to zero 
 matrix_2_print(:,~idx_aboveThreshold)=0;
 
 figure_entries=table;
@@ -172,9 +148,13 @@ figure_entries.minval=0;
 % black for the super white representation.
 hold on
 % registration marks for regions
-plot(sort_position(5),1,'ko');
-plot(sort_position(10),1,'ko');
-plot(sort_position(15),1,'ko');
+position_set=[5 10, 15];
+
+for pos=1:numel(position_set)
+    if position_set(pos)<=num_labels
+        plot(sort_position(position_set(pos)),1,'ko');
+    end
+end
 
 plot([(size(matrix_2_print,2)/2)+0.5 (size(matrix_2_print,2)/2)+0.5],[0 size(matrix_2_print,1)+1],'color',[0 0 0]);
 
