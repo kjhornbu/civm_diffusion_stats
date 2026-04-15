@@ -335,9 +335,9 @@ for o=1:numel(voxel_wise)
             %This needs to go on the smallest most useful unit for multicomparison otherwise we
             %can't get the BH calculated correctly -- ie don't to L/R/BI together
 
-            bilat_result_table_BHFDR=calculate_BHFDR(bilat_result_table);
-            left_result_table_BHFDR=calculate_BHFDR(left_result_table);
-            right_result_table_BHFDR=calculate_BHFDR(right_result_table);
+            bilat_result_table_BHFDR=calculate_BHFDR(bilat_result_table,ideal_contrast_list);
+            left_result_table_BHFDR=calculate_BHFDR(left_result_table,ideal_contrast_list);
+            right_result_table_BHFDR=calculate_BHFDR(right_result_table,ideal_contrast_list);
 
             %shift the saving location so it is in respect to the given filtering groups in the directory.
             output_paths_bilat=save_output_from_scalar_analysis(save_location,'Bilateral',group_names{m},group,subgroup,model_GROUPING,bilat_group_summary_stats,bilat_specimen_zscore,bilat_result_table_BHFDR,bilat_multi_compare_table);
