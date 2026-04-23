@@ -49,7 +49,10 @@ columns_to_plot = column_setup(:,2);
 LUT_type = column_setup(:,1);
 
 %{'^(CEN-B|CCX-B)$','DIE-B','^(RVG-B|MID-B|HBR-B|CBN-B|CBX-B)$','wmt-B'};
-% to get whole brain ontology use BRN-B; 
+% to get whole brain ontology use BRN-B; -- this has CBL at the end of the
+% HBR which ROB dislikes but we would need a split HBR structure to have it
+% work otherwise.
+%
 % I'm processing the 'decided' 4 partial ontologies, followed by the full. 
 % This is becuase i've added the parent index to the output name as the
 % first part of the name, to group the 4 parts together. maybe that is a
@@ -75,6 +78,7 @@ if strcmp(atlas_name,'DMBA')
 elseif strcmp(atlas_name,'symmetric15um')
     slice_levels=[168,222,276,329]; %in Symmetric 15 RCCF Entry points (0:535)*0.015-4.0125
 end
+
 %{
 Original processing order of the data
 ColorSlice_Figure_Generation/make_LUT_4_slicegen.m:function [LUT] = make_LUT(type,Statistical_Results,Data_Column,file_path)
@@ -96,10 +100,11 @@ Statistical_Results=civm_read_table(group_stats_file,[],[],true);
 
 % check that the requested stats are present
 stat_col_numbers=column_find(Statistical_Results,sprintf('^(%s)$',strjoin(columns_to_plot,'|')));
-% Statistical_Results.Properties.VariableNames(stat_col_numbers)
-% pct_change_cols=column_find(Statistical_Results,'percent_change_AD-.*nTg.*FAD.*');
-% Statistical_Results.Properties.VariableNames(pct_change_cols)
-assert(numel(stat_col_numbers)==numel(columns_to_plot), 'Requested columns not properly resolved, check the requested columns');
+assert(numel(stat_col_numbers)==numel(unique(columns_to_plot)), 'Requested columns not properly resolved, check the requested columns');
+
+% but this isn't finding it twice??? What if I want multiple things plotted
+% different color ranges -- don't do it here. 
+
 
 [source_of_variation_names,~,source_of_variation_idx]=unique(Statistical_Results.source_of_variation);
 [contrast_names,~,contrast_idx]=unique(Statistical_Results.contrast);
@@ -115,6 +120,7 @@ if strcmp(label_nrrd.axis_order,'LPS')
 elseif strcmp(label_nrrd.axis_order,'RAS')
     slice_level_data=label_nrrd.data(:,end:-1:1,slice_levels);
 end
+
 %% create ontology plots of columns, and colored slices.
 % parfor will put the figure creation in the background, making the
 % computer still useable while generating figures.
@@ -125,16 +131,13 @@ end
 lut_map=containers.Map();
 task_map=containers.Map();
 composite_map=containers.Map();
-for i_column=1:numel(columns_to_plot)
-    plot_lut = true;
-    for i_sov=1:numel(source_of_variation_names)
-        
+for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
+    %plot_lut = true;
+    for i_sov=1:numel(source_of_variation_names) 
         source_of_variation_logical_idx=source_of_variation_idx==i_sov;
-
         for i_contrast=1:numel(contrast_names)
 
             contrast_logical_idx=contrast_idx==i_contrast;
-            
             plot_idx=and(contrast_logical_idx,source_of_variation_logical_idx);
             segmented_Statistical_Results=Statistical_Results(plot_idx,:);
 
@@ -184,12 +187,19 @@ for i_column=1:numel(columns_to_plot)
             end
             measure_name=regexprep(columns_to_plot(i_column),'(_-)+','');
 
-            %data_identity=[measure_name,contrast_names{i_contrast},sov];
-            data_identity=[sov, contrast_names{i_contrast}, measure_name];
+            if numel(LUT_type{i_column})==1
+                data_identity=[sov, contrast_names{i_contrast}, measure_name,LUT_type{i_column}];
+            else
+                data_identity=[sov, contrast_names{i_contrast}, measure_name];
+            end
+            
             C_contrast_dir=[C_metric_dir, contrast_names{i_contrast}];
             lookup_dir=fullfile(C_contrast_dir{:},'lookup_tables');
-            lookup_name_slicer=strjoin([data_identity,'lookup.txt'],'_');
-            % new type? calibrated instead of _wn? 
+            try
+                lookup_name_slicer=strjoin([data_identity,'lookup.txt'],'_');
+            catch
+                keyboard;
+            end
             slice_lut_out=fullfile(lookup_dir,lookup_name_slicer);
 
             % creating the direct output path is deferred until below
@@ -235,7 +245,6 @@ for i_column=1:numel(columns_to_plot)
                     % force tall not wide, in case our input is backwards.
                     color_names=reshape(color_names,numel(color_names),1);
                     Color = lookup_colors_generate(numel(color_range)-neutral_count-1, false, neutral_count, false);
-                    
                 else
                     desired_steps=10;
                     %color_range=lookup_range(desired_steps,neutral_count,'step_size',step_size,'neutrals_are_steps',i_tx);
@@ -312,6 +321,8 @@ for i_column=1:numel(columns_to_plot)
             %    sLUT=civm_read_table(slice_lut_out);
             end
             %}
+
+
             %% ontology component loop
             ontology_paths=cell(size(selected_parents));
             for i_parent = 1:numel(selected_parents)
@@ -354,6 +365,7 @@ for i_column=1:numel(columns_to_plot)
                     complete_layout = @(b_l) coordinate_positioning(b_l());
                 end
                 %}
+
                 base_layout=@() gen_ontology_ordering_table(ontology_with_stats,segmented_Statistical_Results,selected_parents{i_parent});
                 complete_layout = @(b_l) coordinate_positioning(b_l());
 
@@ -466,7 +478,6 @@ if any(fails)
     db_inplace(mfilename,msg);
     % the task-map can bse
 end
-
 
 %% parfor ontologies and slices
 task_list=task_map.values();

@@ -253,10 +253,12 @@ function [archive_idx,temp_connectome_data] = check_connectome_directory(m,n,pro
 %Checks all possible project research archives given by user for where data
 %is saved.
 if iscell(project_research_archive)
-    temp_connectome_data=connectome_dir(project_research_archive{m},[cloud_notebook.(unique_column){n} 'NLSAM'],'optional_suffix',opts.isSuffixOptional,'suffix',opts.suffix);
-    if isempty(temp_connectome_data.labels) % If not NLSAMed then it is without
+    if ~isempty(opts.suffix)
         temp_connectome_data=connectome_dir(project_research_archive{m},[cloud_notebook.(unique_column){n}],'optional_suffix',opts.isSuffixOptional,'suffix',opts.suffix);
+    else
+        temp_connectome_data=connectome_dir(project_research_archive{m},[cloud_notebook.(unique_column){n}],'optional_suffix',opts.isSuffixOptional);
     end
+    
     archive_idx=m;
 
     if ~exist(temp_connectome_data.results,'dir')
@@ -268,10 +270,12 @@ if iscell(project_research_archive)
         end
     end
 else
-    temp_connectome_data=connectome_dir(project_research_archive,[cloud_notebook.(unique_column){n} 'NLSAM'],'optional_suffix',opts.isSuffixOptional,'suffix',opts.suffix);
-    if isempty(temp_connectome_data.labels) %If not NLSAMed then it is without
+    if ~isempty(opts.suffix)
         temp_connectome_data=connectome_dir(project_research_archive,[cloud_notebook.(unique_column){n}],'optional_suffix',opts.isSuffixOptional,'suffix',opts.suffix);
+    else
+        temp_connectome_data=connectome_dir(project_research_archive,[cloud_notebook.(unique_column){n}],'optional_suffix',opts.isSuffixOptional);
     end
+
     archive_idx = 1;
 end
 end

@@ -445,18 +445,21 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
 
             %% list off the "cool" columns to go plot
 
+            %these are set columns that are fixed color ranges for the data
             col_types={'cohenD','percent_change'};
             column_setup = {
                 'singleside_cohen','cohenF'
                 'pvalue_extended', 'pval'
                 'pvalue_extended', 'pval_BH'%This was pvalue regular before but as rob loves getting all the exact pvalues, I did more
                 };
+
             % indicies of the summary criteria, we dont use summary criterais because
             % its not as well connected to what we want.
 
             summary_idx=pairwise_criteria.control.applytosummary==1;
 
-            % comparison_names
+            % comparison_names version -- technically could be defined so
+            % each one is different. 
             case_names=pairwise_criteria.control.case(summary_idx);
             name_code=cell(size(case_names));
             sum_compare=compare_criteria{1}(:,summary_idx);
@@ -476,6 +479,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
                     %end
                     % WARNING: ONLY the neutral works right now, make james fix the color
                     % table junk (or replace the whole thing with something smart(er/ish)).
+
                     column_setup(end+1,:)={sprintf('%s_WN',col_types{col_type_idx}), sprintf('%s_%s',col_types{col_type_idx},name_code{n})};
                 end
             end
@@ -697,9 +701,14 @@ civm_diffusion_stats(studyParams{:});
                     global_path{s}=global_paths.pval;
                 end
                 
+                try
                 Paths_Pval.(connectome_outputs{n}).name((1:numel(name))+1)=name;
                 Paths_Pval.(connectome_outputs{n}).regional((1:numel(name))+1)=regional_path;
                 Paths_Pval.(connectome_outputs{n}).global((1:numel(name))+1)=global_path;
+                catch
+                    disp(n)
+                    keyboard;
+                end
             end
             t_oneremove=toc(t_start_remove);
             fprintf('One remove actually took, %g minutes estimate was %g minutes\n',t_oneremove/60,total_est_time_1rm);

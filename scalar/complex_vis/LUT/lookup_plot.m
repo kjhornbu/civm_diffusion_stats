@@ -28,7 +28,6 @@ parse(p, varargin{:});
 
 params=p.Results; 
 
-
 if isstruct(stat_colors)
     color_bounds=[ [stat_colors.bin_start]; [stat_colors.bin_stop] ];
     color_range=sort(unique(color_bounds(:)));
