@@ -114,7 +114,8 @@ end
 LUT.sep=repmat({'#'},height(LUT),1);
 LUT=column_reorder(LUT,list2cell('ROI Structure r g b a sep GN_Symbol ARA_abbrev'));
 LUT.Properties.VariableNames([3,4,5,6])=list2cell('c_r c_g c_b c_a');
+
 if exist('output','var')
     civm_write_table(LUT,output,false,true,{},'quiet');
 end
-
+end

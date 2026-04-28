@@ -237,6 +237,16 @@ for d_idx=1:numel(data_idx)
                 'continuous', cont_positional_idx,...
                 'random', random_positional_idx,...
                 'display','off');
+
+             % WE do the default here which is a type 3 -- type 3 means
+             % calculate all SS in a iterative series 3 
+             %Type III sum of squares. The reduction in residual sum of squares 
+             % obtained by adding that term to a model containing all other terms,
+             % but with their effects constrained to obey the usual "sigma restrictions"
+             % that make models estimable.
+
+             %% Add total ss?
+
         catch
            % keyboard;
             %I modified a lot within here (the if else checking on data lengths) to go and add NaN data into the

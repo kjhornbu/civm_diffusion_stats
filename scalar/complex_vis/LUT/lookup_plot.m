@@ -101,10 +101,10 @@ end
 hold off;
 
 if exist('out','var') 
-    if isfield(out,'svg')
+    if isfield(out,'svg')&&~exist(out.svg,'file')
         print(fig_colormap, out.svg, '-dsvg', '-vector');
     end
-    if isfield(out,'png')
+    if isfield(out,'png')&&~exist(out.png,'file')
         print(fig_colormap, out.png, '-dpng', '-r600');
     end
 end

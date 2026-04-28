@@ -128,11 +128,11 @@ end
 % 
 % maps are like hashes/dictionaries, this lets us avoid repeating work.
 % keys are the file paths with values being anonymous functions.
+
 lut_map=containers.Map();
 task_map=containers.Map();
 composite_map=containers.Map();
-for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
-    %plot_lut = true;
+for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing  
     for i_sov=1:numel(source_of_variation_names) 
         source_of_variation_logical_idx=source_of_variation_idx==i_sov;
         for i_contrast=1:numel(contrast_names)
@@ -192,14 +192,18 @@ for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
             else
                 data_identity=[sov, contrast_names{i_contrast}, measure_name];
             end
-            
+
+            data_identity=strrep(data_identity,':','BY');
+
             C_contrast_dir=[C_metric_dir, contrast_names{i_contrast}];
             lookup_dir=fullfile(C_contrast_dir{:},'lookup_tables');
+            
             try
                 lookup_name_slicer=strjoin([data_identity,'lookup.txt'],'_');
             catch
                 keyboard;
             end
+
             slice_lut_out=fullfile(lookup_dir,lookup_name_slicer);
 
             % creating the direct output path is deferred until below
@@ -209,8 +213,10 @@ for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
             % keeping the path handling together(as much as possible)
             figure_type='slice';
             slice_dir=fullfile(C_contrast_dir{:});
-            C_slice_name=[data_identity, figure_type, 'SLICELEVEL'];
+            C_slice_name=[data_identity, figure_type, 'SLICELEVEL']; % RIGHT HERE DOES THE SLICE THING!!!
 
+            slice_name_pos=find(reg_match(C_slice_name,'SLICELEVEL'));
+            
             figure_type='ontology_composite';
             composite_ol_dir=fullfile(C_contrast_dir{:});
             C_ontoslice_name=[data_identity,figure_type];
@@ -286,10 +292,17 @@ for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
             if ~exist(out_lut.tbl,'file')
                 civm_write_table(stat_colors,out_lut.tbl,false,true,{},'quiet');
             end
-            if ~exist(out_lut.svg,'file') || ~exist(out_lut.png,'file')
+            if (~exist(out_lut.svg,'file') || ~exist(out_lut.png,'file'))
+                % but these are not ran here so the checer isn't actually
+                % makign teh out_lut figures here. 
+
                 % to prevent issue with anonymous functions this has to be
-                % a var before we define the fuction.
+                % a var before we define the fuction. -- the problem is
+                % this is making a ton of the same things
+
                 t_st=table2struct(stat_colors);
+                %This makes all the plots a ton of times for each one and
+                %this is craziness. 
                 lut_map(slice_lut_out)=@() lookup_plot(t_st,out_lut,bar_plot_opts{:});
             end
             if ~exist(slice_lut_out,'file')
@@ -379,9 +392,11 @@ for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
                 %task_map(ontology_base_path)=@() onto_plot(complete_layout,gen_olut);
 
                 onto_plot=@(c_l,lut) ontology_plotting(c_l(base_layout),selected_parents{i_parent},lut,ontology_base_path);
+
                 if ~exist('LUT','var')
                     LUT=civm_read_table(slice_lut_out,[],[],true);
                 end
+
                 task_map(ontology_base_path)=@() onto_plot(complete_layout,LUT);
             end
             %close all;
