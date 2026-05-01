@@ -236,7 +236,9 @@ for d_idx=1:numel(data_idx)
                 'varnames', group_types,...
                 'continuous', cont_positional_idx,...
                 'random', random_positional_idx,...
-                'display','off');
+                'display','off'); 
+
+            assert(nnz(cell2mat(tbl(2:end,4))==1)==0,'There are Singular Terms! You cannot run the model as specified!');
 
              % WE do the default here which is a type 3 -- type 3 means
              % calculate all SS in a iterative series 3 
