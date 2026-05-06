@@ -155,7 +155,26 @@ print(figH, out_png,'-dpng','-r600');
 exportgraphics(figH, out.pdf,'BackgroundColor','none','ContentType','vector','Resolution',600);
 
 %% convert saved pdf to svg and png via inkscape
-warning('NOT GENERATING svg or png from pdf because inkscape hates james');
+warning('NOT GENERATING svg or png from pdf because inkscape based conversion in ontology_plotting.m is busted (');
+
+%{
+Alt2 form of inkscape
+Errors in the inkscape command when ran as command line basically it was
+not able to process that .svg is .svg (or using svg or 'svg' or "svg" etc)
+
+(process:7820): GLib-GIO-WARNING **: 16:48:04.657: C:\CIVM_Apps\inkscape\bin\gdbus.exe dbus binary failed to launch bus, maybe incompatible version
+
+(org.inkscape.Inkscape:7820): GLib-GIO-WARNING **: 16:48:08.237: C:\CIVM_Apps\inkscape\bin\gdbus.exe dbus binary failed to launch bus, maybe incompatible version
+
+** (org.inkscape.Inkscape:7820): WARNING **: 16:48:53.366: No pages selected, getting first page only.
+InkFileExportCmd::do_export: Unknown export type: svg. Allowed values: [.dxf, .emf, .eps, .fxg, .gpl, .hpgl, .html, .jpg, .odg, .pdf, .png, .pov, .ps, .sif, .svg, .svgz, .tar, .tex, .tiff, .webp, .wmf, .xaml, .zip]
+
+TRY THIS NEXT:
+does runnign inkscape from command prompt work???
+Test CTX02-3-1 and see if same behavior. 
+%}
+
+
 return;
 cmd=sprintf('inkscape --export-filename=%s %s', out.svg, out.pdf);
 [s,sout]=system(cmd);

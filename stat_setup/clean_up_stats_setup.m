@@ -41,7 +41,7 @@ end
 %test_criteria={{'group2';{'group1','subgroup1'}},{'group1','group2','subgroup1'}};
 
 model_array=table2array(configuration_struct.model_table);
-idx_pos = sum(model_array)>0;
+idx_pos = sum(model_array,1)>0;
 matrix=double(model_array(:,idx_pos));
 model_names = configuration_struct.model_table.Properties.VariableNames(idx_pos);
 plot_criteria=model_names;
@@ -143,6 +143,7 @@ stats_test_manova.pval_threshold=pval_threshold;
 %should just keept it to those and then from there apply other things. Have
 %a button in the script to port from one sheet to the other and just apply
 %the 
+
 source={'control','treatment'};
 for o=1:numel(source)
     for n=1:height(pairwise_criteria.(source{o}))

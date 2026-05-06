@@ -7,9 +7,6 @@ else
 end
 
 model_array=table2array(configuration_struct.model_table);
-for n=1:size(model_array,1)
-    studymodel{n}=strjoin(configuration_struct.model_table.Properties.VariableNames(model_array(n,:)),':');
-end
 
 %% Pulling Interesting columns (we need those because the other columns are not useful stuff)
 GROUP_logical_idx=~cellfun(@isempty,configuration_struct.test_criteria.GROUP);
@@ -38,9 +35,17 @@ end
      idx_strat=logical(zeros(height(only_interesting_col_names),1));
  end
 
-    idx = idx_zscore | idx_strat;
-    only_interesting_col_names(idx)=[];
-    
+ % don't put in pairwise compare if you don't actually include this
+ % factor in the model. 
+ not_using_cofactor_idx=sum(model_array)'==0;
+
+ idx = idx_zscore | idx_strat | not_using_cofactor_idx;
+ only_interesting_col_names(idx)=[];
+
+for n=1:size(model_array,1)
+    studymodel{n}=strjoin(configuration_struct.model_table.Properties.VariableNames(model_array(n,:)),':');
+end
+
 %% Start the ui for figure generation
 fig=uifigure('Position',[100 100 2150 1100]);
 main_grid = uigridlayout(fig,[2,1]); % Have two grids one with all the info in it and another which holds the next button
