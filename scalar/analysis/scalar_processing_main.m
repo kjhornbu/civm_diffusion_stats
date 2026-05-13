@@ -11,9 +11,6 @@ if exist('opts','var')
     end
 end
 
-% voxel_wise={'Non_Erode','Erode'}
-% voxel_wise_keys={'stat_path','stat_path_erode'}
-
 %% check if erode stats are part of data frame, and skip with warning if not
 if isempty( column_find(dataframe,'^stat_path_erode$') )
     warning('There are NO Erode Stat Paths Specified -- NO Erode Region Data Summaries will be Generated');
@@ -21,9 +18,11 @@ if isempty( column_find(dataframe,'^stat_path_erode$') )
     idx=reg_match(voxel_wise,'^(Erode)$');
     pos_idx=find(idx);
 
-    voxel_wise{pos_idx}=[];
-    voxel_wise_keys{pos_idx}=[];
-    all_ideal_contrast_list{pos_idx}=[];
+    if ~isempty(pos_idx)
+        voxel_wise{pos_idx}=[];
+        voxel_wise_keys{pos_idx}=[];
+        all_ideal_contrast_list{pos_idx}=[];
+    end
 
     voxel_wise = voxel_wise(~cellfun('isempty',voxel_wise)) ;
     voxel_wise_keys = voxel_wise_keys(~cellfun('isempty',voxel_wise_keys)) ;

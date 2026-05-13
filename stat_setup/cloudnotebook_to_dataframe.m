@@ -55,13 +55,6 @@ for n=1:height(cloud_notebook)
 
     [~,temp_connectome_data] = check_connectome_directory(m,n,stats_archive,cloud_notebook,unique_column,opts);
 
-    if ~isempty(opts.alternative_statsheet_path)
-        [temp_connectome_data] = shift_stats_location_to_flat_folder(temp_connectome_data,dir_alt_stat,'stats',cloud_notebook.(unique_column){n});
-    end
-
-    if ~isempty(opts.alternative_statsheet_erode_path)
-        [temp_connectome_data] = shift_stats_location_to_flat_folder(temp_connectome_data,dir_alt_stat,'e1_stats',cloud_notebook.(unique_column){n});
-    end
 
     % Stats Polisher output, NOT where the files currently live.
     polished_stats=fullfile(opts.polishedSheetPath, [cloud_notebook.(unique_column){n},'stats.txt']);
