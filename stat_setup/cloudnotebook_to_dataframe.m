@@ -4,8 +4,15 @@ function [] = cloudnotebook_to_dataframe(unique_column,input_doc, ...
 %The main difference between a cloud notebook and a dataframe is just that
 %the dataframe has paths to data items within it.
 
-
-stats_archive=opts.researchArchivePath;
+if isempty(opts.alternative_statsheet_dir)&&~isempty(opts.researchArchivePath)
+    %if the alterative stat sheet directory is empty (default behavior) and we have research
+    %archive path, take the research arhive path
+    stats_archive=opts.researchArchivePath;
+elseif ~isempty(opts.alternative_statsheet_dir)
+    % in any case of a  alterative stat sheet directory, take it. Doesn't
+    % matter if have a research archive path (just ignore what is in there).
+    stats_archive=opts.alternative_statsheet_dir;
+end
 
 % stats_archive is either the "research" directory for this
 % project in the primary CIVM archive, OR a folder which contains stats
@@ -43,9 +50,18 @@ dataFrame=cloud_notebook;
 failures=0;
 
 m=1;
+
 for n=1:height(cloud_notebook)
 
     [~,temp_connectome_data] = check_connectome_directory(m,n,stats_archive,cloud_notebook,unique_column,opts);
+
+    if ~isempty(opts.alternative_statsheet_path)
+        [temp_connectome_data] = shift_stats_location_to_flat_folder(temp_connectome_data,dir_alt_stat,'stats',cloud_notebook.(unique_column){n});
+    end
+
+    if ~isempty(opts.alternative_statsheet_erode_path)
+        [temp_connectome_data] = shift_stats_location_to_flat_folder(temp_connectome_data,dir_alt_stat,'e1_stats',cloud_notebook.(unique_column){n});
+    end
 
     % Stats Polisher output, NOT where the files currently live.
     polished_stats=fullfile(opts.polishedSheetPath, [cloud_notebook.(unique_column){n},'stats.txt']);
@@ -68,10 +84,13 @@ for n=1:height(cloud_notebook)
         else
             dataFrame.label_lookup_path{n}=temp_connectome_data.lookup;
         end
+        if opts
         dataFrame.label_path{n}=temp_connectome_data.labels; %WE NEED THIS FOR CONNECTOMES!!!! WHY DO YOU COMMENT IT OUT JAMES/HARRISON? NEED TO FIX HOW WE GET SCALES FOR CONNECTOME FIRST
+        end
         dataFrame.connectome_obj{n}=temp_connectome_data;
-    elseif numel(fieldnames(temp_connectome_data.headfile)) == 0 && ...
+    elseif numel(fieldnames(temp_connectome_data.headfile)) == 0 && ~isempty(opts.alternative_statsheet_dir) &&...
             ~any(reg_match(stats_archive,'research[\/]?$'))
+        
         % no fields in the headfile struct indicates the headfile was not loaded (and probably not found).
         % This does NOT MEAN we're not looking at archive!
         % We should only search extra in the stats_archive when we're
@@ -82,13 +101,13 @@ for n=1:height(cloud_notebook)
         % This silly construct avoids unnecessary test for cell array.
         % This will force search_dirs to allways be a cell array, with at
         % least 1 entry.
+
         search_dirs={}; search_dirs=[search_dirs,stats_archive];
 
         found_stat='NOFILE';
         idx_sd=1;
         while ~exist(found_stat,'file') && idx_sd <= numel(search_dirs)
             pattern=sprintf('%s_.+stats.txt$',cloud_notebook.(unique_column){n});
-            %pattern=sprintf('%s%s',cloud_notebook.(unique_column){n},RUNNO_mod);
             found=regexpdir(search_dirs{idx_sd},pattern);
             if numel(found)
                 % what about finding too many? Right now we'll just crash.
@@ -106,9 +125,7 @@ for n=1:height(cloud_notebook)
                 temp_connectome_data.(uncell(badfield))='';
             end
             dataFrame.stat_path{n}=polished_stats;
-            %dataFrame.stat_path_erode{n}=polished_e1stats;
             dataFrame.label_lookup_path{n}=opts.overrideLabelLUT;
-            % dataFrame.label_path{n}=temp_connectome_data.labels;
             dataFrame.connectome_obj{n}=temp_connectome_data;
         end
     else
@@ -279,3 +296,5 @@ else
     archive_idx = 1;
 end
 end
+
+

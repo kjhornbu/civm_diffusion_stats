@@ -46,6 +46,7 @@ addParameter(p, 'isSuffixOptional', false,  @(x) isscalar(x) && ismember(x, [fal
 addParameter(p, 'suffix',[], @(x) ischar(x) || isstring(x) || iscell(x));
 addParameter(p, 'allowMissing', false,  @(x) isscalar(x) && ismember(x, [false, true])); %If you are missing stuff you are caring about change option to true
 addParameter(p, 'assumeNLSAM', false,  @(x) isscalar(x) && ismember(x, [false, true])); %hey if you are missing all your data you need to look for NLSAM (change to true)
+addParameter(p, 'alternative_statsheet_dir',[], @(x) ischar(x) || isstring(x) || iscell(x)); % if you have stats that are in a flat file (like out of a samba run here is how to grab them all together and use them)-- Either put the same path in teh project research path or leave empty
 
 if isempty(getenv('USER')), user_name=getenv('USERNAME'); end
 addParameter(p, 'user', user_name, @(x) ischar(x) || isstring(x) || iscell(x)); 
@@ -67,7 +68,7 @@ default_scalarContrast(2).List=list2cell("fa_mean ad_mean md_mean rd_mean");
 
 addParameter(p,'scalarContrastMetrics',default_scalarContrast, @(x) isstruct(x));
 
-%addParameter(p, 'directionality', 'double', @(x) ( ischar(x) || isstring(x) ) && reg_match(x,'negative|double|positive') );
+
 
 % Parse input
 parse(p, varargin{:});
