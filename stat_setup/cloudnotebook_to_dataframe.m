@@ -77,9 +77,11 @@ for n=1:height(cloud_notebook)
         else
             dataFrame.label_lookup_path{n}=temp_connectome_data.lookup;
         end
-        if opts
-        dataFrame.label_path{n}=temp_connectome_data.labels; %WE NEED THIS FOR CONNECTOMES!!!! WHY DO YOU COMMENT IT OUT JAMES/HARRISON? NEED TO FIX HOW WE GET SCALES FOR CONNECTOME FIRST
+        if nnz(reg_match(opts.analysisPipelineType,'Connectome'))
+            %  For connectomes only grab the label files
+            dataFrame.label_path{n}=temp_connectome_data.labels; %WE NEED THIS FOR CONNECTOMES!!!! WHY DO YOU COMMENT IT OUT JAMES/HARRISON? NEED TO FIX HOW WE GET SCALES FOR CONNECTOME FIRST
         end
+
         dataFrame.connectome_obj{n}=temp_connectome_data;
     elseif numel(fieldnames(temp_connectome_data.headfile)) == 0 && ~isempty(opts.alternative_statsheet_dir) &&...
             ~any(reg_match(stats_archive,'research[\/]?$'))
@@ -120,6 +122,10 @@ for n=1:height(cloud_notebook)
             dataFrame.stat_path{n}=polished_stats;
             dataFrame.label_lookup_path{n}=opts.overrideLabelLUT;
             dataFrame.connectome_obj{n}=temp_connectome_data;
+
+            if nnz(reg_match(opts.analysisPipelineType,'Connectome'))
+                error('You cannot run the alterative stat sheet directory form of analysis for connectomic processing!!! Change "analysisPipelineType" to ONLY scalar mode.')
+            end
         end
     else
         % probably no headfile found
