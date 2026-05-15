@@ -57,9 +57,9 @@ default_scalarContrast=struct;
 default_scalarContrast(1).Name={'Non_Erode'}; 
 default_scalarContrast(1).Column={'stat_path'};
 default_scalarContrast(1).List=list2cell("volume_mm3 volume_fraction fa_mean ad_mean md_mean rd_mean");
-default_scalarContrast(2).Name={'Erode'}; 
-default_scalarContrast(2).Column={'stat_path_erode'}; 
-default_scalarContrast(2).List=list2cell("fa_mean ad_mean md_mean rd_mean");
+% default_scalarContrast(2).Name={'Erode'}; 
+% default_scalarContrast(2).Column={'stat_path_erode'}; 
+% default_scalarContrast(2).List=list2cell("fa_mean ad_mean md_mean rd_mean");
 
 %The former QSDR that harrison used.
 %default_scalarContrast(3).Name={'QSDR'}; 
@@ -67,7 +67,6 @@ default_scalarContrast(2).List=list2cell("fa_mean ad_mean md_mean rd_mean");
 %default_scalarContrast(3).List=strcatlist2cell(strrep('dti_fa,ad,md,rd,iso,qa,rdi,t-inc-ad,t-inc-md,t-inc-rd,t-inc-gfa,t-inc-dti-fa,t-inc-iso,t-inc-qa,t-dec-ad,t-dec-md,t-dec-rd,t-dec-gfa,t-dec-dti-fa,t-dec-iso,t-dec-qa','-','_')),'_mean');
 
 addParameter(p,'scalarContrastMetrics',default_scalarContrast, @(x) isstruct(x));
-
 
 
 % Parse input

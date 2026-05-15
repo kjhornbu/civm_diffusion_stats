@@ -335,7 +335,8 @@ for d_idx=1:numel(data_idx)
 
             output.cohenF(length_output+(1:numel(p)))=sqrt(output.eta2(length_output+(1:numel(p)))./(1-output.eta2(length_output+(1:numel(p)))));
 
-            %Error term entries tacked onto the end.
+            %Error term entries tacked onto the end. makes it easier for us
+            %to repair if there is a processing problem.
             output.Number_of_Groupings(length_output+num_lines_to_add)=NaN;
             output.pval(length_output+num_lines_to_add)=NaN;
             output.eta2(length_output+num_lines_to_add)=NaN;
