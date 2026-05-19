@@ -1,58 +1,50 @@
-function [] = cloudnotebook_to_dataframe(unique_column,input_doc, ...
-   opts)
+function [outputArg1,outputArg2] = dataframePolisher(inputArg1,inputArg2)
 
-%The main difference between a cloud notebook and a dataframe is just that
-%the dataframe has paths to data items within it.
+if found_stats
+    missing_erode_stats_idx=false(height(dataFrame),1);
+    % Because polishing is slow, we use parfor.
+    % Due to limits of parfor, must pull out the relevant columns before
+    % the loop.
+    df_connectome_obj=dataFrame.connectome_obj;
+    df_stat_path=dataFrame.stat_path;
+    if found_e1stats
+        df_stat_path_erode=dataFrame.stat_path_erode;
+    else
+        df_stat_path_erode=cell(size(df_stat_path));
+    end
 
-if isempty(opts.alternative_statsheet_dir)&&~isempty(opts.researchArchivePath)
-    %if the alterative stat sheet directory is empty (default behavior) and we have research
-    %archive path, take the research arhive path
-    stats_archive=opts.researchArchivePath;
-elseif ~isempty(opts.alternative_statsheet_dir)
-    % in any case of a  alterative stat sheet directory, take it. Doesn't
-    % matter if have a research archive path (just ignore what is in there).
-    stats_archive=opts.alternative_statsheet_dir;
+    stats_polisher_bulk(df_stat_path,df_stat_path_erode,df_connectome_obj)
+
+    %% Validate polishing worked.
+    for n=1:height(dataFrame)
+        temp_connectome_data=dataFrame.connectome_obj{n};
+        polished_stats=dataFrame.stat_path{n};
+        % Have to use the newer check because if the file does not exist we
+        % return false.
+        have_stats_been_polished = ~isempty(temp_connectome_data) && file_time_check(polished_stats, 'newer', temp_connectome_data.stats );
+        if ~found_e1stats
+            stat_ready=have_stats_been_polished;
+        else
+            polished_e1stats=dataFrame.stat_path_erode{n};
+            if ~isempty(temp_connectome_data) && ~isempty(temp_connectome_data.e1_stats)
+                have_e1stats_polished = file_time_check(polished_e1stats, 'newer', temp_connectome_data.e1_stats );
+            else
+                missing_erode_stats_idx(n)=1;
+                have_e1stats_polished=true; %just so we can pass through the check condition
+            end
+            stat_ready=(have_stats_been_polished+have_e1stats_polished)/2;
+        end
+        failures=failures+(1-stat_ready);
+        if stat_ready < 1
+            continue;
+        end
+        % if any labels were found, its presumed we're supposed to have
+        % labels.
+        if found_labels
+            dataFrame.label_path{n}=temp_connectome_data.labels;
+        end
+    end
 end
-opts.stats_archive=stats_archive;
-% stats_archive is either the "research" directory for this
-% project in the primary CIVM archive, OR a folder which contains stats
-% files someplace underneath it.
-%
-% James added the second case to support stats from the samba stats folder.
-% (This is a folder where samba measures all your labels while it is
-% processing.)
-%
-% For both archive and arbitrary directory, it can be a cell array to
-% specify multiple search locations.
-% The first valid location found will be used.
-
-if istable(input_doc)
-    cloud_notebook=input_doc;
-else
-    cloud_notebook=civm_read_table(input_doc);
-end
-
-%% load (simple) ontology and resolve implications
-if ~isempty(opts.overrideLabelLUT)
-    atlasOntology=civm_read_table(opts.overrideLabelLUT);
-    reset_cols={ {'voxel_presence','none'} };
-    [success, fullAtlasOntology, name_to_idx, name_to_onto] = ontology_resolve_implied_rows(atlasOntology, reset_cols, [], 'quiet');
-    assert(success==1,'resolved implied rows of ontology data');
-else
-    fullAtlasOntology=[];
-end
-
-opts.fullAtlasOntology=fullAtlasOntology;
-
-
-dataFrame=cloud_notebook; %This is a list of what specimen you need to grab
-failures=0;
-
-m=1;
-
-
-
-[dataFrame] = polishingData_FormingInitalRecord(cloud_notebook,unique_column,opts);
 
 % remove connectome_obj from dataframe as it cannot be saved to spreadsheet.
 dataFrame.connectome_obj=[];
@@ -103,7 +95,5 @@ dataFrame=dataFrame(~missing_data_idx,:);
 
 %% dataframe creation complete, save.
 civm_write_table(dataFrame,opts.dataframePath);
+
 end
-
-
-
