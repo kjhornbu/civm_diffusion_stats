@@ -19,7 +19,8 @@ data_scaling=1;
 % meaningful_nodes=unique(meaningful_nodes); %only 1 hemisphere
 
 %meaningful_nodes=[9 26]; %ACC-L VCP-L
-meaningful_nodes=[9, 14, 17, 26, 28, 71, 104, 137, 156, 161];
+%meaningful_nodes=[9, 14, 17, 26, 28, 71, 104, 137, 156, 161];
+meaningful_nodes=[9, 14, 17, 26, 28, 104, 137, 156, 161]; %without CLT
 
 %% Run All Comparision
 directory=fullfile(working_folder,'All_EdgeStrengthPlots_EffectPlots_ClaudeConnection_9KeyROIs');
@@ -30,6 +31,15 @@ comparison(1).grouping.Basis.('Age_Class')='Young';
 comparison(1).grouping.UnderTest.('Age_Class')='Old';
 
 [~,~,~] = full_edge_effect_setup_claudeForm(directory,dataframe,data_scaling,comparison,meaningful_nodes);
+
+% directory=fullfile(working_folder,'All_EdgeStrengthPlots_EffectPlots_9KeyROIs');
+% mkdir(directory);
+% clear comparison;
+% 
+% comparison(1).grouping.Basis.('Age_Class')='Young';
+% comparison(1).grouping.UnderTest.('Age_Class')='Old';
+% 
+% [~,~,~] = full_edge_effect_setup(directory,dataframe,data_scaling,comparison,meaningful_nodes);
 
 %% Pick Strains to Use
 distance_values=civm_read_table("Z:\All_Staff\18.gaj.42\FullAnalysis_20260224\MDS\MDS_Distances\REGIONAL_MDS_centroid_to_centroid_Distance_All_Strains+All.csv");

@@ -1,0 +1,29 @@
+close all;
+clear variables;
+
+%% Preliminaries
+studyID='18.gaj.42';
+project_dir='Z:\All_Staff\18.gaj.42\';
+google_doc="Z:\All_Staff\18.gaj.42\google_sheet_captures\18.gaj.42_20260401.txt";
+cleaned_google_doc_path="Z:\All_Staff\18.gaj.42\google_sheet_captures\Edited_GoogleSheet_FixedDate.txt";
+statSaveDir=fullfile(project_dir,'FullAnalysis_20260514');
+
+dataframe_path="Z:\All_Staff\18.gaj.42\18.gaj.42_DataFrame_noB6_20260224.txt";
+config_file='';
+polished_sheets=fullfile(project_dir,'polished_sheets'); %where the polished sheets will be saved 
+project_research_archive{1}=fullfile('A:/',studyID,'research');
+atlas_ontology_path=fullfile(getenv("WORKSTATION_HOME"),'static_data','atlas','symmetric15um','labels','RCCF','symmetric15um_RCCF_labels_lookup.txt'); 
+
+studyParams={
+  studyID,...
+  statSaveDir,...
+  'configFile',config_file,...
+  'dataframePath',dataframe_path,...
+  'overrideLabelLUT',atlas_ontology_path,...
+  'researchArchivePath',project_research_archive,...
+  'polishedSheetPath',polished_sheets,...
+  'suffix','RCCF',...
+  'allowMissing',true,...
+  'analysisPipelineType', list2cell('Scalar')};
+
+civm_diffusion_stats(studyParams{:});
