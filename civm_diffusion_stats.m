@@ -56,10 +56,13 @@ addParameter(p,'extendedStudyColumns',{}, @(x) ischar(x) || isstring(x) || iscel
 default_scalarContrast=struct;
 default_scalarContrast(1).Name={'Non_Erode'}; 
 default_scalarContrast(1).Column={'stat_path'};
+default_scalarContrast(1).stat_extension={'stats.txt'};
 default_scalarContrast(1).List=list2cell("volume_mm3 volume_fraction fa_mean ad_mean md_mean rd_mean");
-% default_scalarContrast(2).Name={'Erode'}; 
-% default_scalarContrast(2).Column={'stat_path_erode'}; 
-% default_scalarContrast(2).List=list2cell("fa_mean ad_mean md_mean rd_mean");
+
+default_scalarContrast(2).Name={'Erode'}; 
+default_scalarContrast(2).Column={'stat_path_erode'};
+default_scalarContrast(2).stat_extension={'e1stats.txt'};
+default_scalarContrast(2).List=list2cell("fa_mean ad_mean md_mean rd_mean");
 
 %The former QSDR that harrison used.
 %default_scalarContrast(3).Name={'QSDR'}; 

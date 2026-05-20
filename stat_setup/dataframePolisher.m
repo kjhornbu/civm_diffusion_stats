@@ -3,15 +3,14 @@ function [failures] = dataframePolisher(dataFrame,unique_column,opts)
 failures=0;
 m=1;
 
+% Stats Polisher output, NOT where the files currently live. Get all output
+% paths for all things we care about first!
+for o=1:numel(opts.scalarContrastMetrics)
+    polished_stats{o,:}=fullfile(opts.polishedSheetPath,strcat(dataFrame.(unique_column),opts.scalarContrastMetrics(o).stat_extension(:)));
+end
 
 for n=1:height(dataFrame)
-
-    % Stats Polisher output, NOT where the files currently live.
-    polished_stats=fullfile(opts.polishedSheetPath, [dataFrame.(unique_column){n},'stats.txt']);
-    polished_e1stats=fullfile(opts.polishedSheetPath, [dataFrame.(unique_column){n},'e1stats.txt']);
-
     [~,temp_connectome_data] = check_connectome_directory(m,n,dataFrame,unique_column,opts);
-
     % assign paths and variables to output dataframe
     dataFrame.vcount(n)=360; % This could be functionalized!!!!!
     dataFrame.ecount(n)=dataFrame.vcount(n)*dataFrame.vcount(n);
@@ -22,8 +21,9 @@ for n=1:height(dataFrame)
         dataFrame.tract_count(n)=temp_connectome_data.headfile.ProgramDetails_dsi_studio_connectome_params_fiber_count;
         dataFrame.connectome_file{n}=temp_connectome_data.conmat;
 
-        dataFrame.stat_path{n}=polished_stats;
-        dataFrame.stat_path_erode{n}=polished_e1stats;
+        for o=1:numel(opts.scalarContrastMetrics)
+            dataFrame.(opts.scalarContrastMetrics(o).Column){n}=polished_stats{o,n};
+        end
         if ~isempty(opts.overrideLabelLUT)
             dataFrame.label_lookup_path{n}=opts.overrideLabelLUT;
         else
@@ -85,7 +85,6 @@ for n=1:height(dataFrame)
 end
 
 found_stats=ismember('stat_path',dataFrame.Properties.VariableNames);
-found_e1stats=ismember('stat_path_erode',dataFrame.Properties.VariableNames);
 found_connectomes=ismember('connectome_file',dataFrame.Properties.VariableNames);
 found_labels=ismember('label_path',dataFrame.Properties.VariableNames);
 
@@ -98,18 +97,15 @@ assert(found_stats||found_connectomes, ...
 
 if found_stats
     missing_erode_stats_idx=false(height(dataFrame),1);
+
     % Because polishing is slow, we use parfor.
     % Due to limits of parfor, must pull out the relevant columns before
     % the loop.
+
     df_connectome_obj=dataFrame.connectome_obj;
-    df_stat_path=dataFrame.stat_path;
-    if found_e1stats
-        df_stat_path_erode=dataFrame.stat_path_erode;
-    else
-        df_stat_path_erode=cell(size(df_stat_path));
-    end
+
 %% now polish the stats
-    stats_polisher_bulk(df_stat_path,df_stat_path_erode,df_connectome_obj,opts.fullAtlasOntology)
+    stats_polisher_bulk(polished_stats,df_connectome_obj,opts.fullAtlasOntology)
 
     %% Validate polishing worked.
     for n=1:height(dataFrame)
