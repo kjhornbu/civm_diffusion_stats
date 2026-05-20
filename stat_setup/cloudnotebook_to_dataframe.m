@@ -47,7 +47,8 @@ opts.fullAtlasOntology=fullAtlasOntology;
 
 dataFrame=cloud_notebook; %This is a list of what specimen you need to grab the first step to making a dataframe is to keep the key information from teh cloud notebok
 
-[failures] = dataframePolisher(dataFrame,unique_column,opts);
+dataframePolisher(dataFrame,unique_column,opts);
+
 end
 
 

@@ -1,7 +1,7 @@
 function [archive_idx,temp_connectome_data] = check_connectome_directory(m,n,cloud_notebook,unique_column,opts)
 %Checks all possible project research archives given by user for where data
 %is saved.
-if iscell(project_research_archive)
+if iscell(opts.stats_archive)
     if ~isempty(opts.suffix)
         temp_connectome_data=connectome_dir(opts.stats_archive{m},[cloud_notebook.(unique_column){n}],'optional_suffix',opts.isSuffixOptional,'suffix',opts.suffix);
     else
@@ -11,11 +11,11 @@ if iscell(project_research_archive)
     archive_idx=m;
 
     if ~exist(temp_connectome_data.results,'dir')
-        if numel(project_research_archive)==m
+        if numel(opts.stats_archive)==m
             return;
         else
             % lol, recursion instead of loop
-            [archive_idx,temp_connectome_data] = check_connectome_directory(m+1,n,project_research_archive,cloud_notebook,unique_column,opts);
+            [archive_idx,temp_connectome_data] = check_connectome_directory(m+1,n,cloud_notebook,unique_column,opts);
         end
     end
 else

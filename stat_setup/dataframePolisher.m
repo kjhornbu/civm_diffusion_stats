@@ -3,13 +3,14 @@ function [failures] = dataframePolisher(dataFrame,unique_column,opts)
 failures=0;
 m=1;
 
+
 for n=1:height(dataFrame)
 
-    [~,temp_connectome_data] = check_connectome_directory(m,n,dataFrame,unique_column,opts);
-
     % Stats Polisher output, NOT where the files currently live.
-    polished_stats=fullfile(opts.polishedSheetPath, [cloud_notebook.(unique_column){n},'stats.txt']);
-    polished_e1stats=fullfile(opts.polishedSheetPath, [cloud_notebook.(unique_column){n},'e1stats.txt']);
+    polished_stats=fullfile(opts.polishedSheetPath, [dataFrame.(unique_column){n},'stats.txt']);
+    polished_e1stats=fullfile(opts.polishedSheetPath, [dataFrame.(unique_column){n},'e1stats.txt']);
+
+    [~,temp_connectome_data] = check_connectome_directory(m,n,dataFrame,unique_column,opts);
 
     % assign paths and variables to output dataframe
     dataFrame.vcount(n)=360; % This could be functionalized!!!!!
@@ -53,7 +54,7 @@ for n=1:height(dataFrame)
         found_stat='NOFILE';
         idx_sd=1;
         while ~exist(found_stat,'file') && idx_sd <= numel(search_dirs)
-            pattern=sprintf('%s_.+stats.txt$',cloud_notebook.(unique_column){n});
+            pattern=sprintf('%s_.+stats.txt$',dataFrame.(unique_column){n});
             found=regexpdir(search_dirs{idx_sd},pattern);
             if numel(found)
                 % what about finding too many? Right now we'll just crash.
@@ -70,7 +71,7 @@ for n=1:height(dataFrame)
             for badfield=list2cell('inputs work results headfile_path program')
                 temp_connectome_data.(uncell(badfield))='';
             end
-            dataFrame.stat_path{n}=polished_stats;
+            dataFrame.stat_path{n}=polished_stats; %No it puts it into stat_path if it just is a folder of data.
             dataFrame.label_lookup_path{n}=opts.overrideLabelLUT;
             dataFrame.connectome_obj{n}=temp_connectome_data;
 
@@ -107,8 +108,8 @@ if found_stats
     else
         df_stat_path_erode=cell(size(df_stat_path));
     end
-
-    stats_polisher_bulk(df_stat_path,df_stat_path_erode,df_connectome_obj)
+%% now polish the stats
+    stats_polisher_bulk(df_stat_path,df_stat_path_erode,df_connectome_obj,opts.fullAtlasOntology)
 
     %% Validate polishing worked.
     for n=1:height(dataFrame)
