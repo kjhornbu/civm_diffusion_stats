@@ -14,6 +14,7 @@ elseif ~isempty(opts.alternative_statsheet_dir)
     stats_archive=opts.alternative_statsheet_dir;
 end
 opts.stats_archive=stats_archive;
+
 % stats_archive is either the "research" directory for this
 % project in the primary CIVM archive, OR a folder which contains stats
 % files someplace underneath it.
@@ -44,65 +45,9 @@ end
 
 opts.fullAtlasOntology=fullAtlasOntology;
 
+dataFrame=cloud_notebook; %This is a list of what specimen you need to grab the first step to making a dataframe is to keep the key information from teh cloud notebok
 
-dataFrame=cloud_notebook; %This is a list of what specimen you need to grab
-failures=0;
-
-m=1;
-
-
-
-[dataFrame] = polishingData_FormingInitalRecord(cloud_notebook,unique_column,opts);
-
-% remove connectome_obj from dataframe as it cannot be saved to spreadsheet.
-dataFrame.connectome_obj=[];
-
-
-%% drop data frame entries which were not populated,
-% For the data cols, we will require all data files for any entry included.
-% This loop marks which specimen are missing one of their data files.
-data_cols=column_find(dataFrame,'^(stat_path|connectome_file)$',1);
-missing_data_idx=zeros(height(dataFrame),1,'logical');
-for col_name = dataFrame.Properties.VariableNames(data_cols)
-    missing_data_idx=missing_data_idx|cellfun(@isempty,dataFrame.(uncell(col_name)));
-end
-% Remove all eroded stats if any are not found.
-if found_e1stats && nnz(missing_erode_stats_idx)>0
-    dataFrame=removevars(dataFrame,'stat_path_erode');
-end
-% If any data had labels, expect that all should have had labels.
-% This marks specimen that are missing labelsd.
-if found_labels
-    missing_labels_idx=cellfun(@isempty,dataFrame.label_path);
-    missing_data_idx=missing_data_idx|missing_labels_idx;
-end
-% Save the missing entries to the "missing" data fram to record clearly
-% they were excluded for misisng data, then remove them.
-[p,n,e]=fileparts(opts.dataframePath);
-missing_path = fullfile(p,sprintf('MISSING_%s%s', n, e));
-missing_frame=dataFrame(missing_data_idx,:);
-if nnz(missing_data_idx) && opts.allowMissing==0
-    warning('Not all entries found');
-    disp(missing_frame);
-    civm_write_table(missing_frame, missing_path);
-    error('Not all entries found. Terminating Execution due to Missing Specimen. If you wish to continue with Missing Specimen, add optional input "allowMissing" as true');
-elseif nnz(missing_data_idx) && opts.allowMissing==1
-    warning('Not all entries found');
-    disp(missing_frame);
-    civm_write_table(missing_frame, missing_path);
-    warning('Not all entries found, see above. Proceeding with Analysis!');
-    pause(3);
-elseif exist(missing_path,'file')
-    delete(missing_path);
-end
-% fix any trailing issues with column headings, they MUST be struct field
-% safe due to code choices made later.
-dataFrame.Properties.VariableNames=matlab.lang.makeValidName(dataFrame.Properties.VariableNames);
-% drop specimen which are missing data.
-dataFrame=dataFrame(~missing_data_idx,:);
-
-%% dataframe creation complete, save.
-civm_write_table(dataFrame,opts.dataframePath);
+[failures] = dataframePolisher(dataFrame,unique_column,opts);
 end
 
 

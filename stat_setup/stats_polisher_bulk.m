@@ -27,5 +27,6 @@ parfor n=1:numel(df_connectome_obj)
         end
     end
 end
+end
 
 end
