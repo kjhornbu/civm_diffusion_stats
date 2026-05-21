@@ -24,7 +24,7 @@ for o=1:height(df_stat_path)
         % have to use the new check because if the file does not exist we
         % return false.
         if ~file_time_check(polished_stats, 'newer', temp_connectome_data.stats)
-            stats_polisher(temp_connectome_data.stats{o},temp_atlas_data,polished_stats);
+            stats_polisher(temp_connectome_data.stats{o},temp_atlas_data,polished_stats); %this assumes method 1 will need to update for other methods.
         end
     end
 end

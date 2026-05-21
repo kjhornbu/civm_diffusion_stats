@@ -21,6 +21,10 @@ for n=1:height(dataFrame)
         dataFrame.tract_count(n)=temp_connectome_data.headfile.ProgramDetails_dsi_studio_connectome_params_fiber_count;
         dataFrame.connectome_file{n}=temp_connectome_data.conmat;
 
+        %several of these assume the former method/ method 1 for the temp
+        %connectome dir object would need to revise when finished deciding
+        %which one to use. 
+        
         for o=1:numel(opts.scalarContrastMetrics)
             dataFrame.(opts.scalarContrastMetrics(o).Column){n}=polished_stats{o,n};
         end
