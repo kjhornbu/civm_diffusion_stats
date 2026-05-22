@@ -16,6 +16,7 @@ for n=1:height(dataFrame)
     dataFrame.ecount(n)=dataFrame.vcount(n)*dataFrame.vcount(n);
 
     if isfield(temp_connectome_data.headfile, 'ProgramDetails_dsi_studio_connectome_params_fiber_count')
+        check='connectome_dir_load';
         % IF the headfile is found, it would have been loaded, if it was NOT
         % loaded, then we didnt find the connectome folder.
         dataFrame.tract_count(n)=temp_connectome_data.headfile.ProgramDetails_dsi_studio_connectome_params_fiber_count;
@@ -41,7 +42,7 @@ for n=1:height(dataFrame)
         dataFrame.connectome_obj{n}=temp_connectome_data;
     elseif numel(fieldnames(temp_connectome_data.headfile)) == 0 && ~isempty(opts.alternative_statsheet_dir) &&...
             ~any(reg_match(opts.stats_archive,'research[\/]?$'))
-        
+        check='flat_file_load';
         % no fields in the headfile struct indicates the headfile was not loaded (and probably not found).
         % This does NOT MEAN we're not looking at archive!
         % We should only search extra in the stats_archive when we're
@@ -88,7 +89,14 @@ for n=1:height(dataFrame)
     end
 end
 
-found_stats=ismember('stat_path',dataFrame.Properties.VariableNames);
+if reg_match(check,'^(flat_file_load)$')
+    found_stats=ismember(opts.scalarContrastMetrics(1).Column{:},dataFrame.Properties.VariableNames);
+elseif reg_match(check,'^(connectome_dir_load)$')
+    for o=1:numel(opts.scalarContrastMetrics)
+        found_stats(o)=ismember(opts.scalarContrastMetrics(o).Column{:},dataFrame.Properties.VariableNames);
+    end
+end
+
 found_connectomes=ismember('connectome_file',dataFrame.Properties.VariableNames);
 found_labels=ismember('label_path',dataFrame.Properties.VariableNames);
 
@@ -96,36 +104,38 @@ found_labels=ismember('label_path',dataFrame.Properties.VariableNames);
 % we need stats files, or connectome files in order to process
 % data, ideally we'd have both. This checks that at least some data was
 % found. Individual checks happen later.
-assert(found_stats||found_connectomes, ...
+assert(sum(found_stats)>=1||found_connectomes, ...
     'No stats or connectome files assigned, maybe the archive is not connected? Are you sure labels and connectomes have been created?');
 
-if found_stats
-    missing_erode_stats_idx=false(height(dataFrame),1);
+if sum(found_stats)>=1
+    missing_stats_idx=false(height(dataFrame),1);
 
     % Because polishing is slow, we use parfor.
     % Due to limits of parfor, must pull out the relevant columns before
     % the loop.
 
-    df_connectome_obj=dataFrame.connectome_obj;
+    input_path=dataFrame.connectome_obj;
+    output_path=polished_stats;
 
 %% now polish the stats
-    stats_polisher_bulk(polished_stats,df_connectome_obj,opts.fullAtlasOntology,opts.scalarContrastMetrics)
+    stats_polisher_bulk(output_path,input_path,opts.fullAtlasOntology,opts.scalarContrastMetrics)
 
     %% Validate polishing worked.
     for n=1:height(dataFrame)
         temp_connectome_data=dataFrame.connectome_obj{n};
-        polished_stats=dataFrame.stat_path{n};
+        polished_stats=dataFrame.(opts.scalarContrastMetrics(1).Column{:}){n};
         % Have to use the newer check because if the file does not exist we
         % return false.
-        have_stats_been_polished = ~isempty(temp_connectome_data) && file_time_check(polished_stats, 'newer', temp_connectome_data.stats );
-        if ~found_e1stats
+        have_stats_been_polished = ~isempty(temp_connectome_data) && file_time_check(polished_stats, 'newer', temp_connectome_data.regionaldata(1).stats );
+        if numel(found_stats)==1
             stat_ready=have_stats_been_polished;
         else
+            for 
             polished_e1stats=dataFrame.stat_path_erode{n};
             if ~isempty(temp_connectome_data) && ~isempty(temp_connectome_data.e1_stats)
                 have_e1stats_polished = file_time_check(polished_e1stats, 'newer', temp_connectome_data.e1_stats );
             else
-                missing_erode_stats_idx(n)=1;
+                missing_stats_idx(n)=1;
                 have_e1stats_polished=true; %just so we can pass through the check condition
             end
             stat_ready=(have_stats_been_polished+have_e1stats_polished)/2;
@@ -154,7 +164,7 @@ for col_name = dataFrame.Properties.VariableNames(data_cols)
     missing_data_idx=missing_data_idx|cellfun(@isempty,dataFrame.(uncell(col_name)));
 end
 % Remove all eroded stats if any are not found.
-if found_e1stats && nnz(missing_erode_stats_idx)>0
+if found_e1stats && nnz(missing_stats_idx)>0
     dataFrame=removevars(dataFrame,'stat_path_erode');
 end
 % If any data had labels, expect that all should have had labels.
