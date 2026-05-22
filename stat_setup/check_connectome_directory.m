@@ -1,6 +1,7 @@
 function [archive_idx,temp_connectome_data] = check_connectome_directory(m,n,cloud_notebook,unique_column,opts)
 %Checks all possible project research archives given by user for where data
-%is saved.
+%is saved. Grabs us a object that contains paths to all that data we can
+%use.
 if iscell(opts.stats_archive)
     if ~isempty(opts.suffix)
         temp_connectome_data=connectome_dir(opts.stats_archive{m},[cloud_notebook.(unique_column){n}],'optional_suffix',opts.isSuffixOptional,'suffix',opts.suffix);

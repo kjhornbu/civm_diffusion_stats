@@ -6,7 +6,7 @@ m=1;
 % Stats Polisher output, NOT where the files currently live. Get all output
 % paths for all things we care about first!
 for o=1:numel(opts.scalarContrastMetrics)
-    polished_stats{o,:}=fullfile(opts.polishedSheetPath,strcat(dataFrame.(unique_column),opts.scalarContrastMetrics(o).stat_extension(:)));
+    polished_stats{o,:}=fullfile(opts.polishedSheetPath,strcat(dataFrame.(unique_column),opts.scalarContrastMetrics(o).stat_extension{:}));
 end
 
 for n=1:height(dataFrame)
@@ -24,7 +24,7 @@ for n=1:height(dataFrame)
         %several of these assume the former method/ method 1 for the temp
         %connectome dir object would need to revise when finished deciding
         %which one to use. 
-        
+
         for o=1:numel(opts.scalarContrastMetrics)
             dataFrame.(opts.scalarContrastMetrics(o).Column){n}=polished_stats{o,n};
         end

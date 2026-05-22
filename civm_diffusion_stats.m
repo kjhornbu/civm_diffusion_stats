@@ -56,12 +56,20 @@ addParameter(p,'extendedStudyColumns',{}, @(x) ischar(x) || isstring(x) || iscel
 default_scalarContrast=struct;
 default_scalarContrast(1).Name={'Non_Erode'}; 
 default_scalarContrast(1).Column={'stat_path'};
-default_scalarContrast(1).stat_extension={'e0_stats.txt'};
+default_scalarContrast(1).erode={'0'};
+default_scalarContrast(1).level={'0'};
+default_scalarContrast(1).bilateral=false;
+default_scalarContrast(1).nickname={'leaf'};
+default_scalarContrast(1).stat_extension={strcat('_e',default_scalarContrast(1).erode,'_L',default_scalarContrast(1).level,'_',default_scalarContrast(1).nickname,'.txt')};
 default_scalarContrast(1).List=list2cell("volume_mm3 volume_fraction fa_mean ad_mean md_mean rd_mean");
 
 default_scalarContrast(2).Name={'Erode'}; 
 default_scalarContrast(2).Column={'stat_path_erode'};
-default_scalarContrast(2).stat_extension={'e1_stats.txt'};
+default_scalarContrast(2).erode={'1'};
+default_scalarContrast(2).level={'0'};
+default_scalarContrast(2).bilateral=false;
+default_scalarContrast(2).nickname={'leaf'};
+default_scalarContrast(2).stat_extension={strcat('_e',default_scalarContrast(2).erode,'_L',default_scalarContrast(2).level,'_',default_scalarContrast(2).nickname,'.txt')};
 default_scalarContrast(2).List=list2cell("fa_mean ad_mean md_mean rd_mean");
 
 %The former QSDR that harrison used.
