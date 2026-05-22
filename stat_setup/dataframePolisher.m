@@ -26,7 +26,7 @@ for n=1:height(dataFrame)
         %which one to use. 
 
         for o=1:numel(opts.scalarContrastMetrics)
-            dataFrame.(opts.scalarContrastMetrics(o).Column){n}=polished_stats{o,n};
+            dataFrame.(opts.scalarContrastMetrics(o).Column{:}){n}=polished_stats{o}{n};
         end
         if ~isempty(opts.overrideLabelLUT)
             dataFrame.label_lookup_path{n}=opts.overrideLabelLUT;
@@ -71,11 +71,11 @@ for n=1:height(dataFrame)
         if idx_sd <= numel(search_dirs)
             % if idx_sd is less than search dirs, we found it.
             % Update the connectome object with the stat file.
-            temp_connectome_data.stats=found_stat;
+            temp_connectome_data.regionaldata(1).stats=found_stat;
             for badfield=list2cell('inputs work results headfile_path program')
                 temp_connectome_data.(uncell(badfield))='';
             end
-            dataFrame.stat_path{n}=polished_stats; %No it puts it into stat_path if it just is a folder of data.
+            dataFrame.(opts.scalarContrastMetrics(1).Column{:}){n}=polished_stats{1}{n}; %No it puts it into stat_path if it just is a folder of data.
             dataFrame.label_lookup_path{n}=opts.overrideLabelLUT;
             dataFrame.connectome_obj{n}=temp_connectome_data;
 
@@ -109,7 +109,7 @@ if found_stats
     df_connectome_obj=dataFrame.connectome_obj;
 
 %% now polish the stats
-    stats_polisher_bulk(polished_stats,df_connectome_obj,opts.fullAtlasOntology)
+    stats_polisher_bulk(polished_stats,df_connectome_obj,opts.fullAtlasOntology,opts.scalarContrastMetrics)
 
     %% Validate polishing worked.
     for n=1:height(dataFrame)
