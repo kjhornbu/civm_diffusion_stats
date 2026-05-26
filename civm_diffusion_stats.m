@@ -63,18 +63,24 @@ default_scalarContrast(1).nickname={'leaf'};
 default_scalarContrast(1).stat_extension={strcat('_e',default_scalarContrast(1).erode,'_L',default_scalarContrast(1).level,'_',default_scalarContrast(1).nickname,'.txt')};
 default_scalarContrast(1).List=list2cell("volume_mm3 volume_fraction fa_mean ad_mean md_mean rd_mean");
 
-default_scalarContrast(2).Name={'Erode'}; 
-default_scalarContrast(2).Column={'stat_path_erode'};
-default_scalarContrast(2).erode={'1'};
-default_scalarContrast(2).level={'0'};
-default_scalarContrast(2).bilateral=false;
-default_scalarContrast(2).nickname={'leaf'};
-default_scalarContrast(2).stat_extension={strcat('_e',default_scalarContrast(2).erode,'_L',default_scalarContrast(2).level,'_',default_scalarContrast(2).nickname,'.txt')};
-default_scalarContrast(2).List=list2cell("fa_mean ad_mean md_mean rd_mean");
+% default_scalarContrast(2).Name={'Erode'}; 
+% default_scalarContrast(2).Column={'stat_path_erode'};
+% default_scalarContrast(2).erode={'1'};
+% default_scalarContrast(2).level={'0'};
+% default_scalarContrast(2).bilateral=false;
+% default_scalarContrast(2).nickname={'leaf'};
+% default_scalarContrast(2).stat_extension={strcat('_e',default_scalarContrast(2).erode,'_L',default_scalarContrast(2).level,'_',default_scalarContrast(2).nickname,'.txt')};
+% default_scalarContrast(2).List=list2cell("fa_mean ad_mean md_mean rd_mean");
 
-%The former QSDR that harrison used.
-%default_scalarContrast(3).Name={'QSDR'}; 
+%The former QSDR that harrison used.-- I converted it into the modern
+%layout that we are using. 
+%default_scalarContrast(3).Name={'lightsheet'}; 
 %default_scalarContrast(3).Column={'stat_path'}; 
+%default_scalarContrast(3).erode={'0'};
+% default_scalarContrast(3).level={'0'};
+%default_scalarContrast(3).bilateral=false;
+% default_scalarContrast(3).nickname={'leaf'};
+%default_scalarContrast(3).stat_extension={strcat('_e',default_scalarContrast(3).erode,'_L',default_scalarContrast(3).level,'_',default_scalarContrast(3).nickname,'.txt')};
 %default_scalarContrast(3).List=strcatlist2cell(strrep('dti_fa,ad,md,rd,iso,qa,rdi,t-inc-ad,t-inc-md,t-inc-rd,t-inc-gfa,t-inc-dti-fa,t-inc-iso,t-inc-qa,t-dec-ad,t-dec-md,t-dec-rd,t-dec-gfa,t-dec-dti-fa,t-dec-iso,t-dec-qa','-','_')),'_mean');
 
 addParameter(p,'scalarContrastMetrics',default_scalarContrast, @(x) isstruct(x));
