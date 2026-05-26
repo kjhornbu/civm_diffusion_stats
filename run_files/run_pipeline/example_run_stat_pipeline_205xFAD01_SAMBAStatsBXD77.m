@@ -16,13 +16,6 @@ project_research_archive{1}=fullfile('A:/20.5xFAD.02/research');
 
 atlas_ontology_path=fullfile(getenv("WORKSTATION_HOME"),'static_data','atlas','symmetric15um','labels','RCCF','symmetric15um_RCCF_labels_lookup.txt'); 
 
-default_scalarContrast=struct;
-default_scalarContrast(1).Name={'Non_Erode'}; 
-default_scalarContrast(1).Column={'stat_path'};
-default_scalarContrast(1).List=list2cell("volume_mm3 volume_fraction fa_mean ad_mean md_mean rd_mean");
-%what if we make unique ending for each polished stat" call it like
-%polished stat extention or something? 
-
 studyParams={
   studyID,...
   statSaveDir,...
@@ -37,7 +30,6 @@ studyParams={
   'allowMissing',false,...
   'assumeNLSAM', true,...
   'analysisPipelineType', list2cell('Scalar'),...
-  'scalarContrastMetrics',default_scalarContrast,...
   'alternative_statsheet_dir','B:\20.5xfad.02\stats\SAMBA_stats_GMDT\2026-05-12'};
 
 civm_diffusion_stats(studyParams{:});
