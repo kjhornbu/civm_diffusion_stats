@@ -1,0 +1,39 @@
+close all;
+clear variables;
+
+%% Preliminaries
+studyID='26.5xFAD.04';
+project_dir='Z:\All_Staff\26.5xFAD.04\';
+%google_doc="Z:\All_Staff\20.5xFAD.01\google_sheet_captures\20.5XFAD.01_Phase1Sheet_2026_05_05.tsv";
+%cleaned_google_doc_path="Z:\All_Staff\20.5xFAD.01\google_sheet_captures\Edited_GoogleSheet_20260506.txt";
+
+google_doc="Z:\All_Staff\20.5xFAD.01\google_sheet_captures\20.5XFAD.01_Phase2Sheet_20260508.tsv";
+cleaned_google_doc_path='Z:\All_Staff\20.5xFAD.01\google_sheet_captures\Edited_GoogleSheet_20260508_Phase2.txt';
+
+statSaveDir=fullfile(project_dir,'Analysis_20260604_PostSAMBA_PostAlign_Phase2');
+
+dataframe_path="Z:\All_Staff\26.5xFAD.04\26.5xFAD.04_DataFrame_20260605_PostSAMBA_PostAlign_Phase2.txt";
+config_file='';
+polished_sheets=fullfile(project_dir,'polished_sheets'); %where the polished sheets will be saved 
+
+project_research_archive{1}=fullfile('A:/20.5xFAD.02/research');
+project_research_archive{2}=fullfile('A:/20.5xFAD.01/research');
+
+atlas_ontology_path=fullfile(getenv("WORKSTATION_HOME"),'static_data','atlas','symmetric15um','labels','RCCF','symmetric15um_RCCF_labels_lookup.txt'); 
+
+studyParams={
+  studyID,...
+  statSaveDir,...
+  'configFile',config_file,...
+  'dataframePath',dataframe_path,...
+  'googleDocPath',google_doc,...
+  'cleanedGoogleDocPath',cleaned_google_doc_path,...
+  'overrideLabelLUT',atlas_ontology_path,...
+  'researchArchivePath',project_research_archive,...
+  'polishedSheetPath',polished_sheets,...
+  'suffix','GMDT',...
+  'allowMissing',false,...
+  'assumeNLSAM', true,...
+  'analysisPipelineType', list2cell('Scalar')};
+
+civm_diffusion_stats(studyParams{:});

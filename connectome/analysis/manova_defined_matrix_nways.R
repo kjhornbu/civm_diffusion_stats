@@ -62,10 +62,10 @@ print("Performing MANOVA")
 
 idx_vertex <- which(grepl("vertex", names(df))) #The index of df equal to vertex
 
-if (is_empty(idx_vertex)) {
+if (rlang::is_empty(idx_vertex)) {
   #Where there is not vertex we only have one "ROI" entry
   df.statistical_output <- format_manova(df, 1, number_of_sources_of_variation, source_of_variation)
-} else if (!is_empty(idx_vertex)) {
+} else if (!rlang::is_empty(idx_vertex)) {
   number_of_vertices <- length(unique(df$vertex))
   df.statistical_output <- format_manova(df,
                                          number_of_vertices,

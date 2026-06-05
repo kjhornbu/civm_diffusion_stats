@@ -4,11 +4,13 @@ clear variables;
 %% Preliminaries
 studyID='26.5xFAD.04';
 project_dir='Z:\All_Staff\26.5xFAD.04\';
-google_doc="Z:\All_Staff\20.5xFAD.01\google_sheet_captures\20.5XFAD.01_Phase1Sheet_2026_05_05.tsv";
-cleaned_google_doc_path="Z:\All_Staff\20.5xFAD.01\google_sheet_captures\Edited_GoogleSheet_20260506.txt";
-statSaveDir=fullfile(project_dir,'Analysis_20260604_PostSAMBA_PreAlign_Phase1');
+%google_doc="Z:\All_Staff\20.5xFAD.01\google_sheet_captures\20.5XFAD.01_Phase1Sheet_2026_05_05.tsv";
+%cleaned_google_doc_path="Z:\All_Staff\20.5xFAD.01\google_sheet_captures\Edited_GoogleSheet_20260506.txt";
+google_doc="Z:\All_Staff\20.5xFAD.01\google_sheet_captures\20.5XFAD.01_Phase2Sheet_20260508.tsv";
+cleaned_google_doc_path='Z:\All_Staff\20.5xFAD.01\google_sheet_captures\Edited_GoogleSheet_20260508_Phase2.txt';
+statSaveDir=fullfile(project_dir,'Analysis_20260604_PostSAMBA_PreAlign_Phase2');
 
-dataframe_path="Z:\All_Staff\26.5xFAD.04\26.5xFAD.04_DataFrame_20260604_PostSAMBA_PreAlign_Phase1.txt";
+dataframe_path="Z:\All_Staff\26.5xFAD.04\26.5xFAD.04_DataFrame_20260604_PostSAMBA_PreAlign_Phase2.txt";
 config_file='';
 polished_sheets=fullfile(project_dir,'polished_SAMBA_sheets'); %where the polished sheets will be saved 
 
