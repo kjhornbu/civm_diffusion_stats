@@ -10,33 +10,36 @@ parfor n=1:numel(df_connectome_obj)
     temp_atlas_data=fullAtlasOntology;
     temp_connectome_data=df_connectome_obj{n};
 
-    runno_region_data=struct2table(temp_connectome_data.regionaldata,'AsArray',true);
+    if ~isempty(temp_connectome_data)
+        runno_region_data=struct2table(temp_connectome_data.regionaldata,'AsArray',true);
 
-    for o=1:height(df_stat_path)
-        polished_stats=df_stat_path{o}{n};
+        for o=1:height(df_stat_path)
+            polished_stats=df_stat_path{o}{n};
 
-        erode_idx=row_find(runno_region_data,'erode', scalar_Info.erode(o));
-        level_idx=row_find(runno_region_data,'level',scalar_Info.level(o));
-        bilateral_idx=runno_region_data.('bilateral')==scalar_Info.bilateral(o);
-        nickname_idx=row_find(runno_region_data,'nickname',scalar_Info.nickname(o));
+            erode_idx=row_find(runno_region_data,'erode', scalar_Info.erode(o));
+            level_idx=row_find(runno_region_data,'level',scalar_Info.level(o));
+            bilateral_idx=runno_region_data.('bilateral')==scalar_Info.bilateral(o);
+            nickname_idx=row_find(runno_region_data,'nickname',scalar_Info.nickname(o));
 
-        total_idx=erode_idx&level_idx&bilateral_idx&nickname_idx;
+            total_idx=erode_idx&level_idx&bilateral_idx&nickname_idx;
 
-        if isempty(temp_atlas_data)
-            temp_atlas_data=temp_connectome_data.lookup;
+            if isempty(temp_atlas_data)
+                temp_atlas_data=temp_connectome_data.lookup;
+            end
+
+            if isempty(temp_connectome_data)||isempty(total_idx)|| ~exist(runno_region_data.stats{total_idx},'file')
+                % if no input file, cannot polish. This can happen on if we do not have an archived connectome dir, OR re-run if
+                % archive were disconnected. Someplace else we should address
+                % re-run. also don't polish stuff that we aren't pulling in
+                continue;
+            end
+            % have to use the new check because if the file does not exist we
+            % return false.
+            if  ~file_time_check(polished_stats, 'newer', runno_region_data.stats{total_idx})
+                stats_polisher(runno_region_data.stats{total_idx},temp_atlas_data,polished_stats);
+            end
         end
 
-        if isempty(temp_connectome_data)||isempty(total_idx)|| ~exist(runno_region_data.stats{total_idx},'file')
-            % if no input file, cannot polish. This can happen on if we do not have an archived connectome dir, OR re-run if
-            % archive were disconnected. Someplace else we should address
-            % re-run. also don't polish stuff that we aren't pulling in
-            continue;
-        end
-        % have to use the new check because if the file does not exist we
-        % return false.
-        if  ~file_time_check(polished_stats, 'newer', runno_region_data.stats{total_idx})
-            stats_polisher(runno_region_data.stats{total_idx},temp_atlas_data,polished_stats);
-        end
     end
 end
 

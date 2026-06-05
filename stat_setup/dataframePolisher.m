@@ -130,7 +130,6 @@ if sum(found_stats)>=1
         if numel(found_stats)==1
             stat_ready=have_stats_been_polished;
         else
-            for 
             polished_e1stats=dataFrame.stat_path_erode{n};
             if ~isempty(temp_connectome_data) && ~isempty(temp_connectome_data.e1_stats)
                 have_e1stats_polished = file_time_check(polished_e1stats, 'newer', temp_connectome_data.e1_stats );
@@ -164,7 +163,7 @@ for col_name = dataFrame.Properties.VariableNames(data_cols)
     missing_data_idx=missing_data_idx|cellfun(@isempty,dataFrame.(uncell(col_name)));
 end
 % Remove all eroded stats if any are not found.
-if found_e1stats && nnz(missing_stats_idx)>0
+if nnz(missing_stats_idx)>0
     dataFrame=removevars(dataFrame,'stat_path_erode');
 end
 % If any data had labels, expect that all should have had labels.
