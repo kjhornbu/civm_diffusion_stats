@@ -22,29 +22,31 @@ only_interesting_col_names=vertcat(configuration_struct.test_criteria.Column_Nam
 %Check and remove things in the zscoring or stratification entries --- Does
 %not work together because none is not and effective name with the string
 %join  -- REMEMBER ONLY 1 column can stratify
-    
+
 if any(~strcmp(configuration_struct.zscore,'none'))
     idx_zscore=reg_match(only_interesting_col_names, strcat('^(',strjoin(configuration_struct.zscore,'|'),')$')); % we allow multiple zscore columns now
 else
     idx_zscore=logical(zeros(height(only_interesting_col_names),1));
 end
-    
- if any(~strcmp(configuration_struct.stratification,'none'))
+
+if any(~strcmp(configuration_struct.stratification,'none'))
     idx_strat=reg_match(only_interesting_col_names,configuration_struct.stratification);
- else
-     idx_strat=logical(zeros(height(only_interesting_col_names),1));
- end
+else
+    idx_strat=logical(zeros(height(only_interesting_col_names),1));
+end
 
- % don't put in pairwise compare if you don't actually include this
- % factor in the model. 
- not_using_cofactor_idx=sum(model_array)'==0;
+% don't put in pairwise compare if you don't actually include this
+% factor in the model.
+not_using_cofactor_idx=sum(model_array)'==0;
 
- idx = idx_zscore | idx_strat | not_using_cofactor_idx;
- only_interesting_col_names(idx)=[];
+idx = idx_zscore | idx_strat | not_using_cofactor_idx;
+only_interesting_col_names(idx)=[];
 
 for n=1:size(model_array,1)
     studymodel{n}=strjoin(configuration_struct.model_table.Properties.VariableNames(model_array(n,:)),':');
 end
+
+
 
 %% Start the ui for figure generation
 fig=uifigure('Position',[100 100 2150 1100]);
@@ -67,17 +69,24 @@ uip_1 = uipanel(main_grid, ...
     "BackgroundColor","white");
 
 applytosummary_ppt=table('Size',[1 1],'VariableTypes',repmat({'logical'},[1,1]),'VariableNames',{'Apply to "Simplify Summary PPT"'});
-
 case_name=table('Size',[1 1],'VariableTypes',repmat({'string'},[1,1]),'VariableNames',{'Case_Name'});
-
 sov_categorical=struct;
 sov_categorical.Source_of_Variation=categorical({'None'},{'None',studymodel{:}},'Ordinal',true,'Protected', true);
 
-holding_add_button = uigridlayout(uip_1,[2,1]);
-holding_add_button.RowHeight = {'1x',65};
-holding_add_button.ColumnWidth = {'1x'};
+Overall_holding = uigridlayout(uip_1,[3,1]);
+Overall_holding.RowHeight = {65,'1x',65};
+Overall_holding.ColumnWidth = {'1x'};
 
-teriary_grid = uigridlayout(holding_add_button,[5,1]);
+holding_priorrequest = uigridlayout(Overall_holding,[1,3]);
+holding_priorrequest.RowHeight = {45};
+holding_priorrequest.ColumnWidth = {'0.5x','1x','0.25x'};
+
+uilabel(holding_priorrequest,'Text','Load Prior Pairwise Comparisions by Entering Path and Pressing Load');
+prior_pairwise = uieditfield(holding_priorrequest,'text','Value','');
+load_data_button = uibutton(holding_priorrequest,'Text','Load');
+load_data_button.ButtonPushedFcn=@(src,event)load_prior_state(src,event,prior_pairwise.Value);
+
+teriary_grid = uigridlayout(Overall_holding,[5,1]);
 teriary_grid.RowHeight = {'1x'};
 teriary_grid.ColumnWidth = {'0.5x','0.25x','0.25x','1x','1x'};
 
@@ -85,6 +94,7 @@ Left_1_teriary_grid= uigridlayout(teriary_grid,[2,1]);
 Left_1_teriary_grid.ColumnWidth = {'1x'};
 Left_1_teriary_grid.RowHeight = {65,'1x'};
 uil=uilabel(Left_1_teriary_grid,'Text','');
+
 uit_applytosummaryppt=uitable(Left_1_teriary_grid,'ColumnEditable',true);
 uit_applytosummaryppt.Data=applytosummary_ppt;
 uit_applytosummaryppt.Data.Properties.RowNames=strsplit(num2str(1))';
@@ -94,6 +104,7 @@ Left_2_teriary_grid= uigridlayout(teriary_grid,[2,1]);
 Left_2_teriary_grid.ColumnWidth = {'1x'};
 Left_2_teriary_grid.RowHeight = {65,'1x'};
 uil=uilabel(Left_2_teriary_grid,'Text','');
+
 uit_case=uitable(Left_2_teriary_grid,'ColumnEditable',true);
 uit_case.Data=case_name;
 uit_case.Data.Properties.RowNames=strsplit(num2str(1))';
@@ -103,6 +114,7 @@ Left3_teriary_grid= uigridlayout(teriary_grid,[2,1]);
 Left3_teriary_grid.ColumnWidth = {'1x'};
 Left3_teriary_grid.RowHeight = {65,'1x'};
 uil=uilabel(Left3_teriary_grid,'Text','');
+
 uit_sov=uitable(Left3_teriary_grid,'ColumnEditable',true);
 uit_sov.Data=struct2table(sov_categorical);
 uit_sov.Data.Properties.RowNames=strsplit(num2str(1))';
@@ -112,6 +124,7 @@ mid_teriary_grid= uigridlayout(teriary_grid,[2,1]);
 mid_teriary_grid.ColumnWidth = {'1x'};
 mid_teriary_grid.RowHeight = {65,'1x'};
 uil=uilabel(mid_teriary_grid,'Text','Basis');
+
 uit_controlpw=uitable(mid_teriary_grid,'ColumnEditable',true);
 uit_controlpw.Data=struct2table(Categorical_Entries);
 uit_controlpw.Data.Properties.RowNames=strsplit(num2str(1))';
@@ -121,6 +134,7 @@ R_teriary_grid = uigridlayout(teriary_grid,[2,1]);
 R_teriary_grid.ColumnWidth = {'1x'};
 R_teriary_grid.RowHeight = {65,'1x'};
 uil=uilabel(R_teriary_grid,'Text','Condition Under Test');
+
 uit_treatedpw=uitable(R_teriary_grid,'ColumnEditable',true);
 uit_treatedpw.Data=struct2table(Categorical_Entries);
 uit_treatedpw.Data.Properties.RowNames=strsplit(num2str(1))';
@@ -129,7 +143,7 @@ uit_treatedpw.DisplayDataChangedFcn=@(src,event)update_text(src,event,'treatment
 controlpw = uit_controlpw.Data;
 treatmentpw = uit_treatedpw.Data;
 
-holding_add_sub_button = uigridlayout(holding_add_button,[1,2]);
+holding_add_sub_button = uigridlayout(Overall_holding,[1,2]);
 holding_add_sub_button.RowHeight = {45};
 holding_add_sub_button.ColumnWidth = {'1x','1x'};
 
@@ -144,6 +158,49 @@ next_button.ButtonPushedFcn=@next_button_pressed;
 waitfor(next_button,'ButtonPushedFcn');
 
 %internal actions
+    function load_prior_state(src,event,entry)
+        data=load(entry);
+        pairwise=data.pairwise_criteria;
+
+        col_names_con=pairwise.control.Properties.VariableNames;
+        col_names_treat=pairwise.treatment.Properties.VariableNames;
+
+        if isequal(col_names_con,col_names_treat)
+
+            controlpw=pairwise.control;
+            treatmentpw=pairwise.treatment;
+
+            uit_controlpw.Data=pairwise.control(:,1:find(reg_match(col_names_con,'applytosummary'))-1);
+            uit_treatedpw.Data=pairwise.treatment(:,1:find(reg_match(col_names_con,'applytosummary'))-1);
+
+            if isequal(pairwise.control.applytosummary,pairwise.treatment.applytosummary)
+                uit_applytosummaryppt.Data.('Apply to "Simplify Summary PPT"')(1:height(pairwise.control.applytosummary))=pairwise.control.applytosummary;
+                uit_applytosummaryppt.Data.Properties.RowNames=strsplit(num2str(1:height(pairwise.control.applytosummary)))';
+            else
+                uit_applytosummaryppt.Data.('Apply to "Simplify Summary PPT"')(1:height(pairwise.control))=repmat({false},[1,height(pairwise.control)]);
+                uit_applytosummaryppt.Data.Properties.RowNames=strsplit(num2str(1:height(pairwise.control)))';
+            end
+
+            if isequal(pairwise.control.case,pairwise.treatment.case)
+                uit_case.Data.Case_Name(1:height(pairwise.control.case))=pairwise.control.case;
+                uit_case.Data.Properties.RowNames=strsplit(num2str(1:height(pairwise.control.case)))';
+            else
+                uit_case.Data.Case_Name(1:height(pairwise.control))=repmat({string},[1,height(pairwise.control)]);
+                uit_case.Data.Properties.RowNames=strsplit(num2str(1:height(pairwise.control)))';
+                
+            end
+            if isequal(pairwise.control.source_of_variation,pairwise.treatment.source_of_variation)
+                uit_sov.Data.Source_of_Variation(1:height(pairwise.control.source_of_variation))=pairwise.control.source_of_variation;
+                uit_sov.Data.Properties.RowNames=strsplit(num2str(1:height(pairwise.control.source_of_variation)))';
+            else
+                uit_sov.Data.Source_of_Variation(1:height(pairwise.control))=repmat({string},[1,height(pairwise.control)]);
+                uit_sov.Data.Properties.RowNames=strsplit(num2str(1:height(pairwise.control)))';
+            end
+        else
+            error('Control and Treatment Pairwise Comparision Files Must Have Same Column Headings')
+        end
+
+    end
     function update_text(src,event,entry)
         if ~isempty(regexpi(entry,'^(control)'))
             [controlpw]=update_text_control(src,event,entry);
@@ -184,7 +241,7 @@ waitfor(next_button,'ButtonPushedFcn');
 
         uit_controlpw.Data=controlpw(:,1:size_data_set(2));
         uit_treatedpw.Data=treatmentpw(:,1:size_data_set(2));
-    
+
         uit_applytosummaryppt.Data(size_data_set(1),:)=[];
         uit_applytosummaryppt.Data.('Apply to "Simplify Summary PPT"')=controlpw.applytosummary;
         uit_case.Data(size_data_set(1),:)=[];
