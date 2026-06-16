@@ -81,9 +81,9 @@ holding_priorrequest = uigridlayout(Overall_holding,[1,3]);
 holding_priorrequest.RowHeight = {45};
 holding_priorrequest.ColumnWidth = {'0.5x','1x','0.25x'};
 
-uilabel(holding_priorrequest,'Text','Load Prior Pairwise Comparisions by Entering Path and Pressing Load');
+uilabel(holding_priorrequest,'Text','Load Prior Pairwise Comparisons by Entering Path (without quotes) and Pressing Load');
 prior_pairwise = uieditfield(holding_priorrequest,'text','Value','');
-load_data_button = uibutton(holding_priorrequest,'Text','Load');
+load_data_button = uibutton(holding_priorrequest,'Text','LOAD');
 load_data_button.ButtonPushedFcn=@(src,event)load_prior_state(src,event,prior_pairwise.Value);
 
 teriary_grid = uigridlayout(Overall_holding,[5,1]);
