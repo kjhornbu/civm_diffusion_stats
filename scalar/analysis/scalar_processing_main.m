@@ -277,14 +277,21 @@ for o=1:numel(voxel_wise)
             right_table=shifted_big_table(shifted_big_table.hemisphere_assignment==1,:);
 
             try
-                if isempty(remove_zscore_grouping{i_testcondition})
+                if isempty(remove_zscore_grouping{i_testcondition}) && opts.findmedianspecimen==1
                     [bilat_specimen_zscore] = zscoring_finder(bilat_table,model_GROUPING);
                     [left_specimen_zscore] = zscoring_finder(left_table,model_GROUPING);
                     [right_specimen_zscore] = zscoring_finder(right_table,model_GROUPING);
-                else
+                elseif ~isempty(remove_zscore_grouping{i_testcondition})
+
                     [bilat_table_standardized,bilat_specimen_zscore] = zscoring_finder(bilat_table,model_GROUPING,remove_zscore_grouping{i_testcondition}{:});
                     [left_table_standardized,left_specimen_zscore] = zscoring_finder(left_table,model_GROUPING,remove_zscore_grouping{i_testcondition}{:});
                     [right_table_standardized,right_specimen_zscore] = zscoring_finder(right_table,model_GROUPING,remove_zscore_grouping{i_testcondition}{:});
+
+                    if opts.findmedianspecimen==0
+                        bilat_specimen_zscore=table;
+                        left_specimen_zscore=table;
+                        right_specimen_zscore=table;
+                    end
 
                     civm_write_table(bilat_table_standardized,fullfile(save_location,strcat(group_names{m},'_Bilat_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
                     civm_write_table(left_table_standardized,fullfile(save_location,strcat(group_names{m},'_Left_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
@@ -359,20 +366,27 @@ for o=1:numel(voxel_wise)
         right_table=big_table(big_table.hemisphere_assignment==1,:);
 
         try
-            if isempty(remove_zscore_grouping{i_testcondition})
+            if isempty(remove_zscore_grouping{i_testcondition}) && opts.findmedianspecimen==1
                 [bilat_specimen_zscore] = zscoring_finder(bilat_table,test_conditions{i_testcondition});
                 [left_specimen_zscore] = zscoring_finder(left_table,test_conditions{i_testcondition});
                 [right_specimen_zscore] = zscoring_finder(right_table,test_conditions{i_testcondition});
-            else
+            elseif ~isempty(remove_zscore_grouping{i_testcondition})
                 [bilat_table_standardized,bilat_specimen_zscore] = zscoring_finder(bilat_table,test_conditions{i_testcondition},remove_zscore_grouping{i_testcondition}{:});
                 [left_table_standardized,left_specimen_zscore] = zscoring_finder(left_table,test_conditions{i_testcondition},remove_zscore_grouping{i_testcondition}{:});
                 [right_table_standardized,right_specimen_zscore] = zscoring_finder(right_table,test_conditions{i_testcondition},remove_zscore_grouping{i_testcondition}{:});
+
+                if opts.findmedianspecimen==0
+                    bilat_specimen_zscore=table;
+                    left_specimen_zscore=table;
+                    right_specimen_zscore=table;
+                end
 
                 civm_write_table(bilat_table_standardized,fullfile(save_location,strcat('Bilat_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
                 civm_write_table(left_table_standardized,fullfile(save_location,strcat('Left_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
                 civm_write_table(right_table_standardized,fullfile(save_location,strcat('Right_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
 
             end
+            
         catch merr
             warning(merr.identifier,'zscoring_finder incomplete: %s',merr.message);
             %if it doesn't work we aren't trying to hard right now --

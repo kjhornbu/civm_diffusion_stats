@@ -29,7 +29,7 @@ addRequired(p, 'statSaveDir', @(x) ischar(x) || isstring(x)); %where the data is
 % Add parameters -- Kinda optional but depends! (not positionally
 % dependant)
 addParameter(p, 'configFile','', @(x) ischar(x) || isstring(x));
-
+addParameter(p,'findmedianspecimen',false,  @(x) isscalar(x) && ismember(x, [false, true]));
 addParameter(p, 'dataframePath',[], @(x) ischar(x) || isstring(x));
 addParameter(p, 'cleanedGoogleDocPath',[], @(x) ischar(x) || isstring(x));
 addParameter(p, 'googleDocPath',[], @(x) ischar(x) || isstring(x));
