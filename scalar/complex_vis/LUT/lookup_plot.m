@@ -25,14 +25,25 @@ addParameter(p, 'direction', 'vertical', @(x) ( ischar(x) || isstring(x) ) && re
 
 % Parse input
 parse(p, varargin{:});
-
 params=p.Results; 
+
+assert(~strcmp(params.direction,'horizontal'),'Horizontal mode not implemented. Please implement, or stop requesting it.');
+
+required_fields=list2cell('r g b bin_start bin_stop');
+if params.use_names
+    required_fields=[required_fields, 'name'];
+end
+if istable(stat_colors)
+    warning('Table input mode not fully tested. maybe you can evaluate that more and remove this message?');
+    col_pat=sprintf('^(%s)$',strjoin(required_fields,'|') );
+    assert( nnz(column_find(stat_colors,col_pat,1))==numel(required_fields),...
+        'Cannot process, missing required information. need: %s ',strjoin(required_fields));
+    stat_colors=table2struct(stat_colors);
+end
 
 if isstruct(stat_colors)
     color_bounds=[ [stat_colors.bin_start]; [stat_colors.bin_stop] ];
     color_range=sort(unique(color_bounds(:)));
-elseif istable(stat_colors)
-    error('unimplemented');
 end
  
 % if flag to plot proportional is off, color_bounds
@@ -46,7 +57,9 @@ figure_close(params.fig_n)
 % start new fig
 fig_colormap=figure(params.fig_n);
 % fancy run at function end to close the figure
-C___={};C___{end+1}=onCleanup(@() figure_close(params.fig_n) );
+if exist('out','var')
+    C___={};C___{end+1}=onCleanup(@() figure_close(params.fig_n) );
+end
 
 set(gca,'FontSize',8,'FontName','Arial');
 set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 2 15],'Units','inches','InnerPosition',[0 1 2 10.4895833333333]);
