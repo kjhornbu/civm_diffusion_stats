@@ -297,6 +297,10 @@ for o=1:numel(voxel_wise)
                     civm_write_table(left_table_standardized,fullfile(save_location,strcat(group_names{m},'_Left_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
                     civm_write_table(right_table_standardized,fullfile(save_location,strcat(group_names{m},'_Right_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
 
+                else
+                    bilat_specimen_zscore=table;
+                    left_specimen_zscore=table;
+                    right_specimen_zscore=table;
                 end
             catch
                 %if it doesn't work we aren't trying to hard right now --
@@ -384,7 +388,10 @@ for o=1:numel(voxel_wise)
                 civm_write_table(bilat_table_standardized,fullfile(save_location,strcat('Bilat_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
                 civm_write_table(left_table_standardized,fullfile(save_location,strcat('Left_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
                 civm_write_table(right_table_standardized,fullfile(save_location,strcat('Right_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
-
+            else
+                bilat_specimen_zscore=table;
+                left_specimen_zscore=table;
+                right_specimen_zscore=table;
             end
             
         catch merr
