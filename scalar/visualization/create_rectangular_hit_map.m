@@ -27,11 +27,18 @@ end
 end
 
 function [] = plot_hit_map(data,hitMetric,x_delineation,x_ordered_idx,y_delineation,y_ordered_idx)
-
+height_entry_prior_graph_inches=10.4895833333333/157;
 Color=color_range_find;
 
 [x_values,~,x_idx]=unique(data.(x_delineation),'stable');
 [y_values,~,y_idx]=unique(data.(y_delineation),'stable');
+
+f=figure;
+set(gca,'FontSize',4,'FontName','Arial');
+set(gcf,'Units','inches','InnerPosition',[0 0 1.25*2 height_entry_prior_graph_inches*numel(GN_Symbol_name)]);
+set(gca, 'TickDir','out');
+
+hold on
 
 for y_axis=1:numel(y_values)
 
@@ -54,11 +61,58 @@ for y_axis=1:numel(y_values)
     end
 end
 
-
 for x_axis=2:numel(x_values)
     xline(x_axis,'Color',[0 0 0])
 end
 
+xticks((1:numel(x_values)+0.5));
+xticklabels(x_values);
+
+yticks((1:numel(y_values))+0.5);
+yticklabels(y_values);
+
 end
-function[] = color_range_find()
+function[colorspace] = color_range_find()
+
+color_range=linspace(-0.3,0.3,255);
+color_range_small=-0.3:0.1:0.3;
+
+%Laying out Cold Hot Color space with 255 divisions
+%whiter center
+Color(:,1)=linspace(26,250,128); %Cold -- R
+Color2(:,1)=linspace(250,212,128); %Hot -- R
+
+Color(:,2)=linspace(133,250,128); %Cold -- G
+Color2(:,2)=linspace(250,17,128); %Hot -- G
+
+Color(:,3)=linspace(255,250,128); %Cold -- B
+Color2(:,3)=linspace(250,89,128); %Hot -- B
+
+length_color=size(Color,1);
+Color(length_color+(1:127),1)=Color2(2:end,1);
+Color(length_color+(1:127),2)=Color2(2:end,2);
+Color(length_color+(1:127),3)=Color2(2:end,3);
+
+fig_colormap=figure;
+set(gca,'FontSize',8,'FontName','Arial');
+set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 2 15],'Units','inches','InnerPosition',[0 0 2 10.4895833333333]);
+
+hold on
+
+for n=1:size(Color,1)
+    rectangle('Position',[0 n 1 1],'FaceColor',Color(n,:)./255,'EdgeColor',Color(n,:)./255);
+end
+
+axis([0 1 1 255])
+
+xticks(linspace(0,1,2))
+xticklabels(repmat('',2,1))
+
+yticks(linspace(1,255,size(color_range_small,2)))
+yticklabels(color_range_small')
+
+print(fig_colormap, strcat('Stratified_ColorMap.png'),'-dpng','-r600');
+print(fig_colormap, strcat('Stratified_ColorMap.svg'),'-dsvg','-vector');
+
+
 end
