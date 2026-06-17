@@ -1,4 +1,6 @@
-function [ ] = civm_diffusion_stats(varargin)
+function [ config_file ] = civm_diffusion_stats(varargin)
+% no help for you 
+
 % Expected that google_doc is a file which civm_read_table will load
 % will save updated copy to cleaned_google_doc_path
 % from cleaned googledoc, will build and save dataframe sheet to dataframe.
@@ -149,8 +151,10 @@ if ~opts.keep_last_frame % if 0 we are NOT keeping the last data frame, if 1 we 
             % force all columns to be treated as text.
             notebook=column2text(notebook,notebook.Properties.VariableNames);
 
-            %James combing stuff together code
-            if iscell(notebook) && 1 < numel(notebook)
+            if iscell(notebook) && numel(notebook)  == 1
+                notebook=uncell(notebook);
+            elseif iscell(notebook) && 1 < numel(notebook) 
+                %James combing stuff together code
                 warning('%s\n\t%s\n','experimental conjoining of data sheets.','THESE MUST BE HIGHLY COMPATIBLE FOR THIS TO WORK');
                 % should I enter auto-debug for any thing requiring user intervention with
                 % helpful suggestions?
@@ -195,8 +199,6 @@ if ~opts.keep_last_frame % if 0 we are NOT keeping the last data frame, if 1 we 
                 end
                 cloud_notebook=concat_tables({},docs{:});
                 clear docs fields field_matching_required colname_match_data idx_d idx_all idx_a idx_n col_name non_matching idx_1 all_columns not_uniform;
-            elseif iscell(notebook)
-                notebook=uncell(notebook);
             end
 
             notebook = civm_metadata_cleanup(notebook,opts.extendedStudyColumns);
