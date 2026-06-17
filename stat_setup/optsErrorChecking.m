@@ -28,19 +28,15 @@ else
         % Make a dataframePath and save to default location to output
         % directory or the dataframePathProvided
         opts.using='cleanedGoogleDocPath';
-
         if isempty(opts.dataframePath)
             opts.dataframePath=fullfile(path,strcat('dataframe_',char(datetime('today')),'.txt'));
         end
-
     else
         if ~isempty(opts.googleDocPath) && exist(opts.googleDocPath,'file')
             %use googleDocPath
             % Make a cleanedGoogleDocPath and save
             % Make a dataframePath and save
             opts.using='googleDocPath';
-
-
             if isempty(opts.dataframePath)
                 opts.dataframePath=fullfile(path,strcat('dataframe_',char(datetime('today')),'.txt'));
             end
@@ -50,10 +46,10 @@ else
             if isempty(opts.cleanedGoogleDocPath)
                 opts.cleanedGoogleDocPath=fullfile(path,strcat('Edited_',name,extension));
             end
-
         else
             %ERROR
-            error('You need to provide at least 1 datapath file: the google document (googleDocPath), a cleaned google document (cleanedGoogleDocPath), or a specific precreated dataframe (dataframePath).');
+            error('Missing required a input. googleDocPath, cleanedGoogleDocPath or dataframePath; At least one of these must exist.');
+            %error('You need to provide at least 1 datapath file: the google document (googleDocPath), a cleaned google document ( ), or a specific precreated dataframe ().');
         end
     end
 end
@@ -67,28 +63,31 @@ elseif reg_match(opts.using,'^(dataframePath)$')
 end
 
 %% Check input sheet polishing
-if exist(opts.polishedSheetPath,'dir')
-    if ~isempty(opts.polishedSheetPath)
-        %opts.polish='checkcomplete';
-        %polishedsheets have already been formed. Check to make sure all
-        %have been polished for given sheet then continue
-    elseif isempty(opts.researchArchivePath) && isempty(opts.polishedSheetPath)
-        error('polishedSheetPath has not been populated and there is no research archive to pull from! Provide "researchArchivePath" so the sheets can be polished.');
-    end
-else
-    if ~isempty(opts.polishedSheetPath)
-        mkdir(opts.polishedSheetPath)
+if ~isempty(opts.polishedSheetPath)
+    if ~exist(opts.polishedSheetPath,'dir')
+        mkdir(opts.polishedSheetPath);
         if ~isempty(opts.researchArchivePath)
             %make polishing from research archive Path
-           % opts.polish='startnew';
+            % opts.polish='startnew';
         else
             error('polishedSheetPath has not been populated and there is no research archive to pull from! Provide "researchArchivePath" so the sheets can be polished.');
         end
-    else
-        error('polishedSheetPath has not been populated! We will not know where to save polished sheet if you do not provide a path!');
+    else 
+        %opts.polish='checkcomplete';
+        %polishedsheets have already been formed. Check to make sure all
+        %have been polished for given sheet then continue
     end
+elseif isempty(opts.researchArchivePath)
+    error('polishedSheetPath has not been populated and there is no research archive to pull from! Provide "researchArchivePath" so the sheets can be polished.');
+else
+    error('polishedSheetPath has not been populated! We will not know where to save polished sheet if you do not provide a path!');
 end
-
+if ~exist(opts.researchArchivePath,'dir')
+    error('Missing input directory: %s\nIs the archive connected?',opts.researchArchivePath);
+end
+if ~exist(opts.polishedSheetPath,'dir')
+    error('mkdir failed for polishedSheets: %s',opts.polishedSheetPath);
+end
 %% Check that save folder exists and if not make one
 if ~exist(opts.statSaveDir,'dir')
     mkdir(opts.statSaveDir);
