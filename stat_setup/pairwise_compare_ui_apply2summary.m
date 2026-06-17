@@ -81,7 +81,7 @@ holding_priorrequest = uigridlayout(Overall_holding,[1,3]);
 holding_priorrequest.RowHeight = {45};
 holding_priorrequest.ColumnWidth = {'0.5x','1x','0.25x'};
 
-uilabel(holding_priorrequest,'Text','Load Prior Pairwise Comparisons by Entering Path (without quotes) and Pressing Load');
+uilabel(holding_priorrequest,'Text','Load Prior Pairwise Comparisons by Entering Path (without quotes) and Pressing LOAD:');
 prior_pairwise = uieditfield(holding_priorrequest,'text','Value','');
 load_data_button = uibutton(holding_priorrequest,'Text','LOAD');
 load_data_button.ButtonPushedFcn=@(src,event)load_prior_state(src,event,prior_pairwise.Value);
@@ -165,13 +165,21 @@ waitfor(next_button,'ButtonPushedFcn');
         col_names_con=pairwise.control.Properties.VariableNames;
         col_names_treat=pairwise.treatment.Properties.VariableNames;
 
+        current_col_names=uit_controlpw.Data.Properties.VariableNames;
+
         if isequal(col_names_con,col_names_treat)
 
             controlpw=pairwise.control;
             treatmentpw=pairwise.treatment;
 
-            uit_controlpw.Data=pairwise.control(:,1:find(reg_match(col_names_con,'applytosummary'))-1);
-            uit_treatedpw.Data=pairwise.treatment(:,1:find(reg_match(col_names_con,'applytosummary'))-1);
+            col_idx=1:find(reg_match(col_names_con,'applytosummary'))-1;
+
+            if isequal(current_col_names,col_names_con)
+                uit_controlpw.Data=pairwise.control(:,col_idx);
+                uit_treatedpw.Data=pairwise.treatment(:,col_idx);
+            else
+                error('The Factors in your current analysis do not match your loaded in Pairwise Analysis! Try Again!')
+            end
 
             if isequal(pairwise.control.applytosummary,pairwise.treatment.applytosummary)
                 uit_applytosummaryppt.Data.('Apply to "Simplify Summary PPT"')(1:height(pairwise.control.applytosummary))=pairwise.control.applytosummary;
@@ -197,7 +205,7 @@ waitfor(next_button,'ButtonPushedFcn');
                 uit_sov.Data.Properties.RowNames=strsplit(num2str(1:height(pairwise.control)))';
             end
         else
-            error('Control and Treatment Pairwise Comparision Files Must Have Same Column Headings')
+            error('Control and Treatment Pairwise Comparision Files Must Have Same Column Headings!')
         end
 
     end
