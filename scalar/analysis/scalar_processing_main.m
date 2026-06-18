@@ -272,10 +272,14 @@ for o=1:numel(voxel_wise)
             %analysis
             shifted_big_table=big_table(group_name_idx==m,:);
 
-            left_table=shifted_big_table(shifted_big_table.hemisphere_assignment==-1,:);
-            bilat_table=shifted_big_table(shifted_big_table.hemisphere_assignment==0,:);
-            right_table=shifted_big_table(shifted_big_table.hemisphere_assignment==1,:);
+            left_table=shifted_big_table(shifted_big_table.hemisphere_assignment  == -1,:);
+            bilat_table=shifted_big_table(shifted_big_table.hemisphere_assignment ==  0,:);
+            right_table=shifted_big_table(shifted_big_table.hemisphere_assignment ==  1,:);
 
+            % initialize to empty to simplify later logic
+            bilat_specimen_zscore=table;
+            left_specimen_zscore=table;
+            right_specimen_zscore=table;
             try
                 if isempty(remove_zscore_grouping{i_testcondition}) && opts.findmedianspecimen==1
                     [bilat_specimen_zscore] = zscoring_finder(bilat_table,model_GROUPING);
@@ -287,28 +291,18 @@ for o=1:numel(voxel_wise)
                     [left_table_standardized,left_specimen_zscore] = zscoring_finder(left_table,model_GROUPING,remove_zscore_grouping{i_testcondition}{:});
                     [right_table_standardized,right_specimen_zscore] = zscoring_finder(right_table,model_GROUPING,remove_zscore_grouping{i_testcondition}{:});
 
-                    if opts.findmedianspecimen==0
-                        bilat_specimen_zscore=table;
-                        left_specimen_zscore=table;
-                        right_specimen_zscore=table;
-                    end
-
                     civm_write_table(bilat_table_standardized,fullfile(save_location,strcat(group_names{m},'_Bilat_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
                     civm_write_table(left_table_standardized,fullfile(save_location,strcat(group_names{m},'_Left_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
                     civm_write_table(right_table_standardized,fullfile(save_location,strcat(group_names{m},'_Right_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
-
-                else
-                    bilat_specimen_zscore=table;
-                    left_specimen_zscore=table;
-                    right_specimen_zscore=table;
                 end
-            catch
+            catch merr
+                warning(merr.identifier,'zscoring_finder incomplete: %s',merr.message);
                 %if it doesn't work we aren't trying to hard right now --
                 %typically it is a string related issued with non
                 %categorical terms
-                bilat_specimen_zscore=table;
-                left_specimen_zscore=table;
-                right_specimen_zscore=table;
+                % 
+                % I think we should at least force ourselves to see the
+                % error...?
             end
 
             if isempty(remove_zscore_grouping{i_testcondition})
@@ -365,10 +359,14 @@ for o=1:numel(voxel_wise)
         end
     else
 
-        left_table=big_table(big_table.hemisphere_assignment==-1,:);
-        bilat_table=big_table(big_table.hemisphere_assignment==0,:);
-        right_table=big_table(big_table.hemisphere_assignment==1,:);
+        left_table=big_table(big_table.hemisphere_assignment  == -1,:);
+        bilat_table=big_table(big_table.hemisphere_assignment ==  0,:);
+        right_table=big_table(big_table.hemisphere_assignment ==  1,:);
 
+        % initialize to empty to simplify later logic
+        bilat_specimen_zscore=table;
+        left_specimen_zscore=table;
+        right_specimen_zscore=table;
         try
             if isempty(remove_zscore_grouping{i_testcondition}) && opts.findmedianspecimen==1
                 [bilat_specimen_zscore] = zscoring_finder(bilat_table,test_conditions{i_testcondition});
@@ -379,19 +377,9 @@ for o=1:numel(voxel_wise)
                 [left_table_standardized,left_specimen_zscore] = zscoring_finder(left_table,test_conditions{i_testcondition},remove_zscore_grouping{i_testcondition}{:});
                 [right_table_standardized,right_specimen_zscore] = zscoring_finder(right_table,test_conditions{i_testcondition},remove_zscore_grouping{i_testcondition}{:});
 
-                if opts.findmedianspecimen==0
-                    bilat_specimen_zscore=table;
-                    left_specimen_zscore=table;
-                    right_specimen_zscore=table;
-                end
-
                 civm_write_table(bilat_table_standardized,fullfile(save_location,strcat('Bilat_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
                 civm_write_table(left_table_standardized,fullfile(save_location,strcat('Left_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
                 civm_write_table(right_table_standardized,fullfile(save_location,strcat('Right_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
-            else
-                bilat_specimen_zscore=table;
-                left_specimen_zscore=table;
-                right_specimen_zscore=table;
             end
             
         catch merr
@@ -399,10 +387,9 @@ for o=1:numel(voxel_wise)
             %if it doesn't work we aren't trying to hard right now --
             %typically it is a string related issued with non
             %categorical terms
-
-            bilat_specimen_zscore=table;
-            left_specimen_zscore=table;
-            right_specimen_zscore=table;
+            %
+            % I think we should at least force ourselves to see the
+            % error...?
         end
 
         %Bilat, Left, and Right
