@@ -63,6 +63,13 @@ elseif reg_match(opts.using,'^(dataframePath)$')
 end
 
 %% Check input sheet polishing
+if ~iscell(opts.researchArchivePath) 
+    if ~isempty(opts.researchArchivePath)
+        opts.researchArchivePath={opts.researchArchivePath};
+    else 
+        opts.researchArchivePath={};
+    end
+end
 if ~isempty(opts.polishedSheetPath)
     if ~exist(opts.polishedSheetPath,'dir')
         mkdir(opts.polishedSheetPath);
@@ -82,8 +89,8 @@ elseif isempty(opts.researchArchivePath)
 else
     error('polishedSheetPath has not been populated! We will not know where to save polished sheet if you do not provide a path!');
 end
-if ~exist(opts.researchArchivePath,'dir')
-    error('Missing input directory: %s\nIs the archive connected?',opts.researchArchivePath);
+if ~all(cellfun(@(x) exist(x,'dir'),opts.researchArchivePath))
+    error('Missing input directory: %s\nIs the archive connected?',strjoin(opts.researchArchivePath,' or '));
 end
 if ~exist(opts.polishedSheetPath,'dir')
     error('mkdir failed for polishedSheets: %s',opts.polishedSheetPath);
