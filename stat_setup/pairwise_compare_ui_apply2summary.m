@@ -174,7 +174,7 @@ waitfor(next_button,'ButtonPushedFcn');
 
             col_idx=1:find(reg_match(col_names_con,'applytosummary'))-1;
 
-            if isequal(current_col_names,col_names_con)
+            if isequal(current_col_names,col_names_con(col_idx))
                 uit_controlpw.Data=pairwise.control(:,col_idx);
                 uit_treatedpw.Data=pairwise.treatment(:,col_idx);
             else
