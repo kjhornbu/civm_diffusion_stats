@@ -113,40 +113,31 @@ for n=1:height(Path_table)
 %     [slidedata] = summary_slide_4item_setup(ppt,name,compare_image);
 
     %% Summary Slides for Each "Interesting" Contrast Per SOV
-    check_interesting_data=readtable(interesting_data_path,'Delimiter','\t');
-   
-    %because the way that the data is saved it opens poorly in civm read
-    %table we are using this to check if the file is empty before doing
-    %real work
+    check_interesting_data=civm_read_table(interesting_data_path);
+    %now civm_read_table should work with blank tables. 
+  
 
     try
-        %If blank totally typically this shows up
-        comment_index=~cellfun(@isempty,regexpi(check_interesting_data.x_ROI,'^#'));
-    catch
-        %otherwise it could be a nan
-        comment_index=isnan(check_interesting_data.x_ROI);
-    end
+        %If we don't have anything interesting it skips this.
+        if height(check_interesting_data)>0
+            Interesting_Data=civm_read_table(interesting_data_path);
+            Group_Table=civm_read_table(Path_table.GroupTable{n});
 
-    try
-    %If we don't have anything interesting it skips this.
-    if (height(check_interesting_data)-sum(comment_index))>0  
-        Interesting_Data=civm_read_table(interesting_data_path);
-        Group_Table=civm_read_table(Path_table.GroupTable{n});
-
-        try
-            [slidepointer] = scalar_summary_slide_setup(ppt,figure_dir,Interesting_Data,Group_Table,test_cases.control,test_cases.treatment);
-        catch exception
-            warning(exception.identifier,'error in summary setup slide creation: %s',exception.message);
-            keyboard;
+            try
+                [slidepointer] = scalar_summary_slide_setup(ppt,figure_dir,Interesting_Data,Group_Table,test_cases.control,test_cases.treatment);
+            catch exception
+                warning(exception.identifier,'error in summary setup slide creation: %s',exception.message);
+            end
+        else
+            %Make "Blank Filler Slide"
+            slidepointer = add(ppt,'Title Slide');
+            replace(slidepointer,'Title','No Significant Results');
         end
-     else
-        %Make "Blank Filler Slide"
-        slidepointer = add(ppt,'Title Slide');
-        replace(slidepointer,'Title','No Significant Results');
-    end
+
     catch exception
         keyboard;
     end
+
     close(ppt);
 end
 end
