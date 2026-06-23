@@ -1,5 +1,6 @@
 function [slidepointer] = scalar_summary_slide_setup(ppt,figure_dir,Interesting_Data,Group_Table,control_setting,noncontrol_setting)
 
+cohenF_Threshold=0.4;
 import mlreportgen.ppt.*;
 
 [contrast,~,contrast_idx]=unique(Interesting_Data.contrast);
@@ -7,21 +8,8 @@ import mlreportgen.ppt.*;
 
 Group_Table_VariableNames=Group_Table.Properties.VariableNames;
 
-control_setting_VariableNames=control_setting.Properties.VariableNames;
-if sum(~cellfun(@isempty,regexpi(control_setting_VariableNames,'^(case)$')))
-    control_setting_VariableNames=control_setting_VariableNames(3:end);
-else
-    control_setting_VariableNames=control_setting_VariableNames(2:end);
-end
-
-noncontrol_setting_VariableNames=noncontrol_setting.Properties.VariableNames;
-if sum(~cellfun(@isempty,regexpi(noncontrol_setting_VariableNames,'^(case)$')))
-    start_idx=3;
-    noncontrol_setting_VariableNames=noncontrol_setting_VariableNames(3:end);
-else
-    start_idx=2;
-    noncontrol_setting_VariableNames=noncontrol_setting_VariableNames(2:end);
-end
+[control_setting_VariableNames] = select_setting_terms(control_setting);
+[noncontrol_setting_VariableNames] = select_setting_terms(noncontrol_setting);
 
 counter = 0;
 [unique_sources_inControlSheet,~,~]=unique(control_setting.source_of_variation);
@@ -42,6 +30,8 @@ if counter == numel(unique_sources_inControlSheet)
     return;
 end
 
+%% Data Slides
+
 for source=1:numel(source_of_variation)
     control_idx=~cellfun(@isempty,regexpi(control_setting.source_of_variation,strcat('^(',source_of_variation(source),')$')));
     control_positional_idx=find(control_idx==1);
@@ -55,7 +45,6 @@ for source=1:numel(source_of_variation)
         continue;
     end
 
- 
     clear control_idx_inGroupTable noncontrol_idx_inGroupTable;
     for pairs_in_group = 1:size(temp_control,1)
         if sum(~cellfun(@isempty,regexpi(noncontrol_setting.Properties.VariableNames,'^(case)$')))
@@ -64,10 +53,8 @@ for source=1:numel(source_of_variation)
         else
             group_name_control{pairs_in_group}=strjoin(table2array(temp_control(pairs_in_group,:)),' ');
             group_name_noncontrol{pairs_in_group}=strjoin(table2array(temp_noncontrol(pairs_in_group,:)),' ');
-
             group_name_full{pairs_in_group}=strcat(group_name_control{pairs_in_group},32,'versus',32,group_name_noncontrol{pairs_in_group});
         end
-
 
         for group_n=1:numel(control_setting_VariableNames)
             control_idx_inGroupTable{pairs_in_group}(:,group_n)=~cellfun(@isempty,regexpi(Group_Table.(control_setting_VariableNames{group_n}),strcat('^(',temp_control.(control_setting_VariableNames{group_n}){pairs_in_group},')$')));
@@ -103,21 +90,28 @@ for source=1:numel(source_of_variation)
                 end
             end
 
+            slidepointer = add(ppt,"Scalar_Analysis");
+
+            slide_title=['Summary:',' ',contrast{con},' ',source_of_variation{source}];
+
+            replace(slidepointer,"Title",slide_title);
+
+% create summary table
             increasing_idx=increase_decrease_setting==1;
             decreasing_idx=increase_decrease_setting==-1;
- 
+
             summary_table=table;
             summary_table.('Summary Counts'){1}='N';
             summary_table.('Summary Counts'){2}='+';
             summary_table.('Summary Counts'){3}='-';
 
             summary_table.('All')(1)=sum(Interesting_Data_Lookup_idx);
-            summary_table.('All')(2)=sum(sum(increasing_idx,1)>0,'all'); 
+            summary_table.('All')(2)=sum(sum(increasing_idx,1)>0,'all');
             summary_table.('All')(3)=sum(sum(decreasing_idx,1)>0,'all');
 
-            summary_table.('Large Effects')(1)=sum(Interesting_Data.cohenF(Interesting_Data_Lookup_idx)>0.4);
-            summary_table.('Large Effects')(2)=sum(Interesting_Data.cohenF(Interesting_Data_Lookup_positional_idx(sum(increasing_idx,1)>0))>0.4);
-            summary_table.('Large Effects')(3)=sum(Interesting_Data.cohenF(Interesting_Data_Lookup_positional_idx(sum(decreasing_idx,1)>0))>0.4);
+            summary_table.('Large Effects')(1)=sum(Interesting_Data.cohenF(Interesting_Data_Lookup_idx)>cohenF_Threshold);
+            summary_table.('Large Effects')(2)=sum(Interesting_Data.cohenF(Interesting_Data_Lookup_positional_idx(sum(increasing_idx,1)>0))>cohenF_Threshold);
+            summary_table.('Large Effects')(3)=sum(Interesting_Data.cohenF(Interesting_Data_Lookup_positional_idx(sum(decreasing_idx,1)>0))>cohenF_Threshold);
 
             if size(increasing_idx,1)>1
                 for n=1:size(increasing_idx,1)
@@ -125,26 +119,20 @@ for source=1:numel(source_of_variation)
                     summary_table.(group_name_full{n})(2)=sum(increasing_idx(n,:),'all');
                     summary_table.(group_name_full{n})(3)=sum(decreasing_idx(n,:),'all');
 
-                    summary_table.(strcat('Large Effects',32,group_name_full{n}))(1)=sum(Interesting_Data.cohenF(Interesting_Data_Lookup_idx)>0.4);
-                    summary_table.(strcat('Large Effects',32,group_name_full{n}))(2)=sum(Interesting_Data.cohenF(Interesting_Data_Lookup_positional_idx(increasing_idx(n,:)))>0.4);
-                    summary_table.(strcat('Large Effects',32,group_name_full{n}))(3)=sum(Interesting_Data.cohenF(Interesting_Data_Lookup_positional_idx(decreasing_idx(n,:)))>0.4);
+                    summary_table.(strcat('Large Effects',32,group_name_full{n}))(1)=sum(Interesting_Data.cohenF(Interesting_Data_Lookup_idx)>cohenF_Threshold);
+                    summary_table.(strcat('Large Effects',32,group_name_full{n}))(2)=sum(Interesting_Data.cohenF(Interesting_Data_Lookup_positional_idx(increasing_idx(n,:)))>cohenF_Threshold);
+                    summary_table.(strcat('Large Effects',32,group_name_full{n}))(3)=sum(Interesting_Data.cohenF(Interesting_Data_Lookup_positional_idx(decreasing_idx(n,:)))>cohenF_Threshold);
                 end
             end
 
+            replace(slidepointer,"Table",Table(summary_table));
             increasing_table=Interesting_Data(Interesting_Data_Lookup_positional_idx(sum(increasing_idx,1)>0),:);
             increasing_table=sortrows(increasing_table,'cohenF','descend');
 
             decreasing_table=Interesting_Data(Interesting_Data_Lookup_positional_idx(sum(decreasing_idx,1)>0),:);
             decreasing_table=sortrows(decreasing_table,'cohenF','descend');
 
-            slidepointer = add(ppt,"Scalar_Analysis");
-
-            slide_title=['Summary:',' ',contrast{con},' ',source_of_variation{source}];
-            replace(slidepointer,"Title",slide_title);
-
-            replace(slidepointer,"Table",Table(summary_table));
-
-            if  (height(increasing_table)>10) | (height(decreasing_table)>10)
+            if  (height(increasing_table)>10) || (height(decreasing_table)>10)
                 clear Full_Content;
                 Full_Content=Paragraph('Abbreviations listed have been capped at a maximum of 10 per direction');
                 Full_Content.Style = {Bold(false)};
@@ -155,16 +143,16 @@ for source=1:numel(source_of_variation)
 
                 if (height(increasing_table)>10)
                     try
-                    abb_regions_identified_Increase=increasing_table.GN_Symbol(1:10);
-                    text_bold_increasing=strjoin(abb_regions_identified_Increase(increasing_table.cohenF(1:10)>0.4),', ');
-                    t=Text(text_bold_increasing);
-                    t.Style = {Bold(true)};
-                    append(Full_Content_I,t);
+                        abb_regions_identified_Increase=increasing_table.GN_Symbol(1:10);
+                        text_bold_increasing=strjoin(abb_regions_identified_Increase(increasing_table.cohenF(1:10)>cohenF_Threshold),', ');
+                        t=Text(text_bold_increasing);
+                        t.Style = {Bold(true)};
+                        append(Full_Content_I,t);
                     catch
                         keyboard;
                     end
 
-                    text_increasing=strjoin(abb_regions_identified_Increase(increasing_table.cohenF(1:10)<=0.4),', ');
+                    text_increasing=strjoin(abb_regions_identified_Increase(increasing_table.cohenF(1:10)<=cohenF_Threshold),', ');
                     if ~isempty(text_increasing)
                         if ~isempty(text_bold_increasing)
                             append(Full_Content_I,Text(', '));
@@ -174,12 +162,12 @@ for source=1:numel(source_of_variation)
                     t.Style = {Bold(false)};
                     append(Full_Content_I,t);
                 else
-                    text_bold_increasing=strjoin(increasing_table.GN_Symbol(increasing_table.cohenF>0.4),', ');
+                    text_bold_increasing=strjoin(increasing_table.GN_Symbol(increasing_table.cohenF>cohenF_Threshold),', ');
                     t=Text(text_bold_increasing);
                     t.Style = {Bold(true)};
                     append(Full_Content_I,t);
 
-                    text_increasing=strjoin(increasing_table.GN_Symbol(increasing_table.cohenF<=0.4),', ');
+                    text_increasing=strjoin(increasing_table.GN_Symbol(increasing_table.cohenF<=cohenF_Threshold),', ');
                     if ~isempty(text_increasing)
                         if ~isempty(text_bold_increasing)
                             append(Full_Content_I,Text(', '));
@@ -196,12 +184,12 @@ for source=1:numel(source_of_variation)
 
                 if (height(decreasing_table)>10)
                     abb_regions_identified_Decrease=decreasing_table.GN_Symbol(1:10);
-                    text_bold_decreasing=strjoin(abb_regions_identified_Decrease(decreasing_table.cohenF(1:10)>0.4),', ');
+                    text_bold_decreasing=strjoin(abb_regions_identified_Decrease(decreasing_table.cohenF(1:10)>cohenF_Threshold),', ');
                     t=Text(text_bold_decreasing);
                     t.Style = {Bold(true)};
                     append(Full_Content_D,t);
 
-                    text_decreasing=strjoin(abb_regions_identified_Decrease(decreasing_table.cohenF(1:10)<=0.4),', ');
+                    text_decreasing=strjoin(abb_regions_identified_Decrease(decreasing_table.cohenF(1:10)<=cohenF_Threshold),', ');
                     if ~isempty(text_decreasing)
                         if ~isempty(text_bold_decreasing)
                             append(Full_Content_D,Text(', '));
@@ -211,12 +199,12 @@ for source=1:numel(source_of_variation)
                     t.Style = {Bold(false)};
                     append(Full_Content_D,t);
                 else
-                    text_bold_decreasing=strjoin(decreasing_table.GN_Symbol(decreasing_table.cohenF>0.4),', ');
+                    text_bold_decreasing=strjoin(decreasing_table.GN_Symbol(decreasing_table.cohenF>cohenF_Threshold),', ');
                     t=Text(text_bold_decreasing);
                     t.Style = {Bold(true)};
                     append(Full_Content_D,t);
 
-                    text_decreasing=strjoin(decreasing_table.GN_Symbol(decreasing_table.cohenF<=0.4),', ');
+                    text_decreasing=strjoin(decreasing_table.GN_Symbol(decreasing_table.cohenF<=cohenF_Threshold),', ');
                     if ~isempty(text_decreasing)
                         if ~isempty(text_bold_decreasing)
                             append(Full_Content_D,Text(', '));
@@ -233,12 +221,12 @@ for source=1:numel(source_of_variation)
                 Full_Content_I = Paragraph('Increasing: ');
                 Full_Content_I.Style = {Bold(false)};
 
-                text_bold_increasing=strjoin(increasing_table.GN_Symbol(increasing_table.cohenF>0.4),', ');
+                text_bold_increasing=strjoin(increasing_table.GN_Symbol(increasing_table.cohenF>cohenF_Threshold),', ');
                 t=Text(text_bold_increasing);
                 t.Style = {Bold(true)};
                 append(Full_Content_I,t);
 
-                text_increasing=strjoin(increasing_table.GN_Symbol(increasing_table.cohenF<=0.4),', ');
+                text_increasing=strjoin(increasing_table.GN_Symbol(increasing_table.cohenF<=cohenF_Threshold),', ');
                 if ~isempty(text_increasing)
                     if ~isempty(text_bold_increasing)
                         append(Full_Content_I,Text(', '));
@@ -252,12 +240,12 @@ for source=1:numel(source_of_variation)
                 Full_Content_D = Paragraph('Decreasing: ');
                 Full_Content_D.Style = {Bold(false)};
 
-                text_bold_decreasing=strjoin(decreasing_table.GN_Symbol(decreasing_table.cohenF>0.4),', ');
+                text_bold_decreasing=strjoin(decreasing_table.GN_Symbol(decreasing_table.cohenF>cohenF_Threshold),', ');
                 t=Text(text_bold_decreasing);
                 t.Style = {Bold(true)};
                 append(Full_Content_D,t);
 
-                text_decreasing=strjoin(decreasing_table.GN_Symbol(decreasing_table.cohenF<=0.4),', ');
+                text_decreasing=strjoin(decreasing_table.GN_Symbol(decreasing_table.cohenF<=cohenF_Threshold),', ');
                 if ~isempty(text_decreasing)
                     if ~isempty(text_bold_decreasing)
                         append(Full_Content_D,Text(', '));
@@ -269,12 +257,10 @@ for source=1:numel(source_of_variation)
 
                 replace(slidepointer,"Content",{Full_Content_I,Full_Content_D});
             end
-            try
-                picture = Picture(fullfile(figure_dir,strrep(source_of_variation{source},':','x'),contrast{con},'png',strcat(strrep(source_of_variation{source},':','x'),'_',contrast{con},'_Subject_Data_Fig.png')));
-                replace(slidepointer,"Picture",picture);
-            catch
-                keyboard;
-            end
+ 
+% Add Figure
+            picture = Picture(fullfile(figure_dir,strrep(source_of_variation{source},':','x'),contrast{con},'png',strcat(strrep(source_of_variation{source},':','x'),'_',contrast{con},'_Subject_Data_Fig.png')));
+            replace(slidepointer,"Picture",picture);
         end
     end
 end

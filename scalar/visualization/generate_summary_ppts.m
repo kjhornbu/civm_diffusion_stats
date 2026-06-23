@@ -116,11 +116,10 @@ for n=1:height(Path_table)
     check_interesting_data=civm_read_table(interesting_data_path);
     %now civm_read_table should work with blank tables. 
   
-
     try
         %If we don't have anything interesting it skips this.
         if height(check_interesting_data)>0
-            Interesting_Data=civm_read_table(interesting_data_path);
+            Interesting_Data=check_interesting_data;
             Group_Table=civm_read_table(Path_table.GroupTable{n});
 
             try
