@@ -5,9 +5,9 @@ function [group_mean,group_std,group_median,group_IQR] = group_summary_statistic
 %Bookkeeping_list={'ROI','Structure','hemisphere_assignment','acronym','name','id64','id32','structure_id'};
 Bookkeeping_list={'ROI','Structure','hemisphere_assignment','GN_Symbol','ARA_abbrev','id64_fSABI','id32_fSABI','structure_id'};
 
-% To cleverly generate the averages for all the reasonable possiblities, 
+% To cleverly generate the averages for all the reasonable possiblities,
 % we'll need to run for (2^(nGroupColumns))-1. That will be used as a binary count
-% from 1..((2^(nGroupColumns))-)
+% from 1..((2^(nGroupColumns)))
 output_means_to_generate=(2^(numel(test_grouping)));%-1; %converted from (2^(numel(test_grouping)))-1; on 20250916
 
 output_mean=cell(1,output_means_to_generate);
@@ -17,7 +17,7 @@ output_IQR=cell(1,output_means_to_generate);
 
 % For each test grouping iterate and add to the list
 %THIS IS COUNTING WRONG NOW! WHEN I TRY TO REMOVE THE SEX TERM this also
-%doesn't have an overall which would be useful to have. 
+%doesn't have an overall which would be useful to have.
 for n=1:output_means_to_generate
 
     character_array=dec2bin(n-1,numel(test_grouping));
@@ -45,7 +45,7 @@ for n=1:output_means_to_generate
     end
 end
 
-%Then when we remove sex from the terms in the table we 
+%Then when we remove sex from the terms in the table we
 group_mean=column_reorder(vertcat(output_mean{:}),grouping_names);
 group_mean.Properties.Description='The - indicates averaging across the given column.\n';
 group_std=column_reorder(vertcat(output_std{:}),grouping_names);
@@ -55,7 +55,6 @@ group_median.Properties.Description='The - indicates averaging across the given 
 group_IQR=column_reorder(vertcat(output_IQR{:}),grouping_names);
 group_IQR.Properties.Description='The - indicates averaging across the given column.\n';
 
-
 % force order to match our outptut so we can simplify testing.
 data_table=column_reorder(data_table,test_grouping);
 %Probably broke Variable descirptions so repair from original table.
@@ -63,7 +62,7 @@ data_idx=column_find(data_table.Properties.VariableNames,strcat('^(',strjoin(tes
 test_descriptions=data_table.Properties.VariableDescriptions(data_idx);
 
 %% fix this table descriptions which broke due to our column elimination and recovery earlier
-% because james is crazy, put all the tables in a cell so we can loop. 
+% because james is crazy, put all the tables in a cell so we can loop.
 % THIS IS CURRENTLY BROKEN FOR STRATIFICAITON 2024-11-04
 tables={group_mean,group_std,group_median,group_IQR};
 for t_n=1:numel(tables)

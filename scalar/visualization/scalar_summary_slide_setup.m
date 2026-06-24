@@ -31,7 +31,6 @@ if counter == numel(unique_sources_inControlSheet)
 end
 
 %% Data Slides
-
 for source=1:numel(source_of_variation)
     control_idx=~cellfun(@isempty,regexpi(control_setting.source_of_variation,strcat('^(',source_of_variation(source),')$')));
     control_positional_idx=find(control_idx==1);
