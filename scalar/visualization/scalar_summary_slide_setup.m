@@ -1,6 +1,7 @@
 function [slidepointer] = scalar_summary_slide_setup(ppt,figure_dir,Interesting_Data,Group_Table,control_setting,noncontrol_setting)
 
 cohenF_Threshold=0.4;
+
 import mlreportgen.ppt.*;
 
 [contrast,~,contrast_idx]=unique(Interesting_Data.contrast);
@@ -33,9 +34,9 @@ end
 %% Data Slides
 for source=1:numel(source_of_variation)
     control_idx=~cellfun(@isempty,regexpi(control_setting.source_of_variation,strcat('^(',source_of_variation(source),')$')));
-    control_positional_idx=find(control_idx==1);
-
     noncontrol_idx=~cellfun(@isempty,regexpi(noncontrol_setting.source_of_variation,strcat('^(',source_of_variation(source),')$')));
+
+    control_positional_idx=find(control_idx==1);
 
     temp_control=control_setting(control_idx,start_idx:end);
     temp_noncontrol=noncontrol_setting(noncontrol_idx,start_idx:end);
@@ -45,6 +46,7 @@ for source=1:numel(source_of_variation)
     end
 
     clear control_idx_inGroupTable noncontrol_idx_inGroupTable;
+
     for pairs_in_group = 1:size(temp_control,1)
         if sum(~cellfun(@isempty,regexpi(noncontrol_setting.Properties.VariableNames,'^(case)$')))
             group_name_full{pairs_in_group}=control_setting.case{control_positional_idx(pairs_in_group)};
@@ -140,79 +142,13 @@ for source=1:numel(source_of_variation)
                 Full_Content_I = Paragraph('Increasing: ');
                 Full_Content_I.Style = {Bold(false)};
 
-                if (height(increasing_table)>10)
-                    try
-                        abb_regions_identified_Increase=increasing_table.GN_Symbol(1:10);
-                        text_bold_increasing=strjoin(abb_regions_identified_Increase(increasing_table.cohenF(1:10)>cohenF_Threshold),', ');
-                        t=Text(text_bold_increasing);
-                        t.Style = {Bold(true)};
-                        append(Full_Content_I,t);
-                    catch
-                        keyboard;
-                    end
-
-                    text_increasing=strjoin(abb_regions_identified_Increase(increasing_table.cohenF(1:10)<=cohenF_Threshold),', ');
-                    if ~isempty(text_increasing)
-                        if ~isempty(text_bold_increasing)
-                            append(Full_Content_I,Text(', '));
-                        end
-                    end
-                    t=Text(text_increasing);
-                    t.Style = {Bold(false)};
-                    append(Full_Content_I,t);
-                else
-                    text_bold_increasing=strjoin(increasing_table.GN_Symbol(increasing_table.cohenF>cohenF_Threshold),', ');
-                    t=Text(text_bold_increasing);
-                    t.Style = {Bold(true)};
-                    append(Full_Content_I,t);
-
-                    text_increasing=strjoin(increasing_table.GN_Symbol(increasing_table.cohenF<=cohenF_Threshold),', ');
-                    if ~isempty(text_increasing)
-                        if ~isempty(text_bold_increasing)
-                            append(Full_Content_I,Text(', '));
-                        end
-                    end
-                    t=Text(text_increasing);
-                    t.Style = {Bold(false)};
-                    append(Full_Content_I,t);
-                end
-
+                [Full_Content_I] = Increase_Decrease_Text(Full_Content_I,increasing_table,cohenF_Threshold);
+   
                 clear Full_Content_D;
                 Full_Content_D = Paragraph('Decreasing: ');
                 Full_Content_D.Style = {Bold(false)};
 
-                if (height(decreasing_table)>10)
-                    abb_regions_identified_Decrease=decreasing_table.GN_Symbol(1:10);
-                    text_bold_decreasing=strjoin(abb_regions_identified_Decrease(decreasing_table.cohenF(1:10)>cohenF_Threshold),', ');
-                    t=Text(text_bold_decreasing);
-                    t.Style = {Bold(true)};
-                    append(Full_Content_D,t);
-
-                    text_decreasing=strjoin(abb_regions_identified_Decrease(decreasing_table.cohenF(1:10)<=cohenF_Threshold),', ');
-                    if ~isempty(text_decreasing)
-                        if ~isempty(text_bold_decreasing)
-                            append(Full_Content_D,Text(', '));
-                        end
-                    end
-                    t=Text(text_decreasing);
-                    t.Style = {Bold(false)};
-                    append(Full_Content_D,t);
-                else
-                    text_bold_decreasing=strjoin(decreasing_table.GN_Symbol(decreasing_table.cohenF>cohenF_Threshold),', ');
-                    t=Text(text_bold_decreasing);
-                    t.Style = {Bold(true)};
-                    append(Full_Content_D,t);
-
-                    text_decreasing=strjoin(decreasing_table.GN_Symbol(decreasing_table.cohenF<=cohenF_Threshold),', ');
-                    if ~isempty(text_decreasing)
-                        if ~isempty(text_bold_decreasing)
-                            append(Full_Content_D,Text(', '));
-                        end
-                    end
-                    t=Text(text_decreasing);
-                    t.Style = {Bold(false)};
-                    append(Full_Content_D,t);
-                end
+                [Full_Content_D] = Increase_Decrease_Text(Full_Content_D,decreasing_table,cohenF_Threshold);
 
                 replace(slidepointer,'Content',{Full_Content,Full_Content_I,Full_Content_D});
             else
@@ -220,39 +156,13 @@ for source=1:numel(source_of_variation)
                 Full_Content_I = Paragraph('Increasing: ');
                 Full_Content_I.Style = {Bold(false)};
 
-                text_bold_increasing=strjoin(increasing_table.GN_Symbol(increasing_table.cohenF>cohenF_Threshold),', ');
-                t=Text(text_bold_increasing);
-                t.Style = {Bold(true)};
-                append(Full_Content_I,t);
-
-                text_increasing=strjoin(increasing_table.GN_Symbol(increasing_table.cohenF<=cohenF_Threshold),', ');
-                if ~isempty(text_increasing)
-                    if ~isempty(text_bold_increasing)
-                        append(Full_Content_I,Text(', '));
-                    end
-                end
-                t=Text(text_increasing);
-                t.Style = {Bold(false)};
-                append(Full_Content_I,t);
-
+                [Full_Content_I] = Increase_Decrease_Text(Full_Content_I,increasing_table,cohenF_Threshold);
+   
                 clear Full_Content_D;
                 Full_Content_D = Paragraph('Decreasing: ');
                 Full_Content_D.Style = {Bold(false)};
 
-                text_bold_decreasing=strjoin(decreasing_table.GN_Symbol(decreasing_table.cohenF>cohenF_Threshold),', ');
-                t=Text(text_bold_decreasing);
-                t.Style = {Bold(true)};
-                append(Full_Content_D,t);
-
-                text_decreasing=strjoin(decreasing_table.GN_Symbol(decreasing_table.cohenF<=cohenF_Threshold),', ');
-                if ~isempty(text_decreasing)
-                    if ~isempty(text_bold_decreasing)
-                        append(Full_Content_D,Text(', '));
-                    end
-                end
-                t=Text(text_decreasing);
-                t.Style = {Bold(false)};
-                append(Full_Content_D,t);
+                [Full_Content_D] = Increase_Decrease_Text(Full_Content_D,decreasing_table,cohenF_Threshold);
 
                 replace(slidepointer,"Content",{Full_Content_I,Full_Content_D});
             end
