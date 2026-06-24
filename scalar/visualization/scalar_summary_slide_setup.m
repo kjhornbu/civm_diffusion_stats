@@ -9,21 +9,30 @@ import mlreportgen.ppt.*;
 
 Group_Table_VariableNames=Group_Table.Properties.VariableNames;
 
-[control_setting_VariableNames] = select_setting_terms(control_setting);
-[noncontrol_setting_VariableNames] = select_setting_terms(noncontrol_setting);
+[control_setting_VariableNames,~] = select_setting_terms(control_setting);
+[noncontrol_setting_VariableNames,start_idx] = select_setting_terms(noncontrol_setting);
 
-counter = 0;
+%% Check if we have any interesting comparisions at all
+%We look at the comparisons we list for key sources of variations and compare
+%it to the interesting data sheet to see if any remain when I consider the sheet.
+%This is different than the outside check which looks for if the Interesting table
+% is a literal empty where as this is looking at says is the comparisons I care most about literally empty.
+
+counter = 0; 
 [unique_sources_inControlSheet,~,~]=unique(control_setting.source_of_variation);
 for keyGroupings=1:numel(unique_sources_inControlSheet)
     logicalKeyGrouping_idx=~cellfun(@isempty,regexpi(source_of_variation,unique_sources_inControlSheet{keyGroupings}));
     if sum(logicalKeyGrouping_idx)==0
+
         %If we can't find in the interesting comparisions the key groupings for the sheet
         %we will just iterate a counter
+
         counter = counter +1;
     end
 end
 
-%if all the sources of variation that are key groupings are missing then indicate that.
+%if all the sources of variation that are key groupings are missing then
+%indicate that.
 if counter == numel(unique_sources_inControlSheet)
     %Make "Blank Filler Slide for the Key Groupings"
     slidepointer = add(ppt,'Title Slide');
@@ -31,7 +40,10 @@ if counter == numel(unique_sources_inControlSheet)
     return;
 end
 
-%% Data Slides
+%% Data Slide Setup
+%we look through all the sources of variations in the interesting rather
+%than in the key comparisions.
+
 for source=1:numel(source_of_variation)
     control_idx=~cellfun(@isempty,regexpi(control_setting.source_of_variation,strcat('^(',source_of_variation(source),')$')));
     noncontrol_idx=~cellfun(@isempty,regexpi(noncontrol_setting.source_of_variation,strcat('^(',source_of_variation(source),')$')));
@@ -48,9 +60,10 @@ for source=1:numel(source_of_variation)
     clear control_idx_inGroupTable noncontrol_idx_inGroupTable;
 
     for pairs_in_group = 1:size(temp_control,1)
+
+        %if we didn't give a cute name then use a standard name
         if sum(~cellfun(@isempty,regexpi(noncontrol_setting.Properties.VariableNames,'^(case)$')))
             group_name_full{pairs_in_group}=control_setting.case{control_positional_idx(pairs_in_group)};
-
         else
             group_name_control{pairs_in_group}=strjoin(table2array(temp_control(pairs_in_group,:)),' ');
             group_name_noncontrol{pairs_in_group}=strjoin(table2array(temp_noncontrol(pairs_in_group,:)),' ');
@@ -73,6 +86,12 @@ for source=1:numel(source_of_variation)
         Interesting_Data_Lookup_positional_idx=find(Interesting_Data_Lookup_idx==1);
 
         if  ~isempty(Interesting_Data_Lookup_positional_idx)
+            %% Add Title to Slide
+            slidepointer = add(ppt,"Scalar_Analysis");
+            slide_title=['Summary:',' ',contrast{con},' ',source_of_variation{source}];
+            replace(slidepointer,"Title",slide_title);
+
+            %% Configure groupings to work from for the Given Contrast
             ROI_numbers=Interesting_Data.ROI(Interesting_Data_Lookup_idx);
             ROI_number_idx=Group_Table.ROI==ROI_numbers';
             data_idx=~cellfun(@isempty,regexpi(Group_Table_VariableNames,strcat('^(',contrast{con},'_group_mean)$')));
@@ -91,13 +110,7 @@ for source=1:numel(source_of_variation)
                 end
             end
 
-            slidepointer = add(ppt,"Scalar_Analysis");
-
-            slide_title=['Summary:',' ',contrast{con},' ',source_of_variation{source}];
-
-            replace(slidepointer,"Title",slide_title);
-
-% create summary table
+            %% Create summary table of Configured Groupings
             increasing_idx=increase_decrease_setting==1;
             decreasing_idx=increase_decrease_setting==-1;
 
@@ -127,47 +140,42 @@ for source=1:numel(source_of_variation)
             end
 
             replace(slidepointer,"Table",Table(summary_table));
+
+            %% Create Top Increase/Decrease Region Content
             increasing_table=Interesting_Data(Interesting_Data_Lookup_positional_idx(sum(increasing_idx,1)>0),:);
             increasing_table=sortrows(increasing_table,'cohenF','descend');
 
             decreasing_table=Interesting_Data(Interesting_Data_Lookup_positional_idx(sum(decreasing_idx,1)>0),:);
             decreasing_table=sortrows(decreasing_table,'cohenF','descend');
 
+            % Assign capping of regions notice
+            clear Full_Content;
             if  (height(increasing_table)>10) || (height(decreasing_table)>10)
-                clear Full_Content;
                 Full_Content=Paragraph('Abbreviations listed have been capped at a maximum of 10 per direction');
                 Full_Content.Style = {Bold(false)};
+            end
 
-                clear Full_Content_I;
-                Full_Content_I = Paragraph('Increasing: ');
-                Full_Content_I.Style = {Bold(false)};
+            %list Increasing regions
+            clear Full_Content_I;
+            Full_Content_I = Paragraph('Increasing: ');
+            Full_Content_I.Style = {Bold(false)};
 
-                [Full_Content_I] = Increase_Decrease_Text(Full_Content_I,increasing_table,cohenF_Threshold);
-   
-                clear Full_Content_D;
-                Full_Content_D = Paragraph('Decreasing: ');
-                Full_Content_D.Style = {Bold(false)};
+            [Full_Content_I] = Increase_Decrease_Text(Full_Content_I,increasing_table,cohenF_Threshold);
 
-                [Full_Content_D] = Increase_Decrease_Text(Full_Content_D,decreasing_table,cohenF_Threshold);
+            %list decreasing regions
+            clear Full_Content_D;
+            Full_Content_D = Paragraph('Decreasing: ');
+            Full_Content_D.Style = {Bold(false)};
 
+            [Full_Content_D] = Increase_Decrease_Text(Full_Content_D,decreasing_table,cohenF_Threshold);
+
+            if exist('Full_Content','var')
                 replace(slidepointer,'Content',{Full_Content,Full_Content_I,Full_Content_D});
             else
-                clear Full_Content_I;
-                Full_Content_I = Paragraph('Increasing: ');
-                Full_Content_I.Style = {Bold(false)};
-
-                [Full_Content_I] = Increase_Decrease_Text(Full_Content_I,increasing_table,cohenF_Threshold);
-   
-                clear Full_Content_D;
-                Full_Content_D = Paragraph('Decreasing: ');
-                Full_Content_D.Style = {Bold(false)};
-
-                [Full_Content_D] = Increase_Decrease_Text(Full_Content_D,decreasing_table,cohenF_Threshold);
-
-                replace(slidepointer,"Content",{Full_Content_I,Full_Content_D});
+                replace(slidepointer,'Content',{Full_Content_I,Full_Content_D});
             end
- 
-% Add Figure
+
+            %% Add Figure
             picture = Picture(fullfile(figure_dir,strrep(source_of_variation{source},':','x'),contrast{con},'png',strcat(strrep(source_of_variation{source},':','x'),'_',contrast{con},'_Subject_Data_Fig.png')));
             replace(slidepointer,"Picture",picture);
         end
