@@ -70,7 +70,10 @@ for n=1:height(Path_table)
 
     %Filter with stratification
     if do_stratification==1
-        Subject_Table=UnStratified_Subject_Table(reg_match(UnStratified_Subject_Table.(stratification_column),stratification),:);
+        % since reg_match expects a string array as first input, I think it
+        % is safe to cast it to string. this is crashing because of
+        % integers in my dataframe
+        Subject_Table=UnStratified_Subject_Table(reg_match(string(UnStratified_Subject_Table.(stratification_column)),stratification),:);
     else
         Subject_Table=UnStratified_Subject_Table;
     end

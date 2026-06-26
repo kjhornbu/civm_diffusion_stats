@@ -6,8 +6,8 @@ m=1;
 % Stats Polisher output, NOT where the files currently live. Get all output
 % paths for all things we care about first!
 for o=1:numel(opts.scalarContrastMetrics)
-    polished_stats{o,:}=fullfile(opts.polishedSheetPath,strcat(dataFrame.(unique_column),opts.scalarContrastMetrics(o).stat_extension{:}));
-    %polished_stats{o,:}=fullfile(opts.polishedSheetPath,strcat(dataFrame.(unique_column),opts.scalarContrastMetrics(o).Name{:}));
+    %polished_stats{o,:}=fullfile(opts.polishedSheetPath,strcat(dataFrame.(unique_column),opts.scalarContrastMetrics(o).stat_extension{:}));
+    polished_stats{o,:}=fullfile(opts.polishedSheetPath,strcat(dataFrame.(unique_column),opts.scalarContrastMetrics(o).Name{:}));
 end
 
 for n=1:height(dataFrame)
