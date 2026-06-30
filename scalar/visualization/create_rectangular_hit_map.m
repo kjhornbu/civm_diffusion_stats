@@ -4,7 +4,7 @@ function [] = create_rectangular_hit_map(data,x_delineation,x_order,set_x_order,
 [x_ordered_idx] = order_axis(data,x_delineation,x_order,set_x_order);
 [y_ordered_idx] = order_axis(data,y_delineation,y_order,set_y_order);
 plot_hit_map(data,hitMetric,x_delineation,x_ordered_idx,y_delineation,y_ordered_idx);
-
+save_hit_map();
 end
 
 function [axis_ordered] = order_axis(data,axis_name,order_type,set_order)
@@ -113,6 +113,5 @@ yticklabels(color_range_small')
 
 print(fig_colormap, strcat('Stratified_ColorMap.png'),'-dpng','-r600');
 print(fig_colormap, strcat('Stratified_ColorMap.svg'),'-dsvg','-vector');
-
 
 end

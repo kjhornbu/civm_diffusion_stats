@@ -50,6 +50,10 @@ addParameter(p, 'allowMissing', false,  @(x) isscalar(x) && ismember(x, [false, 
 addParameter(p, 'assumeNLSAM', false,  @(x) isscalar(x) && ismember(x, [false, true])); %hey if you are missing all your data you need to look for NLSAM (change to true)
 addParameter(p, 'alternative_statsheet_dir',[], @(x) ischar(x) || isstring(x) || iscell(x)); % if you have stats that are in a flat file (like out of a samba run here is how to grab them all together and use them)-- Either put the same path in teh project research path or leave empty
 
+addParameter(p,'Scalar_Sheet_Path_csv',[], @(x) ischar(x) || isstring(x) || iscell(x));
+addParameter(p,'Connectome_Sheet_Path_csv',[], @(x) ischar(x) || isstring(x) || iscell(x));
+
+
 if isempty(getenv('USER')), user_name=getenv('USERNAME'); end
 addParameter(p, 'user', user_name, @(x) ischar(x) || isstring(x) || iscell(x)); 
 
@@ -100,6 +104,8 @@ studyID=opts.studyID;
 dataframe_path=opts.dataframePath;
 config_file=opts.configFile;
 save_dir=opts.statSaveDir;
+
+
 
 %% Data setup -- User Input form
 opts.keep_last_frame = 0; % if 0 we are NOT keeping the last data frame, if 1 we ARE keeping the last dataframe
@@ -304,6 +310,7 @@ if isempty(config_file)
     [~,n,~]=fileparts(dataframe_path);
     config_file=fullfile(save_dir,sprintf('%s_setup.mat',n));
 end
+
 clear n;
 % check thing exists -- intialize to do it.
 opts.keep_last_setup=0;
@@ -469,7 +476,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
             column_setup = {
                 'singleside_cohen','cohenF'
                 'pvalue_extended', 'pval'
-                'pvalue_extended', 'pval_BH'%This was pvalue regular before but as rob loves getting all the exact pvalues, I did more
+                'pvalue_extended', 'pval_BH'
                 };
 
             % indicies of the summary criteria, we dont use summary criterais because

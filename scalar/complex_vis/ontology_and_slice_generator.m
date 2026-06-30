@@ -151,7 +151,7 @@ for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
                 LUT_type{i_column}=LUT_type(i_column);
             end
             colorbar_name=LUT_type{i_column}{1};
-            if reg_match(LUT_type{i_column}{1},'percent_change|cohenD')
+            if reg_match(LUT_type{i_column}{1},'percent_change|cohenD|estimated_power')
                 sov={};
                 slice_name_pos=slice_name_pos-1;
                 %C_contrast_dir{sov_name_pos}='percent_change';
@@ -167,6 +167,9 @@ for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
                     if reg_match(LUT_type{i_column}{1},'percent_change')
                         c_mm={'min',-0.1,'max',0.1}; % This is the color range
                         c_neutral={'neutral',[-0.025, 0.025]};%KH Shifted from 0.05 to 0.01 on 202600130 to better represent CHDI-- and 2.5% on 20260327 You should do this within the name of the color itself
+                    elseif reg_match(LUT_type{i_column}{1},'estimated_power')
+                        c_mm={'min',-0.95,'max',0.95}; % This is the color range
+                        c_neutral={'neutral',[-0.7, 0.7]};% Estimated power uses the same color range as CohenD/percent Change but the white center is +/- 70% and color extends to 
                     elseif reg_match(LUT_type{i_column}{1},'cohenD')
                         % inital range proposed by yuqi
                         c_mm={'min',-2,'max',2};
@@ -223,7 +226,7 @@ for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
             composite_out=path_convert_platform(fullfile(composite_ol_dir,'svg',[ strjoin(C_ontoslice_name,'_') '.svg' ]),'native');
 
             %% Get LUT for plotting
-            change_data_type='percent_change|cohenD';
+            change_data_type='percent_change|cohenD|estimated_power';
             clear stat_colors; % to prevent accidental re-use of wrong colors.
             if reg_match(LUT_type{i_column}{1},'pvalue')
                 C_colorbar_dir={scalar_complex_vis_dir};
