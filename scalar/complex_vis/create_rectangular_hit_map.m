@@ -1,8 +1,5 @@
-function [] = create_rectangular_hit_map(data,x_delineation,x_order,set_x_order,y_delineation,y_order,set_y_order,hitMetric)
+function [] = create_rectangular_hit_map(filename,x_axis_data,x_axis_label,ontology_ordering)
 
-
-[x_ordered_idx] = order_axis(data,x_delineation,x_order,set_x_order);
-[y_ordered_idx] = order_axis(data,y_delineation,y_order,set_y_order);
 
 
 plot_hit_map(data,hitMetric,x_delineation,x_ordered_idx,y_delineation,y_ordered_idx);
@@ -14,18 +11,6 @@ end
 
 function [axis_ordered] = order_axis(data,axis_name,order_type,set_order)
 
-if reg_match(order_type,'alphabetical')
-    [~,axis_ordered]=sortrows(data,axis_name,'ascend');
-elseif reg_match(order_type,'ontological')
-elseif reg_match(order_type,'set')
-    [~,axis_ordered]=sortrows(data,axis_name,'ascend');
-
-    for n=1:numel(set_order)
-        axis_ordered(n)
-    end
-
-else
-end
 
 
 

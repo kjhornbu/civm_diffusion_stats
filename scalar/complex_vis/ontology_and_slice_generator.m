@@ -16,6 +16,7 @@ assert(exist(py_env,'dir'),'python setup not complete, need %s',py_env);
 complex_code_dir=fileparts(which('ontology_and_slice_generator'));
 assert(exist(complex_code_dir,'dir'),'Failed to find complex code dir, this is required to use the composite code');
 
+
 % this is configued to default load ontology
 ontology_with_stats=civm_read_table(atlas_stats_file,[],[],true);
 % load centroids
@@ -28,14 +29,14 @@ Label_Ontology_Centroid_cleaned=atlas_centroids(:,logical_check_data_in_centroid
 ontology_with_stats=innerjoin(ontology_with_stats,Label_Ontology_Centroid_cleaned,'Keys',{'id64_fSABI'});
 % remove temporaries.
 clear atlas_centroid_file check_data_in_centroid logical_check_data_in_centroid atlas_centroids Label_Ontology_Centroid_cleaned
- 
+
 slicer_lookup=civm_read_table(atlas_lookup_file,[],[],true);
 % it is NOT good enough to simply load the lookuptable, we have to resolve
-% any implied entries to process successfully. 
-% 
+% any implied entries to process successfully.
+%
 % Alternatively, we could load the ontology_with_stats where all the
 % implications have been previously resolved. But that is not standard
-% distribution data yet. 
+% distribution data yet.
 reset_cols=[{'ROI'},{{'voxel_presence','none'}}];
 [success,ontology_lookup,name_to_idx,name_to_onto]=ontology_resolve_implied_rows(slicer_lookup,reset_cols);
 
@@ -53,7 +54,7 @@ LUT_type = column_setup(:,1);
 % HBR which ROB dislikes but we would need a split HBR structure to have it
 % work otherwise.
 %
-% I'm processing the 'decided' 4 partial ontologies, followed by the full. 
+% I'm processing the 'decided' 4 partial ontologies, followed by the full.
 % This is becuase i've added the parent index to the output name as the
 % first part of the name, to group the 4 parts together. maybe that is a
 % mistake.
@@ -103,7 +104,7 @@ stat_col_numbers=column_find(Statistical_Results,sprintf('^(%s)$',strjoin(column
 assert(numel(stat_col_numbers)==numel(unique(columns_to_plot)), 'Requested columns not properly resolved, check the requested columns');
 
 % but this isn't finding it twice??? What if I want multiple things plotted
-% different color ranges -- don't do it here. 
+% different color ranges -- don't do it here.
 
 
 [source_of_variation_names,~,source_of_variation_idx]=unique(Statistical_Results.source_of_variation);
@@ -125,15 +126,16 @@ end
 % parfor will put the figure creation in the background, making the
 % computer still useable while generating figures.
 % There may be an alternate method for that using matlab function "openfig"
-% 
+%
 % maps are like hashes/dictionaries, this lets us avoid repeating work.
 % keys are the file paths with values being anonymous functions.
 
 lut_map=containers.Map();
+plot_queue=containers.Map();
 task_map=containers.Map();
 composite_map=containers.Map();
-for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing  
-    for i_sov=1:numel(source_of_variation_names) 
+for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
+    for i_sov=1:numel(source_of_variation_names)
         source_of_variation_logical_idx=source_of_variation_idx==i_sov;
         for i_contrast=1:numel(contrast_names)
 
@@ -143,8 +145,8 @@ for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
 
             %% figure out where to save
             sov=source_of_variation_names(i_sov);
-            sov_name_pos=2; % where in contrast_dir is the sov 
-            slice_name_pos=5; % where in slice_name is the position text (m1.98 etc.)
+            sov_name_pos=2; % where in contrast_dir is the sov
+           % slice_name_pos=5; % where in slice_name is the position text (m1.98 etc.)
 
             C_metric_dir=[scalar_complex_vis_dir, strrep(sov,':','BY')];
             if ~iscell(LUT_type{i_column})
@@ -153,15 +155,15 @@ for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
             colorbar_name=LUT_type{i_column}{1};
             if reg_match(LUT_type{i_column}{1},'percent_change|cohenD|estimated_power')
                 sov={};
-                slice_name_pos=slice_name_pos-1;
+                %slice_name_pos=slice_name_pos-1;
                 %C_contrast_dir{sov_name_pos}='percent_change';
                 C_metric_dir{sov_name_pos}=LUT_type{i_column}{1};
 
                 if numel(LUT_type{i_column}) == 1
                     % we have a simple lookup configuration, so we need to
                     % specifiy desired min/max for data.
-                    % 
-                    % This is for when we use constant ranges. 
+                    %
+                    % This is for when we use constant ranges.
                     % alternatively, those COULD be coded in for the
                     % complex config.
                     if reg_match(LUT_type{i_column}{1},'percent_change')
@@ -169,7 +171,7 @@ for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
                         c_neutral={'neutral',[-0.025, 0.025]};%KH Shifted from 0.05 to 0.01 on 202600130 to better represent CHDI-- and 2.5% on 20260327 You should do this within the name of the color itself
                     elseif reg_match(LUT_type{i_column}{1},'estimated_power')
                         c_mm={'min',-0.95,'max',0.95}; % This is the color range
-                        c_neutral={'neutral',[-0.7, 0.7]};% Estimated power uses the same color range as CohenD/percent Change but the white center is +/- 70% and color extends to 
+                        c_neutral={'neutral',[-0.7, 0.7]};% Estimated power uses the same color range as CohenD/percent Change but the white center is +/- 70% and color extends to
                     elseif reg_match(LUT_type{i_column}{1},'cohenD')
                         % inital range proposed by yuqi
                         c_mm={'min',-2,'max',2};
@@ -200,7 +202,7 @@ for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
 
             C_contrast_dir=[C_metric_dir, contrast_names{i_contrast}];
             lookup_dir=fullfile(C_contrast_dir{:},'lookup_tables');
-            
+
             try
                 lookup_name_slicer=strjoin([data_identity,'lookup.txt'],'_');
             catch
@@ -214,195 +216,58 @@ for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
             % identifier as the first part of the filename.
             % This could all be deferred until below, however i like
             % keeping the path handling together(as much as possible)
-            figure_type='slice';
-            slice_dir=fullfile(C_contrast_dir{:});
-            C_slice_name=[data_identity, figure_type, 'SLICELEVEL']; % RIGHT HERE DOES THE SLICE THING!!!
 
-            slice_name_pos=find(reg_match(C_slice_name,'SLICELEVEL'));
-            
             figure_type='ontology_composite';
             composite_ol_dir=fullfile(C_contrast_dir{:});
             C_ontoslice_name=[data_identity,figure_type];
             composite_out=path_convert_platform(fullfile(composite_ol_dir,'svg',[ strjoin(C_ontoslice_name,'_') '.svg' ]),'native');
-
-            %% Get LUT for plotting
-            change_data_type='percent_change|cohenD|estimated_power';
-            clear stat_colors; % to prevent accidental re-use of wrong colors.
-            if reg_match(LUT_type{i_column}{1},'pvalue')
-                C_colorbar_dir={scalar_complex_vis_dir};
-                stat_colors=lookup_pvalue(LUT_type{i_column}{1});
-                bar_plot_opts={'proportional',false};
-            elseif reg_match(LUT_type{i_column}{1},'^(singleside_cohen)$')
-                C_colorbar_dir={scalar_complex_vis_dir};
-                stat_colors=lookup_cohen(LUT_type{i_column}{1});
-                bar_plot_opts={'proportional',false};
-            elseif reg_match(LUT_type{i_column}{1},change_data_type)
-                C_colorbar_dir=[C_metric_dir,'ColorBars'];
-                % todo: check lut_type params for neutral, when it exists we
-                % have 2.
-                neutral_count=0;
-                if reg_match(cell2str(LUT_type{i_column}),'neutral')
-                    neutral_count=2;
-                end
-                % look for special keyword indicating proscribed range
-                % instead of auto-calc
-                idx_range=cellfun(@(x) ischar(x) && strcmp(x,'color_range'),LUT_type{i_column});
-                idx_names=cellfun(@(x) ischar(x) && strcmp(x,'color_names'),LUT_type{i_column});
-                if any( idx_range )
-                    color_range=LUT_type{i_column}{find(idx_range)+1};
-                    color_names=LUT_type{i_column}{find(idx_names)+1};
-                    % force tall not wide, in case our input is backwards.
-                    color_names=reshape(color_names,numel(color_names),1);
-                    Color = lookup_colors_generate(numel(color_range)-neutral_count-1, false, neutral_count, false);
-                else
-                    desired_steps=10;
-                    %color_range=lookup_range(desired_steps,neutral_count,'step_size',step_size,'neutrals_are_steps',i_tx);
-                    color_range=lookup_range(desired_steps,LUT_type{i_column}{2:end});
-                    [Color, color_names]=lookup_colors_generate(numel(color_range)-neutral_count-1, false, neutral_count, false);
-                end
-                stat_colors=lookup_colors_apply_values(Color,color_range,color_names);
-                if isempty(colorbar_name)
-                    % this was not specific enough in some cases.
-                    %colorbar_name=measure_name;
-                    colorbar_name=regexprep(uncell(measure_name),sprintf('(%s)',change_data_type),LUT_type{i_column}{1});
-                end
-                bar_plot_opts={};
-            else
-                warning('ERROR lut type not recognized.')
-                keyboard
+            if exist(composite_out,'file')
+                continue;
             end
 
+            change_data_type='percent_change|cohenD|estimated_power';
+
+            if reg_match(LUT_type{i_column}{1},'pvalue')
+                C_colorbar_dir={scalar_complex_vis_dir};
+            elseif reg_match(LUT_type{i_column}{1},'^(singleside_cohen)$')
+                C_colorbar_dir={scalar_complex_vis_dir};
+            elseif reg_match(LUT_type{i_column}{1},change_data_type) 
+                C_colorbar_dir=[C_metric_dir,'ColorBars'];
+            end
+            
             colorbar_dir=fullfile(C_colorbar_dir{:});
+
+            if ~exist(colorbar_dir,'dir')
+                mkdir(colorbar_dir);
+            end
+
+            if isempty(colorbar_name)
+                % this was not specific enough in some cases.
+                %colorbar_name=measure_name;
+                colorbar_name=regexprep(uncell(measure_name),sprintf('(%s)',change_data_type),LUT_type{i_column}{1});
+            end
             out_lut=struct(...
                 'png',fullfile(colorbar_dir,['ColorBar_',colorbar_name,'.png'] ),...
                 'svg',fullfile(colorbar_dir,['ColorBar_',colorbar_name,'.svg'] ), ...
                 'tbl',fullfile(colorbar_dir,['LUT_',colorbar_name,'.txt'] ) ...
                 );
+
+            [stat_colors,bar_plot_opts] = prepare_LUT(change_data_type,LUT_type, i_column,out_lut.tbl);
+
             if ~exist(lookup_dir,'dir')
                 mkdir(lookup_dir);
             end
-            if ~exist(colorbar_dir,'dir')
-                mkdir(colorbar_dir);
-            end
-            
-            % NOTE: direction == horizontal NOT implemented.
-            bar_plot_opts=[bar_plot_opts,'direction','vertical'];
-            
-            % Lookup plotting **before** we stuff it into the anonymous
-            % function stack.
-            % lookup_plot(table2struct(stat_colors),out_bar,bar_plot_opts{:});
-            %These break if we re-runstuff
-            if ~exist(out_lut.tbl,'file')
-                civm_write_table(stat_colors,out_lut.tbl,false,true,{},'quiet');
-            end
-            if (~exist(out_lut.svg,'file') || ~exist(out_lut.png,'file'))
-                % but these are not ran here so the checer isn't actually
-                % makign teh out_lut figures here. 
+           
+            queue_color_bar_plot(plot_queue,bar_plot_opts,out_lut)
 
-                % to prevent issue with anonymous functions this has to be
-                % a var before we define the fuction. -- the problem is
-                % this is making a ton of the same things
-
-                t_st=table2struct(stat_colors);
-                %This makes all the plots a ton of times for each one and
-                %this is craziness. 
-                lut_map(slice_lut_out)=@() lookup_plot(t_st,out_lut,bar_plot_opts{:});
-            end
             if ~exist(slice_lut_out,'file')
-                LUT = stat_table_lookup(segmented_Statistical_Results, columns_to_plot{i_column}, stat_colors, ontology_lookup, slice_lut_out);
-                % it should be possible to switch to
-                % ontology_with_stats(WHICH HAS BEEN TRIMMED) to minimal
-                % N-rows.
-                %LUT = stat_table_lookup(segmented_Statistical_Results, columns_to_plot{i_column}, stat_colors, ontology_with_stats, slice_lut_out);
-            else 
-                clear LUT;
-            end
-            if exist(composite_out,'file')
-                continue;
+                stat_table_lookup(segmented_Statistical_Results, columns_to_plot{i_column}, out_lut.tbl, ontology_lookup, slice_lut_out);
             end
 
-            %{
-            % ontology
-            %[oLUT, plot_lut] = make_LUT(LUT_type{i_column},segmented_Statistical_Results,columns_to_plot{i_column},scalar_complex_vis_dir,plot_lut);
-            gen_olut=@() make_LUT(LUT_type{i_column},segmented_Statistical_Results,columns_to_plot{i_column},scalar_complex_vis_dir,plot_lut);
-            % slice
-            if ~exist(slice_lut_out,'file')
-                %[sLUT] = make_LUT_4_slicegen(LUT_type{i_column},segmented_Statistical_Results,columns_to_plot{i_column},scalar_complex_vis_dir);
-                %civm_write_table(sLUT,slice_lut_out,false,true,'');
-                gen_lut=@() make_LUT_4_slicegen(LUT_type{i_column},segmented_Statistical_Results,columns_to_plot{i_column},scalar_complex_vis_dir);
-                gen_and_write_lut=@(g_lut) civm_write_table(g_lut(),slice_lut_out,false,true,'');
-                lut_map(slice_lut_out)=@() gen_and_write_lut(gen_lut);
-            else% if ~exist('sLUT','var')
-                lut_map(slice_lut_out)=@() fprintf('%s ready\n',slice_lut_out);
-            %    sLUT=civm_read_table(slice_lut_out);
-            end
-            %}
-
-
-            %% ontology component loop
-            ontology_paths=cell(size(selected_parents));
-            for i_parent = 1:numel(selected_parents)
-                figure_type='ontology_segment';
-                ontology_dir=fullfile(C_contrast_dir{:},figure_type);
-                if strcmp(selected_parents{i_parent},'BRN-B')
-                    figure_type='ontology';
-                    ontology_dir=fullfile(C_contrast_dir{:});
-                end
-                simplified_parent_list=replace(selected_parents{i_parent},{'$','(',')','^','-B','-L','-R'},'');
-                if ~ any(simplified_parent_list=='|')
-                    % single parent
-                    % parent_word='parent';
-                else
-                    % multi parent
-                    % parent_word='parents';
-                    simplified_parent_list=strrep(simplified_parent_list,'|','_');
-                end
-                %ontology_fig_name=strjoin([num2str(i_parent) data_identity parent_word simplified_parent_list ], '_' );
-                ontology_fig_name=strjoin([data_identity figure_type num2str(i_parent) simplified_parent_list ], '_' );
-                ontology_base_path=path_convert_platform(fullfile(ontology_dir, 'svg', ontology_fig_name),'native');
-                ontology_paths{i_parent}=sprintf('%s.svg',ontology_base_path);
-
-                % the mkdirs are all hear because whole-brain ontology is
-                % segregated using figure type.
-                out_dirs={ontology_dir,slice_dir,composite_ol_dir};
-                for i_out_dir=1:numel(out_dirs)
-                    if ~exist(out_dirs{i_out_dir},'dir')
-                        mkdir(out_dirs{i_out_dir});
-                    end
-                end
-                
-                %% Find the ontology layout to actually be able to layout data only need 1 time per parent/stat_data type
-                %{
-                if i_contrast == 1 && i_sov == 1
-                    %[ontology_layout] = ontology(ontology_with_stats,segmented_Statistical_Results,selected_parents{i_parent});
-                    %[ontology_layout] = coordinate_positioning(ontology_layout);
-                    
-                    base_layout=@() ontology(ontology_with_stats,segmented_Statistical_Results,selected_parents{i_parent});
-                    complete_layout = @(b_l) coordinate_positioning(b_l());
-                end
-                %}
-
-                base_layout=@() gen_ontology_ordering_table(ontology_with_stats,segmented_Statistical_Results,selected_parents{i_parent});
-                complete_layout = @(b_l) coordinate_positioning(b_l());
-
-                %% Do actual plotting
-                % PLEASE ONLY READ THIS LINE. The anonymos functions are an
-                % artifact of adding delayed exection, and should be
-                % refactored. 
-                %ontology_plotting(ontology_layout,selected_parents{i_parent},LUT,ontology_base_path);
-                
-                %onto_plot=@(c_l,g_lut) ontology_plotting(c_l(base_layout),selected_parents{i_parent},g_lut(),ontology_base_path);
-                %task_map(ontology_base_path)=@() onto_plot(complete_layout,gen_olut);
-
-                onto_plot=@(c_l,lut) ontology_plotting(c_l(base_layout),selected_parents{i_parent},lut,ontology_base_path);
-
-                if ~exist('LUT','var')
-                    LUT=civm_read_table(slice_lut_out,[],[],true);
-                end
-
-                task_map(ontology_base_path)=@() onto_plot(complete_layout,LUT);
-            end
-            %close all;
+            clear LUT;
+       
+            [ontology_paths] = prepare_layout_tables(C_contrast_dir,selected_parents,data_identity,segmented_Statistical_Results,ontology_with_stats);
+            queue_ontology_plotting(plot_queue,selected_parents,ontology_paths,slice_lut_out)
 
             %% slice loop
             slice_paths=cell(size(slice_levels));
@@ -422,11 +287,13 @@ for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
                 gen_img = @() uint8( slice_colorer(slice_lut_out,slice_level_data(:,:,i_slice)) *255 );
                 %gen_and_write_img=@(g_img) save_color_slice(g_img(),slice_out);
                 gen_and_write_img=@(g_img) slice_saver(g_img(),slice_out,'image');
-                
+
                 %task_list{i_task}=@() gen_and_write_img(gen_img);
                 %i_task=i_task+1;
                 task_map(slice_out)=@() gen_and_write_img(gen_img);
             end
+
+
             %close all;
             %% composite slice here.
             % this is different than our other code beacuase we're not
@@ -434,24 +301,27 @@ for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
             % want a single quote around each string, so join with a ' ',
             % will require prefix/suffix quote when embedding into command.
             %py_args=strjoin( [ ontology_paths(composite_ontology_order), slice_paths(composite_slice_order) ], ''' ''');
-            % set the "quote character" 
+            % set the "quote character"
             qq=char("'");
             if ispc
                 qq='"';
             end
-            
+
             py_file=path_convert_platform(fullfile(complex_code_dir,'Python_Support','composite_ontology_w_slice.py'),'native');
             py_cmd=[ py_env 'python' py_file ontology_paths(composite_ontology_order), slice_paths(composite_slice_order) '-o' composite_out ];
             py_cmd=sprintf([qq '%s' qq ' '],py_cmd{:});
             cmd=sprintf('conda run -p %s',py_cmd);
-            
+
             composite_map(composite_out)=cmd;
         end
     end
 end
+
+%% ACTUALLY RUNNING THE FUNCTIONS
 % run using much parfor
 % added randperms so thatn if we have errors, and re-run we'll get more
 % done.
+
 %% parfor luts
 lut_gens=lut_map.values();
 lut_gen_count=numel(lut_gens);
@@ -510,8 +380,11 @@ parfor i_task=1:task_count
         end
     end
 end
+
+
 warning('deactivated all svg checking and copositing because of inkscape conversion fails');
 return;
+
 t_keys=task_map.keys();
 fails=zeros(size(t_keys),'logical');
 for i_task=1:task_count

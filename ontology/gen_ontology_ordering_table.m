@@ -1,7 +1,9 @@
 function [ontology_layout] = gen_ontology_ordering_table(Label_Ontology,Statistical_Results,parent_structure)
 
 %Remove the actual stats we don't need from Statistical Results keep only
-%the book keeping stuff
+%the book keeping stuff -- We want the 231 regions from the Statistical
+%results accounted for here perfectly (plus any region that will techically
+%be blank to fill slots)
 ontology_layout=table;
 
 ontology_layout.ROI=Statistical_Results.ROI;
@@ -30,6 +32,9 @@ for ROI=1:height(ontology_layout)
     ontology_layout.ontology_level(ROI)=numel(r_idx);
 
     if isempty(r_idx)
+        ontology_layout.ontology_order_GN_Symbol{ROI}={};
+        ontology_layout.ontology_order_Structure{ROI}={};
+        %keyboard;
     else
         ontology_layout.ontology_order_ROI(ROI,1:numel(r_idx))=fliplr(ancestor.ROI');
         ontology_layout.ontology_order_GN_Symbol{ROI}=ancestor.GN_Symbol;
@@ -72,6 +77,7 @@ for ROI=1:numel(unique_parent_ROIs)
     ontology_layout.ontology_level(ROI+offset)=numel(r_idx);
 
     if isempty(r_idx)
+        %keyboard;
     else
         ontology_layout.ontology_order_ROI(ROI+offset,1:numel(r_idx))=fliplr(ancestor.ROI');
         ontology_layout.ontology_order_GN_Symbol{ROI+offset}=ancestor.GN_Symbol;
