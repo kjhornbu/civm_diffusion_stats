@@ -9,6 +9,8 @@ info_test=vertcat(temp_info{:});
 if isempty(info_test)
     warning('You have passed a list of files where none of them exist... are you sure you want to do that');
     %keyboard;
+     file_keepOLD={''};
+     file_keepNEW={''};
 else
     first_entry_path=fullfile(info_test(1).folder,info_test(1).name);
 
@@ -19,18 +21,18 @@ else
     file_keepNEW=fullfile(info_keepNEW.folder,info_keepNEW.name);
 end
 
-for current_info_test=info_test
-    %OLDEST file
-    if ~isempty(current_info_test) && ~isempty(info_keepOLD) && (current_info_test.datenum < info_keepOLD.datenum)
-        file_keepOLD=fullfile(current_info_test.folder,current_info_test.name);
-        info_keepOLD=current_info_test;
+for current_test= 1:numel(info_test)
+    %set OLDEST file
+    if ~isempty(info_test(current_test)) && ~isempty(info_keepOLD) && (info_test(current_test).datenum < info_keepOLD.datenum)
+        file_keepOLD=fullfile(info_test(current_test).folder,info_test(current_test).name);
+        info_keepOLD=info_test(current_test);
     end
 
-    %NEWEST file
-    if ~isempty(current_info_test) && ~isempty(info_keepNEW) && (current_info_test.datenum > info_keepNEW.datenum)
-        file_keepNEW=fullfile(current_info_test.folder,current_info_test.name);
-        info_keepNEW=current_info_test;
+    %set NEWEST file
+    if ~isempty(info_test(current_test)) && ~isempty(info_keepNEW) && (info_test(current_test).datenum > info_keepNEW.datenum)
+        file_keepNEW=fullfile(info_test(current_test).folder,info_test(current_test).name);
+        info_keepNEW=info_test(current_test);
     end
-
 end
+
 end
