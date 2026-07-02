@@ -1,7 +1,5 @@
 function [slice_paths] = prepare_slice_levels(C_contrast_dir,slice_levels,DVlevels,data_identity)
 
-warning('FUNCTION NOT YET COMPLETED');
-keyboard;
 
 figure_type='slice';
 slice_dir=fullfile(C_contrast_dir{:});

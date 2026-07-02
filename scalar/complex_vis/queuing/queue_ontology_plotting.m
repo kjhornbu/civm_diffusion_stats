@@ -1,4 +1,4 @@
-function queue_ontology_plotting(plot_queue,selected_parents,ontology_paths,slice_lut_out)
+function queue_ontology_plotting(plot_queue,ontology_paths,selected_parents,slice_lut_out)
 for i_parent = 1:numel(selected_parents)
 
     ontology_path=ontology_paths{i_parent};

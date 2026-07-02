@@ -11,11 +11,6 @@ atlas_stats_file=fullfile(atlas_label_dir,sprintf('%s_%s_ontology_with_stats.txt
 atlas_centroid_file=fullfile(atlas_label_dir,sprintf('%s_%s_labels_centroids.txt',atlas_name,label_nick));
 atlas_lookup_file=fullfile(atlas_label_dir,sprintf('%s_%s_labels_lookup.txt',atlas_name,label_nick));
 atlas_label_file=fullfile(atlas_label_dir,sprintf('%s_%s_labels.nhdr',atlas_name,label_nick));
-py_env=path_convert_platform(fullfile(getenv('WORKSTATION_AUX'),'py_env_svg_stack'),'native');
-assert(exist(py_env,'dir'),'python setup not complete, need %s',py_env);
-complex_code_dir=fileparts(which('ontology_and_slice_generator'));
-assert(exist(complex_code_dir,'dir'),'Failed to find complex code dir, this is required to use the composite code');
-
 
 % this is configued to default load ontology
 ontology_with_stats=civm_read_table(atlas_stats_file,[],[],true);
@@ -68,6 +63,10 @@ selected_parents = {'^(CEN-B|CCX-B)$','DIE-B','^(RVG-B|MID-B|HBR-B|CBN-B|CBX-B)$
 % that code expects (gray_1,gray_2,gray_3,white)
 composite_ontology_order= [1,2,3,4];
 
+change_data_type='percent_change|cohenD|estimated_power'; 
+% these are assignable color ranges that you can modify via shifting the white
+% center and maximal color bar value -- rather than the other color ranges which are fixed.
+
 % VARIABLES levels and DVlevels MUST HAVE THE SAME NUMBER OF ELEMENTS.
 DVlevels={'M4p88','M3p96','M2p96','M1p98'};
 % the order the selected parents will be insterted into the specialized
@@ -79,19 +78,6 @@ if strcmp(atlas_name,'DMBA')
 elseif strcmp(atlas_name,'symmetric15um')
     slice_levels=[168,222,276,329]; %in Symmetric 15 RCCF Entry points (0:535)*0.015-4.0125
 end
-
-%{
-Original processing order of the data
-ColorSlice_Figure_Generation/make_LUT_4_slicegen.m:function [LUT] = make_LUT(type,Statistical_Results,Data_Column,file_path)
-ColorSlice_Figure_Generation/save_color_slice.m:function [] = save_color_slice(img_slice,filename)
-ColorSlice_Figure_Generation/slice_colorer.m:function [img_slice] = slice_colorer(LUT_path,slice_data)
-Ontology_Figure_Generation/coordinate_positioning.m:function [ontology_layout] = coordinate_positioning(ontology_layout)
-Ontology_Figure_Generation/make_LUT.m:function [LUT, plot_lut] = make_LUT(type,Statistical_Results,Data_Column,file_path, plot_lut)
-Ontology_Figure_Generation/ontology.m:function [ontology_layout] = ontology(Label_Ontology,Statistical_Results,parent_structure)
-Ontology_Figure_Generation/ontology_plotting.m:function [] = ontology_plotting(ontology_layout,new_main_parent,color_LUT,file_path)
-Ontology_Figure_Generation/parentage_checking.m:function [Full_Parent] = parentage_checking(table_A,table_B)
-Ontology_Figure_Generation/rob_order_fixer.m:function [ontology_layout] = rob_order_fixer(ontology_layout,parent_structure)
-%}
 
 %% run-config checks.
 assert(numel(columns_to_plot)==numel(LUT_type),'setup error, must have same number of elements');
@@ -105,7 +91,6 @@ assert(numel(stat_col_numbers)==numel(unique(columns_to_plot)), 'Requested colum
 
 % but this isn't finding it twice??? What if I want multiple things plotted
 % different color ranges -- don't do it here.
-
 
 [source_of_variation_names,~,source_of_variation_idx]=unique(Statistical_Results.source_of_variation);
 [contrast_names,~,contrast_idx]=unique(Statistical_Results.contrast);
@@ -130,10 +115,9 @@ end
 % maps are like hashes/dictionaries, this lets us avoid repeating work.
 % keys are the file paths with values being anonymous functions.
 
-lut_map=containers.Map();
 plot_queue=containers.Map();
-task_map=containers.Map();
-composite_map=containers.Map();
+composite_queue=containers.Map();
+
 for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
     for i_sov=1:numel(source_of_variation_names)
         source_of_variation_logical_idx=source_of_variation_idx==i_sov;
@@ -149,11 +133,13 @@ for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
            % slice_name_pos=5; % where in slice_name is the position text (m1.98 etc.)
 
             C_metric_dir=[scalar_complex_vis_dir, strrep(sov,':','BY')];
+
             if ~iscell(LUT_type{i_column})
                 LUT_type{i_column}=LUT_type(i_column);
             end
             colorbar_name=LUT_type{i_column}{1};
-            if reg_match(LUT_type{i_column}{1},'percent_change|cohenD|estimated_power')
+
+            if reg_match(LUT_type{i_column}{1},change_data_type)
                 sov={};
                 %slice_name_pos=slice_name_pos-1;
                 %C_contrast_dir{sov_name_pos}='percent_change';
@@ -190,18 +176,21 @@ for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
                     colorbar_name={};
                 end
             end
-            measure_name=regexprep(columns_to_plot(i_column),'(_-)+','');
 
+
+            measure_name=regexprep(columns_to_plot(i_column),'(_-)+','');
             if numel(LUT_type{i_column})==1
                 data_identity=[sov, contrast_names{i_contrast}, measure_name,LUT_type{i_column}];
             else
                 data_identity=[sov, contrast_names{i_contrast}, measure_name];
             end
-
             data_identity=strrep(data_identity,':','BY');
 
             C_contrast_dir=[C_metric_dir, contrast_names{i_contrast}];
             lookup_dir=fullfile(C_contrast_dir{:},'lookup_tables');
+            if ~exist(lookup_dir,'dir')
+                mkdir(lookup_dir);
+            end
 
             try
                 lookup_name_slicer=strjoin([data_identity,'lookup.txt'],'_');
@@ -211,21 +200,6 @@ for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
 
             slice_lut_out=fullfile(lookup_dir,lookup_name_slicer);
 
-            % creating the direct output path is deferred until below
-            % inside the slice loop, so we can insert the slice
-            % identifier as the first part of the filename.
-            % This could all be deferred until below, however i like
-            % keeping the path handling together(as much as possible)
-
-            figure_type='ontology_composite';
-            composite_ol_dir=fullfile(C_contrast_dir{:});
-            C_ontoslice_name=[data_identity,figure_type];
-            composite_out=path_convert_platform(fullfile(composite_ol_dir,'svg',[ strjoin(C_ontoslice_name,'_') '.svg' ]),'native');
-            if exist(composite_out,'file')
-                continue;
-            end
-
-            change_data_type='percent_change|cohenD|estimated_power';
 
             if reg_match(LUT_type{i_column}{1},'pvalue')
                 C_colorbar_dir={scalar_complex_vis_dir};
@@ -252,171 +226,151 @@ for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
                 'tbl',fullfile(colorbar_dir,['LUT_',colorbar_name,'.txt'] ) ...
                 );
 
-            [stat_colors,bar_plot_opts] = prepare_LUT(change_data_type,LUT_type, i_column,out_lut.tbl);
-
-            if ~exist(lookup_dir,'dir')
-                mkdir(lookup_dir);
-            end
-           
+            [~,bar_plot_opts] = prepare_LUT(change_data_type,LUT_type, i_column,out_lut.tbl);
             queue_color_bar_plot(plot_queue,bar_plot_opts,out_lut)
 
             if ~exist(slice_lut_out,'file')
                 stat_table_lookup(segmented_Statistical_Results, columns_to_plot{i_column}, out_lut.tbl, ontology_lookup, slice_lut_out);
             end
 
-            clear LUT;
-       
+            %% Ontology Generation
             [ontology_paths] = prepare_layout_tables(C_contrast_dir,selected_parents,data_identity,segmented_Statistical_Results,ontology_with_stats);
-            queue_ontology_plotting(plot_queue,selected_parents,ontology_paths,slice_lut_out)
-
-            %% slice loop
-            slice_paths=cell(size(slice_levels));
-            for i_slice=1:numel(slice_levels)
-                C_t_sn=C_slice_name;
-                C_t_sn{slice_name_pos}=DVlevels{i_slice};
-                slice_out=path_convert_platform(fullfile(slice_dir,'svg',strjoin(C_t_sn,'_')),'native');
-                slice_paths{i_slice}=sprintf('%s.svg',slice_out);
-                if exist(slice_out,'file')
-                    continue;
-                end
-                %{
-                slice_data=slice_level_data(:,:,i_slice);
-                [img_slice] = slice_colorer(slice_lut_out,slice_data);
-                save_color_slice(img_slice,slice_out);
-                %}
-                gen_img = @() uint8( slice_colorer(slice_lut_out,slice_level_data(:,:,i_slice)) *255 );
-                %gen_and_write_img=@(g_img) save_color_slice(g_img(),slice_out);
-                gen_and_write_img=@(g_img) slice_saver(g_img(),slice_out,'image');
-
-                %task_list{i_task}=@() gen_and_write_img(gen_img);
-                %i_task=i_task+1;
-                task_map(slice_out)=@() gen_and_write_img(gen_img);
-            end
-
-
-            %close all;
-            %% composite slice here.
-            % this is different than our other code beacuase we're not
-            % bothering to generate a anonymous function.
-            % want a single quote around each string, so join with a ' ',
-            % will require prefix/suffix quote when embedding into command.
-            %py_args=strjoin( [ ontology_paths(composite_ontology_order), slice_paths(composite_slice_order) ], ''' ''');
-            % set the "quote character"
-            qq=char("'");
-            if ispc
-                qq='"';
-            end
-
-            py_file=path_convert_platform(fullfile(complex_code_dir,'Python_Support','composite_ontology_w_slice.py'),'native');
-            py_cmd=[ py_env 'python' py_file ontology_paths(composite_ontology_order), slice_paths(composite_slice_order) '-o' composite_out ];
-            py_cmd=sprintf([qq '%s' qq ' '],py_cmd{:});
-            cmd=sprintf('conda run -p %s',py_cmd);
-
-            composite_map(composite_out)=cmd;
+            queue_ontology_plotting(plot_queue,ontology_paths,selected_parents,slice_lut_out)
+            %% Slice Generation
+            [slice_paths] = prepare_slice_levels(C_contrast_dir,slice_levels,DVlevels,data_identity);
+            queue_slice_plotting(plot_queue,slice_paths,slice_levels,slice_level_data,slice_lut_out);
+            %% Compositing of Onotology + Slice
+            select_ontology_paths=ontology_paths(composite_ontology_order);
+            select_slice_paths=slice_paths(composite_slice_order);
+            [composite_out] = prepare_composite(C_contrast_dir,data_identity);
+            queue_compositing(composite_queue, composite_out,select_ontology_paths,select_slice_paths)
         end
     end
 end
 
-%% ACTUALLY RUNNING THE FUNCTIONS
-% run using much parfor
-% added randperms so thatn if we have errors, and re-run we'll get more
-% done.
+%% Run the Queued Functions and Commands with Retry
+% test data for function_success;
+%function_success=uint8(floor(randi(2,55,1)/2));
 
-%% parfor luts
-lut_gens=lut_map.values();
-lut_gen_count=numel(lut_gens);
-l_keys=lut_map.keys();
-fails=zeros(size(l_keys),'logical');
-parfor i_lut_gen=1:lut_gen_count
-    if isa(lut_gens{i_lut_gen},'function_handle')
-        try
-            lut_gens{i_lut_gen}();
-        catch merr
-            m=sprintf('lut gen %i/%i failed with error: %i',i_lut_gen,lut_gen_count,merr.message);
-            warning(merr.identifier,m);
-            fails(i_lut_gen)=true;
-        end
-    end
-end
-fail_count=nnz(fails);
-success_count=numel(fails)-fail_count;
-if fail_count
-    fprintf('Retrying %i fails (%i were succesful which is %3.0f%%%)\n',fail_count, success_count, 100* success_count/numel(fails) );
-end
-for i_lut_gen=1:lut_gen_count
-    if isa(lut_gens{i_lut_gen},'function_handle')
-        try
-            lut_gens{i_lut_gen}();
-            fails(i_lut_gen)=false;
-        catch merr
-            m=sprintf('lut gen %i/%i failed with error: %i',i_lut_gen,lut_gen_count,merr.message);
-            warning(merr.identifier,m);
-            fails(i_lut_gen)=true;
-        end
-    end
-end
-clear TASKNAME;
-if any(fails)
-    fprintf('Color bar error or Missing the following lut!\n');
-    fprintf('\t%s\n',l_keys{fails});
-    fails=fails+1;
-    msg=sprintf(['%i/%i failed to create\n' ...
-        'To run one failure for debuging (see above for task names), use t_task=lut_map(TASKNAME);t_task()'], ...
-        nnz(fails),lut_gen_count);
-    db_inplace(mfilename,msg);
-    % the task-map can bse
-end
+function_success=process_function_queue(plot_queue);
+fraction_success=sum(function_success)./numel(function_success);
 
-%% parfor ontologies and slices
-task_list=task_map.values();
-task_list=task_list(randperm(numel(task_list)));
-task_count=numel(task_list);
-parfor i_task=1:task_count
-    if isa(task_list{i_task},'function_handle')
-        try
-            task_list{i_task}();
-        catch merr
-            warning(merr.identifier,'task %i/%i failed with error: %i',i_task,task_count,merr.message);
-        end
-    end
+stop_too_many=5;
+while any(~function_success) && stop_too_many>0 && fraction_success>0.7
+    function_success=process_function_queue(plot_queue);
+    fraction_success=sum(function_success)./numel(function_success);
+    stop_too_many=stop_too_many-1;
 end
-
 
 warning('deactivated all svg checking and copositing because of inkscape conversion fails');
 return;
 
-t_keys=task_map.keys();
-fails=zeros(size(t_keys),'logical');
-for i_task=1:task_count
-    svg_out=sprintf('%s.svg',t_keys{i_task});
-    % intermittent failures in paralllllism, lets just run here, and only
-    % report fail after that.
-    if ~exist(svg_out,'file')
-        TASKNAME=t_keys{i_task};
-        t_task=task_map(TASKNAME);t_task();
-    end
-    if ~exist(svg_out,'file')
-        fails(i_task)=true;
-    end
-end
-clear TASKNAME;
-if any(fails)
-    fprintf('Missing svg for the following tasks!\n');
-    fprintf('\t%s\n',t_keys{fails});
-    fails=fails+1;
-    msg=sprintf(['%i/%i failed to create\n' ...
-        'To run one failure for debuging (see above for task names), use t_task=task_map(TASKNAME);t_task()'], ...
-        nnz(fails),task_count);
-    db_inplace(mfilename,msg);
-    % the task-map can bse
+command_success=process_command_queue(composite_queue);
+fraction_success=sum(command_success)./numel(command_success);
+
+stop_too_many=5;
+while any(~command_success) && stop_too_many>0 && fraction_success>0.7
+    command_success=process_command_queue(composite_queue);
+    fraction_success=sum(command_success)./numel(command_success);
+    stop_too_many=stop_too_many-1;
 end
 
-%% parfor compositing
-comp_list=composite_map.values();
-comp_list=comp_list(randperm(numel(comp_list)));
-parfor i_comp=1:numel(comp_list)
-    [s,sout]=system(comp_list{i_comp});
-    if s~=0
-        warning(sout);
-    end
 end
+
+% %% parfor luts
+% lut_gens=lut_map.values();
+% lut_gen_count=numel(lut_gens);
+% l_keys=lut_map.keys();
+% fails=zeros(size(l_keys),'logical');
+% parfor i_lut_gen=1:lut_gen_count
+%     if isa(lut_gens{i_lut_gen},'function_handle')
+%         try
+%             lut_gens{i_lut_gen}();
+%         catch merr
+%             m=sprintf('lut gen %i/%i failed with error: %i',i_lut_gen,lut_gen_count,merr.message);
+%             warning(merr.identifier,m);
+%             fails(i_lut_gen)=true;
+%         end
+%     end
+% end
+% fail_count=nnz(fails);
+% success_count=numel(fails)-fail_count;
+% if fail_count
+%     fprintf('Retrying %i fails (%i were succesful which is %3.0f%%%)\n',fail_count, success_count, 100* success_count/numel(fails) );
+% end
+% for i_lut_gen=1:lut_gen_count
+%     if isa(lut_gens{i_lut_gen},'function_handle')
+%         try
+%             lut_gens{i_lut_gen}();
+%             fails(i_lut_gen)=false;
+%         catch merr
+%             m=sprintf('lut gen %i/%i failed with error: %i',i_lut_gen,lut_gen_count,merr.message);
+%             warning(merr.identifier,m);
+%             fails(i_lut_gen)=true;
+%         end
+%     end
+% end
+% clear TASKNAME;
+% if any(fails)
+%     fprintf('Color bar error or Missing the following lut!\n');
+%     fprintf('\t%s\n',l_keys{fails});
+%     fails=fails+1;
+%     msg=sprintf(['%i/%i failed to create\n' ...
+%         'To run one failure for debuging (see above for task names), use t_task=lut_map(TASKNAME);t_task()'], ...
+%         nnz(fails),lut_gen_count);
+%     db_inplace(mfilename,msg);
+%     % the task-map can bse
+% end
+% 
+% %% parfor ontologies and slices
+% task_list=task_map.values();
+% task_list=task_list(randperm(numel(task_list)));
+% task_count=numel(task_list);
+% parfor i_task=1:task_count
+%     if isa(task_list{i_task},'function_handle')
+%         try
+%             task_list{i_task}();
+%         catch merr
+%             warning(merr.identifier,'task %i/%i failed with error: %i',i_task,task_count,merr.message);
+%         end
+%     end
+% end
+
+
+
+
+% t_keys=task_map.keys();
+% fails=zeros(size(t_keys),'logical');
+% for i_task=1:task_count
+%     svg_out=sprintf('%s.svg',t_keys{i_task});
+%     % intermittent failures in paralllllism, lets just run here, and only
+%     % report fail after that.
+%     if ~exist(svg_out,'file')
+%         TASKNAME=t_keys{i_task};
+%         t_task=task_map(TASKNAME);t_task();
+%     end
+%     if ~exist(svg_out,'file')
+%         fails(i_task)=true;
+%     end
+% end
+% clear TASKNAME;
+% if any(fails)
+%     fprintf('Missing svg for the following tasks!\n');
+%     fprintf('\t%s\n',t_keys{fails});
+%     fails=fails+1;
+%     msg=sprintf(['%i/%i failed to create\n' ...
+%         'To run one failure for debuging (see above for task names), use t_task=task_map(TASKNAME);t_task()'], ...
+%         nnz(fails),task_count);
+%     db_inplace(mfilename,msg);
+%     % the task-map can bse
+% end
+% 
+% %% parfor compositing
+% comp_list=composite_map.values();
+% comp_list=comp_list(randperm(numel(comp_list)));
+% parfor i_comp=1:numel(comp_list)
+%     [s,sout]=system(comp_list{i_comp});
+%     if s~=0
+%         warning(sout);
+%     end
+% end
