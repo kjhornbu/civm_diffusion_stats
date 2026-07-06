@@ -18,28 +18,3 @@ for i_slice=1:numel(slice_levels)
 end
 
 end
-
-% 
-%             
-%             for i_slice=1:numel(slice_levels)
-%                 C_t_sn=C_slice_name;
-%                 C_t_sn{slice_name_pos}=DVlevels{i_slice};
-%                 slice_out=path_convert_platform(fullfile(slice_dir,'svg',strjoin(C_t_sn,'_')),'native');
-%                 slice_paths{i_slice}=sprintf('%s.svg',slice_out);
-%                 if exist(slice_out,'file')
-%                     continue;
-%                 end
-% 
-%                 %{
-%                 slice_data=slice_level_data(:,:,i_slice);
-%                 [img_slice] = slice_colorer(slice_lut_out,slice_data);
-%                 save_color_slice(img_slice,slice_out);
-%                 %}
-% 
-%                 gen_img = @() uint8( slice_colorer(slice_lut_out,slice_level_data(:,:,i_slice)) *255 );
-%                 gen_and_write_img=@(g_img) slice_saver(g_img(),slice_out,'image');
-% 
-% 
-% 
-%                 task_map(slice_out)=@() gen_and_write_img(gen_img);
-%             end
