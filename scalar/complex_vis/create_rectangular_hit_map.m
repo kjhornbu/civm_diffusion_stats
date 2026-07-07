@@ -1,46 +1,57 @@
-function [] = create_rectangular_hit_map(filename,x_axis_data,x_axis_label,ontology_ordering)
+function [] = create_rectangular_hit_map(color_lookup_paths,color_lookup_name,ontology_ordering)
+% color_lookup_paths: is the path to the lookup file in the exact order you
+% want them in along the x axis. 
+% color_lookup_name: is a name you want represented for the data along on
+% the x axis.
+% ontology_ordering: is a single file ordering you want for the y axis of the data. If
+% you are to filter the lookup data you will remove regions from the
+% ontology ordering. THAT SHOULD BE DONE BEFORE IT PASSES INTO HERE.
+
+if ~istable(ontology_ordering)
+    ontology_ordering=civm_read_table(ontology_ordering);
+end
+for n=1:numel(color_lookup_paths)
+    data{n}=civm_read_table(color_lookup_paths{n});
+    
+    %Confirm uniform size of datasets here
+
+    bilat_data{n}=data(data{n}.hemisphere_assignment==0,:);
+
+    data{n}.Structure
+end
 
 
-
-plot_hit_map(data,hitMetric,x_delineation,x_ordered_idx,y_delineation,y_ordered_idx);
+plot_hit_map(bilat_data,color_lookup_name,ontology_ordering);
 save_hit_map();
 
 % This should basically work off off the ontology stuff. use the ontology
-% and slice generator to make the 
+% and slice generator to make the
 end
 
-function [axis_ordered] = order_axis(data,axis_name,order_type,set_order)
-
-
-
-
-end
-
-function [] = plot_hit_map(data,hitMetric,x_delineation,x_ordered_idx,y_delineation,y_ordered_idx)
+function [] = plot_hit_map(data,x_delineation,y_delineation)
 height_entry_prior_graph_inches=10.4895833333333/157;
-Color=color_range_find;
-
-[x_values,~,x_idx]=unique(data.(x_delineation),'stable');
-[y_values,~,y_idx]=unique(data.(y_delineation),'stable');
 
 f=figure;
 set(gca,'FontSize',4,'FontName','Arial');
-set(gcf,'Units','inches','InnerPosition',[0 0 1.25*2 height_entry_prior_graph_inches*numel(GN_Symbol_name)]);
+set(gcf,'Units','inches','InnerPosition',[0 0 1.25*2 height_entry_prior_graph_inches*numel(y_delineation)]);
 set(gca, 'TickDir','out');
 
 hold on
 
-for y_axis=1:numel(y_values)
+for x_axis=numel(x_delineation)
+    %go through all columns
 
-    combined_y_idx=y_idx(y_ordered_idx(y_axis));
+    % got through all rows
+end
 
-    for x_axis=1:numel(x_values)
+for y_axis=1:numel(y_delineation)
+    y_delineation.
+
+    for x_axis=1:numel(x_delineation)
         combined_x_idx=x_idx(x_ordered_idx(x_axis));
-        data_to_place=data.(hitMetric)(combined_x_idx&combined_y_idx);
+        data_to_place=data{x_axis}()
         try
             if ~isempty(data_to_place)
-                [~,color_index]=min(abs(color_range-data_to_place));
-
                 rectangle('Position',[contrast_value+((x_axis-1)/numel(x_values)), y_axis, 1/numel(x_values), 1],'FaceColor',Color(color_index,:)./255,'EdgeColor',[1 1 1]);
             else
                 rectangle('Position',[contrast_value+((x_axis-1)/numel(x_values)), y_axis, 1/numel(x_values), 1],'FaceColor',[1 1 1],'EdgeColor',[1 1 1]);
@@ -60,48 +71,5 @@ xticklabels(x_values);
 
 yticks((1:numel(y_values))+0.5);
 yticklabels(y_values);
-
-end
-function[colorspace] = color_range_find()
-
-color_range=linspace(-0.3,0.3,255);
-color_range_small=-0.3:0.1:0.3;
-
-%Laying out Cold Hot Color space with 255 divisions
-%whiter center
-Color(:,1)=linspace(26,250,128); %Cold -- R
-Color2(:,1)=linspace(250,212,128); %Hot -- R
-
-Color(:,2)=linspace(133,250,128); %Cold -- G
-Color2(:,2)=linspace(250,17,128); %Hot -- G
-
-Color(:,3)=linspace(255,250,128); %Cold -- B
-Color2(:,3)=linspace(250,89,128); %Hot -- B
-
-length_color=size(Color,1);
-Color(length_color+(1:127),1)=Color2(2:end,1);
-Color(length_color+(1:127),2)=Color2(2:end,2);
-Color(length_color+(1:127),3)=Color2(2:end,3);
-
-fig_colormap=figure;
-set(gca,'FontSize',8,'FontName','Arial');
-set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 2 15],'Units','inches','InnerPosition',[0 0 2 10.4895833333333]);
-
-hold on
-
-for n=1:size(Color,1)
-    rectangle('Position',[0 n 1 1],'FaceColor',Color(n,:)./255,'EdgeColor',Color(n,:)./255);
-end
-
-axis([0 1 1 255])
-
-xticks(linspace(0,1,2))
-xticklabels(repmat('',2,1))
-
-yticks(linspace(1,255,size(color_range_small,2)))
-yticklabels(color_range_small')
-
-print(fig_colormap, strcat('Stratified_ColorMap.png'),'-dpng','-r600');
-print(fig_colormap, strcat('Stratified_ColorMap.svg'),'-dsvg','-vector');
 
 end
