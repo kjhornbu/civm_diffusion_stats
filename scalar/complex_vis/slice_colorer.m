@@ -34,6 +34,7 @@ for n=1:numel(ROI_entries)
         img_slice_b(label_logical_idx)=LUT_data.c_b(ROI_logical_idx) / 255;
         img_slice_a(label_logical_idx)=LUT_data.c_a(ROI_logical_idx) / 255;
     else
+        %if exterior make white. 
         img_slice_r(label_logical_idx) = 1;
         img_slice_g(label_logical_idx) = 1;
         img_slice_b(label_logical_idx) = 1;
