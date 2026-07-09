@@ -1,5 +1,5 @@
 function [ config_file ] = civm_diffusion_stats(varargin)
-% no help for you 
+% no help for you HEYYYYY I TRY
 
 % Expected that google_doc is a file which civm_read_table will load
 % will save updated copy to cleaned_google_doc_path
@@ -104,8 +104,6 @@ studyID=opts.studyID;
 dataframe_path=opts.dataframePath;
 config_file=opts.configFile;
 save_dir=opts.statSaveDir;
-
-
 
 %% Data setup -- User Input form
 opts.keep_last_frame = 0; % if 0 we are NOT keeping the last data frame, if 1 we ARE keeping the last dataframe
@@ -462,7 +460,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
     [values,~,idx]=unique(output_paths_table.stratification);
 
     if (numel(values) == 1 && ~cellfun(@isempty,regexpi(values,'^(-)$'))) || (numel(values)>1 && height(output_paths_table)==numel(values))
-        for n=1:numel(values)
+        parfor n=1:numel(values)
             output_paths_table_single=output_paths_table(n,:);
             group_stats_file=output_paths_table.StatsResults{n};
             processed_stats_dir=fileparts(group_stats_file);
@@ -513,13 +511,10 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
             % internally, composite ontology and slice generator follows the structure
             % of our figures (as it was programmed at the time). If we change that
             % orgzanization wed have to update the composite code.
-            try
-                ontology_and_slice_generator(group_stats_file, column_setup, scalar_complex_vis_dir, previously_loaded_labelfile);
-            catch merr
-                warning(merr.message);
-                fprintf('ontology and slice gen failed, see above\n');
-                pause(3);
-            end
+            
+            %this generates our master queue for the dataset. 
+           [main_plot_queue{n},main_composite_queue{n},label_nrrd]=ontology_and_slice_generator(group_stats_file, column_setup, scalar_complex_vis_dir, previously_loaded_labelfile);
+
 
             %% Create Summary Powerpoint for scalars
             for pt=opts.pvalType
@@ -527,6 +522,11 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
                 generate_summary_ppts( output_paths_table_single, studyID, user,pvalue_type, opts.pvalThreshold, studymodel, Summary_Criteria);
             end
         end
+
+        % Do Actual Running of queues
+        plot_queue=vertcat(main_plot_queue{:});
+        composite_queue=vertcat(main_composite_queue{:});
+        [function_success] = tracking_running_queues(plot_queue,composite_queue);
     end
 end
 %% Omni Manova Analysis

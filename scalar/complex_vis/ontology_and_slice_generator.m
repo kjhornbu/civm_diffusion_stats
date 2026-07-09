@@ -1,4 +1,5 @@
-function label_nrrd=ontology_and_slice_generator(group_stats_file,column_setup,scalar_complex_vis_dir,label_nrrd)
+function [plot_queue,composite_queue,label_nrrd]=ontology_and_slice_generator(group_stats_file,column_setup,scalar_complex_vis_dir,label_nrrd)
+
 %% load static data (atlas stats and centroids, and combine, also set-up label nrrd)
 % use test code to auto-find label ontology, also load centroids.
 w_settings=wks_settings();
@@ -248,129 +249,31 @@ for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
     end
 end
 
-%% Run the Queued Functions and Commands with Retry
-% test data for function_success;
-%function_success=uint8(floor(randi(2,55,1)/2));
-
-function_success=process_function_queue(plot_queue);
-fraction_success=sum(function_success)./numel(function_success);
-
-stop_too_many=5;
-while any(~function_success) && stop_too_many>0 && fraction_success>0.7
-    function_success=process_function_queue(plot_queue);
-    fraction_success=sum(function_success)./numel(function_success);
-    stop_too_many=stop_too_many-1;
-end
-
-warning('deactivated all svg checking and copositing because of inkscape conversion fails');
-return;
-
-command_success=process_command_queue(composite_queue);
-fraction_success=sum(command_success)./numel(command_success);
-
-stop_too_many=5;
-while any(~command_success) && stop_too_many>0 && fraction_success>0.7
-    command_success=process_command_queue(composite_queue);
-    fraction_success=sum(command_success)./numel(command_success);
-    stop_too_many=stop_too_many-1;
-end
-
-end
-
-% %% parfor luts
-% lut_gens=lut_map.values();
-% lut_gen_count=numel(lut_gens);
-% l_keys=lut_map.keys();
-% fails=zeros(size(l_keys),'logical');
-% parfor i_lut_gen=1:lut_gen_count
-%     if isa(lut_gens{i_lut_gen},'function_handle')
-%         try
-%             lut_gens{i_lut_gen}();
-%         catch merr
-%             m=sprintf('lut gen %i/%i failed with error: %i',i_lut_gen,lut_gen_count,merr.message);
-%             warning(merr.identifier,m);
-%             fails(i_lut_gen)=true;
-%         end
-%     end
-% end
-% fail_count=nnz(fails);
-% success_count=numel(fails)-fail_count;
-% if fail_count
-%     fprintf('Retrying %i fails (%i were succesful which is %3.0f%%%)\n',fail_count, success_count, 100* success_count/numel(fails) );
-% end
-% for i_lut_gen=1:lut_gen_count
-%     if isa(lut_gens{i_lut_gen},'function_handle')
-%         try
-%             lut_gens{i_lut_gen}();
-%             fails(i_lut_gen)=false;
-%         catch merr
-%             m=sprintf('lut gen %i/%i failed with error: %i',i_lut_gen,lut_gen_count,merr.message);
-%             warning(merr.identifier,m);
-%             fails(i_lut_gen)=true;
-%         end
-%     end
-% end
-% clear TASKNAME;
-% if any(fails)
-%     fprintf('Color bar error or Missing the following lut!\n');
-%     fprintf('\t%s\n',l_keys{fails});
-%     fails=fails+1;
-%     msg=sprintf(['%i/%i failed to create\n' ...
-%         'To run one failure for debuging (see above for task names), use t_task=lut_map(TASKNAME);t_task()'], ...
-%         nnz(fails),lut_gen_count);
-%     db_inplace(mfilename,msg);
-%     % the task-map can bse
+% %% Run the Queued Functions and Commands with Retry
+% % test data for function_success;
+% %function_success=uint8(floor(randi(2,55,1)/2));
+% 
+% function_success=process_function_queue(plot_queue);
+% fraction_success=sum(function_success)./numel(function_success);
+% 
+% stop_too_many=5;
+% while any(~function_success) && stop_too_many>0 && fraction_success>0.7
+%     function_success=process_function_queue(plot_queue);
+%     fraction_success=sum(function_success)./numel(function_success);
+%     stop_too_many=stop_too_many-1;
 % end
 % 
-% %% parfor ontologies and slices
-% task_list=task_map.values();
-% task_list=task_list(randperm(numel(task_list)));
-% task_count=numel(task_list);
-% parfor i_task=1:task_count
-%     if isa(task_list{i_task},'function_handle')
-%         try
-%             task_list{i_task}();
-%         catch merr
-%             warning(merr.identifier,'task %i/%i failed with error: %i',i_task,task_count,merr.message);
-%         end
-%     end
-% end
-
-
-
-
-% t_keys=task_map.keys();
-% fails=zeros(size(t_keys),'logical');
-% for i_task=1:task_count
-%     svg_out=sprintf('%s.svg',t_keys{i_task});
-%     % intermittent failures in paralllllism, lets just run here, and only
-%     % report fail after that.
-%     if ~exist(svg_out,'file')
-%         TASKNAME=t_keys{i_task};
-%         t_task=task_map(TASKNAME);t_task();
-%     end
-%     if ~exist(svg_out,'file')
-%         fails(i_task)=true;
-%     end
-% end
-% clear TASKNAME;
-% if any(fails)
-%     fprintf('Missing svg for the following tasks!\n');
-%     fprintf('\t%s\n',t_keys{fails});
-%     fails=fails+1;
-%     msg=sprintf(['%i/%i failed to create\n' ...
-%         'To run one failure for debuging (see above for task names), use t_task=task_map(TASKNAME);t_task()'], ...
-%         nnz(fails),task_count);
-%     db_inplace(mfilename,msg);
-%     % the task-map can bse
-% end
+% warning('deactivated all svg checking and copositing because of inkscape conversion fails');
+% return;
 % 
-% %% parfor compositing
-% comp_list=composite_map.values();
-% comp_list=comp_list(randperm(numel(comp_list)));
-% parfor i_comp=1:numel(comp_list)
-%     [s,sout]=system(comp_list{i_comp});
-%     if s~=0
-%         warning(sout);
-%     end
+% command_success=process_command_queue(composite_queue);
+% fraction_success=sum(command_success)./numel(command_success);
+% 
+% stop_too_many=5;
+% while any(~command_success) && stop_too_many>0 && fraction_success>0.7
+%     command_success=process_command_queue(composite_queue);
+%     fraction_success=sum(command_success)./numel(command_success);
+%     stop_too_many=stop_too_many-1;
 % end
+
+end
