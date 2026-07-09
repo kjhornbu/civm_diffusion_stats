@@ -36,7 +36,7 @@ for n=1:numel(color_lookup_paths)
 
     data_w_ontology=innerjoin(temp_data,indiv_ontology_ordering,'Keys',{'Structure','GN_Symbol','hemisphere_assignment','ARA_abbrev'});
 
-    key_data{n}=sortrows(data_w_ontology,{'ontology_level','start_of_bar'});
+    key_data{n}=sortrows(data_w_ontology,{'start_of_bar','ontology_level'});
     key_data_size(n)=height(key_data{n});
 end
 
