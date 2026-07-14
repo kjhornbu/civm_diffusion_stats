@@ -1,6 +1,9 @@
 function lookup_plot(stat_colors,varargin)
 % Given an input colors table(or structure), plot and optionally save
 % NOTE: table not functional yet.
+% This function might be better named as "LUT_plot", as it does NOT plot a
+% 3D slicer "lookup.txt".
+
 arg_count=numel(varargin);
 if arg_count
     for i_v=arg_count:-1:1
@@ -9,6 +12,18 @@ if arg_count
             varargin(i_v)=[];
         end
     end
+end
+if ~exist('out','var') && mod(arg_count,2) && ischar(varargin{end}) || isstring(varargin{end})
+    out=varargin{end};
+    varargin(end)=[];
+end
+
+params=struct();
+params.font='Arial';
+if strcmp(hostname,'blackbox')
+   params.font='Liberation Sans'; 
+else
+   warning('plotting font could be a problem. You should check output SVG at least the first time and update this code accordingly.');
 end
 
 p = inputParser;
@@ -22,9 +37,12 @@ addParameter(p, 'proportional', true, @(x) islogical(x) && isscalar(x));
 addParameter(p, 'use_names', false, @(x) islogical(x) && isscalar(x));
 addParameter(p, 'fig_n', 999, @(x) isnumeric(x) && isscalar(x));
 addParameter(p, 'direction', 'vertical', @(x) ( ischar(x) || isstring(x) ) && reg_match(x,'vertical|horizontal') );
+addParameter(p, 'font', params.font, @validate_text);
+addParameter(p, 'out_height', 15, @(x) isnumeric(x) && numel(x)==1 );
 
 % Parse input
 parse(p, varargin{:});
+clear params;
 params=p.Results; 
 
 assert(~strcmp(params.direction,'horizontal'),'Horizontal mode not implemented. Please implement, or stop requesting it.');
@@ -59,11 +77,51 @@ fig_colormap=figure(params.fig_n);
 % fancy run at function end to close the figure
 if exist('out','var')
     C___={};C___{end+1}=onCleanup(@() figure_close(params.fig_n) );
+
+    % out.pdf is the 'true' output of the function right now, using inkscape to
+    % convert to both svg and png. svg is a required and expected output
+    if ~isstruct(out) && ( ischar(out) || isstring(out) )
+        [p,n,e]=fileparts(out);
+        [out]=figure_out_struct(path_convert_platform(fullfile(p,n),'native'));
+        if strcmp(e,'.svg')
+            C___{end+1}=onCleanup(@() delete(out.pdf) );
+            out=rmfield(out,'png');
+            %C___{end+1}=onCleanup(@() delete(out.png) );
+        end
+    end
+    % IF we wish to skip existing
+    if exist(out.pdf,'file') && exist(out.svg,'file') && exist(out.png,'file')
+        return;
+    end
 end
 
-set(gca,'FontSize',8,'FontName','Arial');
-set(gcf,'PaperUnits', 'inches','PaperPosition',[0 0 2 15],'Units','inches','InnerPosition',[0 1 2 10.4895833333333]);
 
+% formerly set arial.
+set(gca,'FontSize',8,'FontName',params.font);
+% Why'd we set this to 15 inches tall? This is making the font uselessly
+% small when we try to scale up/around?
+% can we adjust that to be "good"?
+p_pos=[0 0 2 15];
+i_pos=[0 1 2 10.4895833333333];
+
+% we're dividing because we have such a struggle with size seting, and
+% p_pos+i_pos were already painstakingly configured.
+% for 1.5 inch, divide by 10
+desired_out=params.out_height;
+div=p_pos(4)/desired_out;
+p_pos=p_pos./div;
+i_pos=i_pos./div;
+
+x_off=0.25;
+y_off=0.5;
+p_pos(1:2)=p_pos(1:2)+[x_off,y_off];
+i_pos(1:2)=i_pos(1:2)+[x_off,y_off];
+% Do i have to add offsets to both y and x stop to get same behavior?
+% kinda doesnt seem like it.
+%p_pos(3:4)=p_pos(3:4)+[x_off,y_off];
+%i_pos(3:4)=i_pos(3:4)+[x_off,y_off];
+
+set(gcf,'PaperUnits', 'inches','PaperPosition',p_pos,'Units','inches','InnerPosition',i_pos);
 hold on
 
 for n=1:numel(stat_colors)
@@ -114,11 +172,33 @@ end
 hold off;
 
 if exist('out','var') 
-    if isfield(out,'svg')&&~exist(out.svg,'file')
+    % DERP print is not recommended!
+    % ESPECIALLY for svg files!
+    % In other code we're using PDF files for the direct output, and then
+    % converting those to svg to maintain editable text.
+    %
+    % In NEWER versions of matlab we could use export graphics with svg
+    % output, HOWEVER 2021b cannot do that!
+    %{ 
+    %% FAIL-TRY blarg
+    if isfield(out,'svg') && ~exist(out.svg,'file')
         print(fig_colormap, out.svg, '-dsvg', '-vector');
+        %exportgraphics(fig_colormap, out.svg, 'ContentType', 'vector');
     end
-    if isfield(out,'png')&&~exist(out.png,'file')
+    if isfield(out,'png') && ~exist(out.png,'file')
         print(fig_colormap, out.png, '-dpng', '-r600');
+        %exportgraphics(fig_colormap, out.png, 'Resolution', 600);
+    end
+    %}
+    %% Updated Doodly doo!
+    %if isfield(out,'pdf')
+    exportgraphics(fig_colormap, out.pdf,'BackgroundColor','none','ContentType','vector','Resolution',600);
+    %end
+    if isfield(out,'svg')
+        pdf2svg(out.pdf, out.svg);
+    end
+    if isfield(out,'png')
+        pdf2png(out.pdf, out.png);
     end
 end
 
