@@ -20,6 +20,7 @@ if isfield(out,'svg')
         % code normally.
         cmd=sprintf('bash -c "%s"', cmd);
     end
+    
     [s,sout]=system(cmd);
     assert(s==0,'Command failed, error: %s\ncommand:%s\n',sout,cmd);
 end
