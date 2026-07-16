@@ -248,32 +248,4 @@ for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
         end
     end
 end
-
-% %% Run the Queued Functions and Commands with Retry
-% % test data for function_success;
-% %function_success=uint8(floor(randi(2,55,1)/2));
-% 
-% function_success=process_function_queue(plot_queue);
-% fraction_success=sum(function_success)./numel(function_success);
-% 
-% stop_too_many=5;
-% while any(~function_success) && stop_too_many>0 && fraction_success>0.7
-%     function_success=process_function_queue(plot_queue);
-%     fraction_success=sum(function_success)./numel(function_success);
-%     stop_too_many=stop_too_many-1;
-% end
-% 
-% warning('deactivated all svg checking and copositing because of inkscape conversion fails');
-% return;
-% 
-% command_success=process_command_queue(composite_queue);
-% fraction_success=sum(command_success)./numel(command_success);
-% 
-% stop_too_many=5;
-% while any(~command_success) && stop_too_many>0 && fraction_success>0.7
-%     command_success=process_command_queue(composite_queue);
-%     fraction_success=sum(command_success)./numel(command_success);
-%     stop_too_many=stop_too_many-1;
-% end
-
 end

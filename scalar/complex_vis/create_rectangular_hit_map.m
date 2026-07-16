@@ -43,31 +43,25 @@ if numel(key_data_size)>1
     assert(nnz(key_data_size(1)==key_data_size(2:end)),'You have different sized key data -- you sure you giving the correct sheets to this function?');
 end
 
-
 [hit_map,data_x_labels,data_y_labels]=make_hit_map(key_data,color_lookup_name,key_data_size(1));
 [make_axis]=save_hit_map(save_dir,hit_map,data_x_labels,data_y_labels,make_axis);
-
 end
 
 function [hit_map,data_x_labels,data_y_labels] = make_hit_map(data,x_delineation,y_delineation)
-
 hit_map=zeros([y_delineation,numel(x_delineation),4],'single');
 
 for y_idx=1:y_delineation
     for x_idx=1:numel(x_delineation)
         data_to_place=data{x_idx}(y_idx,:);
-
         hit_map(y_idx,x_idx,1)=data_to_place.c_r;
         hit_map(y_idx,x_idx,2)=data_to_place.c_g;
         hit_map(y_idx,x_idx,3)=data_to_place.c_b;
         hit_map(y_idx,x_idx,4)=data_to_place.c_a;
-
     end
 end
 
 data_y_labels=strrep(strrep(strrep(data{1}.GN_Symbol,{'-B'},{''}),{'-L'},{''}),{'-R'},{''});
 data_x_labels=x_delineation;
-
 
 end
 
@@ -131,24 +125,26 @@ for region=1:size(hit_map,1)
     rectangle('Position',[stratification-1 region-1  1 1],'FaceColor',hit_map(region,stratification,1:3)./255,'EdgeColor',[1 1 1]);
     end
 end
+
     xticks(0);
     xticklabels("");
     yticks(0);
     yticklabels("");
 
 axis([0 selection_Number_x 0 selection_Number_y]);
-
 print(f, out.pdf,'-dpdf','-painters');
 
 if make_axis
     make_axis=0;
     %% y-axis generate
-    y_line_coor=[0.15 0.2];
+    %y_line_coor=[0.15 0.2];
+    offset=4/13; %4 ticks of the 13 regions
+    y_line_coor=offset+[0 0.05];
     fL=figure;
     set(gcf,'PaperUnits', 'inches','PaperPosition',(96/72)*position_matrix_in,'InnerPosition',position_matrix_in,'PaperPositionMode', 'manual');
 
     rectangle("Position",[0 0 1 (selection_Number_y)+1],"FaceColor",[1 1 1],"EdgeColor",[1 1 1])
-    axis([0 0.5 0.5 (selection_Number_y)+0.5]);
+    axis([0 1 0.5 (selection_Number_y)+0.5]);
 
     positioning = linspace(0,(selection_Number_y),(selection_Number_y)+1)+1;
     positioning(positioning>(selection_Number_y))=[];
@@ -157,12 +153,12 @@ if make_axis
         text(0,positioning(n),strcat(data_y_labels{n}),'HorizontalAlignment','left','VerticalAlignment','middle','FontSize',fontsize,'FontName','FixedWdith');
         line(y_line_coor,[positioning(n),positioning(n)],'Color','black');
     end
-
     
     xticks(0);
     xticklabels("");
     yticks(0);
     yticklabels("");
+    
     print(fL, fullfile(p,'Left_Axis.pdf'),'-dpdf','-painters');
 
     %% x-axis generate
@@ -170,7 +166,7 @@ if make_axis
     set(gcf,'PaperUnits', 'inches','PaperPosition',(96/72)*position_matrix_in,'InnerPosition',position_matrix_in,'PaperPositionMode', 'manual');
 
     rectangle("Position",[0 0 (selection_Number_x)+1 1],"FaceColor",[1 1 1],"EdgeColor",[1 1 1])
-    axis([0.5 (selection_Number_x)+0.5 0 0.5]);
+    axis([0.5 (selection_Number_x)+0.5 0 1]);
 
     positioning = linspace(0,(selection_Number_x),(selection_Number_x)+1)+1;
     positioning(positioning>(selection_Number_x))=[];
@@ -191,7 +187,9 @@ if make_axis
 end
 end
 
-function [offset,x_line_coor]=match_xy_axis(position_matrix_in,y_line_coor)
+function [x_line_coor]=match_xy_axis(position_matrix_in,y_line_coor)
 %in row column now instead of column row. 
-x_line_coor=position_matrix_in(3)*(y_line_coor)/position_matrix_in(4);
+offset = (6/231); % we want an offset that is nominally at the length of BXDFamily name which is 6 ticks of 231. 
+x_line_coor=position_matrix_in(3)*(diff(y_line_coor))/position_matrix_in(4); % WE convert the difference along x into a difference on y.
+x_line_coor=[offset,offset+x_line_coor];
 end

@@ -487,13 +487,14 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
             case_names=pairwise_criteria.control.case(summary_idx);
             name_code=cell(size(case_names));
             sum_compare=compare_criteria{1}(:,summary_idx);
+            
             for col_type_idx=1:numel(col_types)
-                for n=1:size(sum_compare,2)
-                    test_name_ctrl=strsplit(sum_compare{1,n},{':',','});
-                    test_name_treat=strsplit(sum_compare{2,n},{':',','});
+                for m=1:size(sum_compare,2)
+                    test_name_ctrl=strsplit(sum_compare{1,m},{':',','});
+                    test_name_treat=strsplit(sum_compare{2,m},{':',','});
 
-                    name_code{n}=strcat(strjoin(test_name_ctrl(2:2:end),'_'),'_',strjoin(test_name_treat(2:2:end),'_'));
-                    name_code{n}=strrep(name_code{n},'.','p');
+                    name_code{m}=strcat(strjoin(test_name_ctrl(2:2:end),'_'),'_',strjoin(test_name_treat(2:2:end),'_'));
+                    name_code{m}=strrep(name_code{m},'.','p');
 
                     % expect 1 column here?
                     %name_code_idx=column_find(col_names,sprintf('.*(%s)$',name_code{n}),1);
@@ -504,7 +505,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
                     % WARNING: ONLY the neutral works right now, make james fix the color
                     % table junk (or replace the whole thing with something smart(er/ish)).
 
-                    column_setup(end+1,:)={sprintf('%s_WN',col_types{col_type_idx}), sprintf('%s_%s',col_types{col_type_idx},name_code{n})};
+                    column_setup(end+1,:)={sprintf('%s_WN',col_types{col_type_idx}), sprintf('%s_%s',col_types{col_type_idx},name_code{m})};
                 end
             end
 
