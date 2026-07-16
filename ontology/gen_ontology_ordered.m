@@ -1,4 +1,4 @@
-function [ontology_layout] = gen_ontology_ordered(Label_Ontology,parent_structure)
+function [ontology_layout] = gen_ontology_ordered(Label_Ontology,parent_structure,full)
 hemisphere=-1;
 
 %Remove the actual stats we don't need from Statistical Results keep only
@@ -99,6 +99,10 @@ check_parents=ontology_layout.ROI==All_Parents'; %Find the ROI that are parents
 ontology_layout.ontology_most_child=~logical(sum(check_parents,2)); %The things that aren't parents are children
 
 ontology_layout=sortrows(ontology_layout,{'ontology_level','centroid_PA'},{'ascend','ascend'});
-ontology_layout=rob_order_fixer(ontology_layout,parent_structure);
+
+if ~exist('full','var')
+    full=0;
+end
+ontology_layout=rob_order_fixer(ontology_layout,parent_structure,full);
 
 end

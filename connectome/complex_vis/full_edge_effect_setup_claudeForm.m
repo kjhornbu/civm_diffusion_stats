@@ -6,7 +6,7 @@ if data_scaling
 end
 
 %ontology_Order=civm_read_table("Ontology_Order_EdgeStrengthPlots.csv");
-ontology_Order=civm_read_table("Ontology_Layout_DMBA_20260317_RobFixedOrder.txt");
+ontology_Order=civm_read_table("Ontology_Layout_DMBA_20260317_RobFixedOrder.txt"); %This is the ontology ordering of leaf structures aka connnectomics. generated using Get_Ontology_Setup.m within the ontology folder of civm_diffusion_stats
 [ontology_Order,total_Ordering] = find_proper_ontology_order(ontology_Order,size(graphs,2)/2);
 
 for n=1:numel(comparison)
