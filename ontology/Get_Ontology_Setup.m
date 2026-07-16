@@ -23,8 +23,8 @@ ontology_with_stats=innerjoin(ontology_with_stats,Label_Ontology_Centroid_cleane
 % remove temporaries.
 clear atlas_centroid_file check_data_in_centroid logical_check_data_in_centroid atlas_centroids Label_Ontology_Centroid_cleaned
 
-%selected_parents = {'BRN-B'};
-selected_parents ={'^(RVG-B|MID-B|HBR-B|CBN-B|CBX-B)$'};
+selected_parents = {'BRN-B'};
+%selected_parents ={'^(RVG-B|MID-B|HBR-B|CBN-B|CBX-B)$'};
 
 for parent=1:numel(selected_parents)
     [ontology_layout] = gen_ontology_ordered(ontology_with_stats,selected_parents{parent});
