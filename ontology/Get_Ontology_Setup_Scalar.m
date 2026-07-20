@@ -1,39 +1,32 @@
 % clear all
 % close all;
 
-w_settings=wks_settings();
+Path_to_Ontology={"Z:\All_Staff\18.gaj.42\FullAnalysis_20260505\Scalar_and_Volume\anovan_1000010000100001\AgeClass_Strain_Perfusionat_Sex\Non_Erode\Bilateral\complex_figures_EstimatedPower-260709_FromCohenF\ontology_layouts\CEN_CCX_ontology_layout.csv"};
 
-atlas_name='DMBA';
-label_nick='RCCF';
-atlas_label_dir=fullfile(path_convert_platform(w_settings.data_directory,'native'),'atlas',atlas_name,'labels',label_nick);
+ontology_layout = civm_read_table(Path_to_Ontology);
+ontology_layout.length_of_bar=[];
+ontology_layout.start_of_bar=[];
+idx=reg_match(ontology_layout.Structure,'BRS__Brain');
+remove_row=ontology_layout(idx,:);
 
-atlas_stats_file=fullfile(atlas_label_dir,sprintf('%s_%s_ontology_with_stats.txt',atlas_name,label_nick));
-atlas_centroid_file=fullfile(atlas_label_dir,sprintf('%s_%s_labels_centroids.txt',atlas_name,label_nick));
+% Find remove row within the full layout so we can start to index through
+% and fix it. 
+idx_remove_withinFullBRN_Ontology=ontology_layout.ontology_order_ROI==remove_row.ROI;
+for n=1:height(ontology_layout)
+    indiv_idx=idx_remove_withinFullBRN_Ontology(n,:);
+    pos_indiv_idx=find(indiv_idx);
 
-% this is configued to default load ontology
-ontology_with_stats=civm_read_table(atlas_stats_file,[],[],true);
-% load centroids
-atlas_centroids=civm_read_table(atlas_centroid_file,[],[],true);
-
-check_data_in_centroid={'id64_fSABI','centroid_'};
-logical_check_data_in_centroid=~cellfun(@isempty,regexpi(atlas_centroids.Properties.VariableNames,strjoin(check_data_in_centroid,'|')));
-Label_Ontology_Centroid_cleaned=atlas_centroids(:,logical_check_data_in_centroid);
-
-ontology_with_stats=innerjoin(ontology_with_stats,Label_Ontology_Centroid_cleaned,'Keys',{'id64_fSABI'});
-% remove temporaries.
-clear atlas_centroid_file check_data_in_centroid logical_check_data_in_centroid atlas_centroids Label_Ontology_Centroid_cleaned
-
-selected_parents = {'BRN-B'};
-%selected_parents ={'^(RVG-B|MID-B|HBR-B|CBN-B|CBX-B)$'};
-
-for parent=1:numel(selected_parents)
-    [ontology_layout] = gen_ontology_ordered(ontology_with_stats,selected_parents{parent},1);
+    if nnz(indiv_idx)>0
+        %repair pathing if something is there
+        %keyboard;
+        ontology_layout.ontology_level(n)=ontology_layout.ontology_level(n)-1;
+        ontology_layout.ontology_order_ROI(n,pos_indiv_idx:(end-1))=ontology_layout.ontology_order_ROI(n,(pos_indiv_idx+1):end);
+        ontology_layout.ontology_order_GN_Symbol{n}=erase(ontology_layout.ontology_order_GN_Symbol{n},strcat("'",remove_row.GN_Symbol,"';"));
+        ontology_layout.ontology_order_Structure{n}=erase(ontology_layout.ontology_order_Structure{n},strcat("'",remove_row.Structure,"';"));
+    end
 end
 
-% dorsal roots, fix with putting a weird thing as GN_Symbol?
-ontology_layout(ontology_layout.ROI==21513,"GN_Symbol")={'drtTEMP'};
-ontology_layout(cellfun(@isempty,ontology_layout.GN_Symbol),:)=[];
-
+ontology_layout=sortrows(ontology_layout,'ontology_level','ascend');
 [ontology_layout] = coordinate_positioning(ontology_layout);
 
 ontology_layout.ontology_order_ROI=[];
