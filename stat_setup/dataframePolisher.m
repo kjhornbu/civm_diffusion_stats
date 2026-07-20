@@ -6,8 +6,8 @@ m=1;
 % Stats Polisher output, NOT where the files currently live. Get all output
 % paths for all things we care about first!
 for o=1:numel(opts.scalarContrastMetrics)
-    %polished_stats{o,:}=fullfile(opts.polishedSheetPath,strcat(dataFrame.(unique_column),opts.scalarContrastMetrics(o).stat_extension{:}));
-    polished_stats{o,:}=fullfile(opts.polishedSheetPath,strcat(dataFrame.(unique_column),opts.scalarContrastMetrics(o).Name{:}));
+    %please I really need this one it gives you the folder and the location.
+    polished_stats{o,:}=fullfile(opts.polishedSheetPath,strcat(dataFrame.(unique_column),opts.scalarContrastMetrics(o).stat_extension{:}));
 end
 
 for n=1:height(dataFrame)
