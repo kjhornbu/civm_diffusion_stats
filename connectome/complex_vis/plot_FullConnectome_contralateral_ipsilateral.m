@@ -102,7 +102,7 @@ for m=1:numel(value_compare)
             make_Axis=false;
             % Make the ontology axis
             middle_break=height(ontology_Order);
-
+            
             for levels=1:max(ontology_Order.ontology_level)
 
                 [a,~,c]=unique(ontology_Order.(strcat('level',num2str(levels))));

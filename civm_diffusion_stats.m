@@ -460,8 +460,17 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
     [values,~,idx]=unique(output_paths_table.stratification);
 
     if (numel(values) == 1 && ~cellfun(@isempty,regexpi(values,'^(-)$'))) || (numel(values)>1 && height(output_paths_table)==numel(values))
-        parfor n=1:numel(values)
+
+        %% Create Summary Powerpoint for scalars
+        for n=1:numel(values)
             output_paths_table_single=output_paths_table(n,:);
+            for pt=opts.pvalType
+                pvalue_type=pt{1};
+                generate_summary_ppts( output_paths_table_single, studyID, user,pvalue_type, opts.pvalThreshold, studymodel, Summary_Criteria);
+            end
+        end
+
+        parfor n=1:numel(values)
             group_stats_file=output_paths_table.StatsResults{n};
             processed_stats_dir=fileparts(group_stats_file);
             scalar_complex_vis_dir=fullfile(processed_stats_dir,'complex_figures');
@@ -487,7 +496,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
             case_names=pairwise_criteria.control.case(summary_idx);
             name_code=cell(size(case_names));
             sum_compare=compare_criteria{1}(:,summary_idx);
-            
+
             for col_type_idx=1:numel(col_types)
                 for m=1:size(sum_compare,2)
                     test_name_ctrl=strsplit(sum_compare{1,m},{':',','});
@@ -514,20 +523,18 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
             % orgzanization wed have to update the composite code.
             
             %this generates our master queue for the dataset. 
-           [main_plot_queue{n},main_composite_queue{n},label_nrrd]=ontology_and_slice_generator(group_stats_file, column_setup, scalar_complex_vis_dir, previously_loaded_labelfile);
+           [main_plot_queue{n},main_composite_queue{n},~]=ontology_and_slice_generator(group_stats_file, column_setup, scalar_complex_vis_dir, previously_loaded_labelfile);
 
 
-            %% Create Summary Powerpoint for scalars
-            for pt=opts.pvalType
-                pvalue_type=pt{1};
-                generate_summary_ppts( output_paths_table_single, studyID, user,pvalue_type, opts.pvalThreshold, studymodel, Summary_Criteria);
-            end
+
         end
+
 
         % Do Actual Running of queues
         plot_queue=vertcat(main_plot_queue{:});
         composite_queue=vertcat(main_composite_queue{:});
         [function_success] = tracking_running_queues(plot_queue,composite_queue);
+
     end
 end
 %% Omni Manova Analysis

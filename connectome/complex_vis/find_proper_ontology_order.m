@@ -48,5 +48,6 @@ if ~isempty(idx_postion_before)
     currentHeight=height(ontology_Order);
     ontology_Order(currentHeight+(1:height(temp_after)),:)=temp_after;
 end
+
 total_Ordering=[ontology_Order.L_Vertex;ontology_Order.R_Vertex];
 end
