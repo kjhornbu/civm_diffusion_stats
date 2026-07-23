@@ -406,7 +406,7 @@ for o=1:numel(voxel_wise)
 
             end
         catch merr
-            db_inplace(mfilename,'Error in calc stats');
+            db_inplace(mfilename,sprintf('Error in calc stats-> %s',merr.message));
         end
 
         bilat_strat_full='hemisphere=bilateral';

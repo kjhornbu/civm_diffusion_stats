@@ -55,6 +55,7 @@ group_median.Properties.Description='The - indicates averaging across the given 
 group_IQR=column_reorder(vertcat(output_IQR{:}),grouping_names);
 group_IQR.Properties.Description='The - indicates averaging across the given column.\n';
 
+
 % force order to match our outptut so we can simplify testing.
 data_table=column_reorder(data_table,test_grouping);
 %Probably broke Variable descirptions so repair from original table.

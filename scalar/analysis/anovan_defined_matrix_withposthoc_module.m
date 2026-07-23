@@ -16,10 +16,6 @@ data_name=data_subtable_columns(data_idx);
 output=table;
 Multi_Compare=table;
 
-for n=1:size(name_table,1)
-    harmonic_mean(n)=harmmean(name_table.N{n},2);
-end
-
 try
     for n=1:size(name_table,1)
         check(n,:)=sum(stats_test.matrix{1}==name_table.matrix{n},2)>=length_name_nointeraction_table;
@@ -45,10 +41,9 @@ multi_compare_template.Group_A='';
 multi_compare_template.Group_B='';
 multi_compare_template.Pval=nan;
 
-
-% for "speed" convert releveant part of table to struct
+% for "speed" convert data part of data_subtable to a struct.
 data_substruct=table2struct(data_subtable(:,data_idx));
-group_types=name_table.group_type(1:length_name_nointeraction_table);
+group_types_no_interaction=name_table.group_type(1:length_name_nointeraction_table);
 if sum(name_table.cross_number<=0) ~= numel(nway_analysis_set)
     nway_analysis_set_temp=nway_analysis_set(name_table.idx{:});
     clear nway_analysis_set;
@@ -56,15 +51,11 @@ if sum(name_table.cross_number<=0) ~= numel(nway_analysis_set)
 end
 
 % remove zeros in the model settting that are not appropriate anymore
-
 if size(stats_test.matrix{1},2)> length_name_nointeraction_table
     temp_matrix=stats_test.matrix{1};
     clear stats_test.matrix{1};
-
     matrix_logical_idx=size(temp_matrix)>length_name_nointeraction_table; % this is what is too big so you have to NOT it to get what you want.
-
     stats_test.matrix{1}=temp_matrix(~matrix_logical_idx);
-
 end
 
 cont_logical_idx=((name_table.continous==1)')&(name_table.cross_number<=0); %need the non interaction terms for continuous terms
@@ -73,54 +64,49 @@ cont_positional_idx=find(cont_logical_idx==1);
 random_logical_idx=~cellfun(@isempty,regexp(name_table.effect_type,'[Rr]andom'))&(name_table.cross_number<=0); %need the non interaction terms for random terms
 random_positional_idx=find(random_logical_idx==1);
 
-num_lines_to_add=size(stats_test.matrix{1},1) + 1;
+num_lines_to_add=size(stats_test.matrix{1},1) + 2;
+harmonic_puller=logical(ones(size(name_table,1),1));
+
 for d_idx=1:numel(data_idx)
     multi_compare_single_contrast(1)=multi_compare_template;
     multi_compare_single_contrast(1)=[];
-    length_output=(height(name_table)+1)*(d_idx-1);
+    length_output=(height(name_table)+2)*(d_idx-1);
     output_lines=length_output+(1:num_lines_to_add);
 
+    % Checking if there are holes in the data that is one or sets of
+    % specimen have NaN within it.
     if sum(~isnan(data_subtable.(data_name{d_idx})))>0
         %The everything interaction!
-        harmonic_puller=logical(ones(size(name_table,1),1));
+        %harmonic_puller=logical(ones(size(name_table,1),1));
         %interaction number is number of crosses for the entry in the table so a 4 way
         %interaction has 3 crosses therefore 3... just the main factor is called a 0
         %interaction in my table for this reason (no crosses) while in reality it is 1 as consider by matlab.
         %that means to get the N way correctly based on our entries we actually start out with N+1
-        try
-            % slow line (42.5s).
-            % data_vector = table2array(data_subtable(:,data_idx(d_idx)))
-            data_vector=[ data_substruct.(data_name{d_idx}) ];
-            [p, tbl,stats] = anovan(data_vector, ...
-                nway_analysis_set,...
-                'model', stats_test.matrix{1}, ...
-                'varnames', group_types,...
-                'continuous', cont_positional_idx,...
-                'random', random_positional_idx,...
-                'display','off'); 
 
-            assert(nnz(cell2mat(tbl(2:end,4))==1)==0,'There are Singular Terms! You cannot run the model as specified!');
+        data_vector=[ data_substruct.(data_name{d_idx}) ];
+        [p, tbl,stats] = anovan(data_vector, ...
+            nway_analysis_set,...
+            'model', stats_test.matrix{1}, ...
+            'varnames', group_types_no_interaction,...
+            'continuous', cont_positional_idx,...
+            'random', random_positional_idx,...
+            'display','off');
 
-             % WE do the default here which is a type 3 -- type 3 means
-             % calculate all SS in a iterative series 3 
-             %Type III sum of squares. The reduction in residual sum of squares 
-             % obtained by adding that term to a model containing all other terms,
-             % but with their effects constrained to obey the usual "sigma restrictions"
-             % that make models estimable.
+        positional_idx=find(cell2mat(tbl(2:end,4)))+1;
+        singular_terms=tbl(positional_idx,1);
 
-             %% Add total ss?
+        assert(nnz(cell2mat(tbl(2:end,4))==1)==0,sprintf('Model is not Full Rank for terms: %s. You cannot run the model as specified! Likely variability too low for one term you added or data groupings are too sparse to model properly! Use crosstab(grouping terms) to check sparsity, remove least dense source-dimension, and try again.',strjoin(singular_terms,', ')));
 
-        catch
-           % keyboard;
-            %I modified a lot within here (the if else checking on data lengths) to go and add NaN data into the
-            %table but that is causing an error outside of this function so
-            %that we can't do bilat/left/right data... I need to figure out
-            %what I should do more properly with the regions that disappear
-            %with erosion.
-        end
+            % WE do the default here which is a type 3 -- type 3 means
+            % calculate all SS in a iterative series 3
+            %Type III sum of squares. The reduction in residual sum of squares
+            % obtained by adding that term to a model containing all other terms,
+            % but with their effects constrained to obey the usual "sigma restrictions"
+            % that make models estimable.
+            % NEED TO ADD IN SS Total because not nessisarily SSE + SSModel
+            % = SST 
 
         if numel(nway_analysis_set{1})==numel(data_vector)
-            %length_output=(height(name_table)+1)*(d_idx-1);
 
             % slow line (2.3) OR slow lines, and maybe we should change how we
             % handle data interanlly(maybe a struct?, or a cell array we
@@ -129,114 +115,80 @@ for d_idx=1:numel(data_idx)
             %because they should all be the same region
             %num_lines_to_add=numel(p)+1;
 
-            %output.ROI(length_output+(1:num_lines_to_add))=repmat(data_subtable.ROI(1),num_lines_to_add,1);
             output.ROI(output_lines)=data_subtable.ROI(1);
-            %output.Structure(length_output+(1:num_lines_to_add))=repmat(data_subtable.Structure(1),num_lines_to_add,1);
-            % slow line ... ? (5s,5.3s)
             output.contrast(output_lines)=data_name(d_idx);
-            %Any partial model or no interaction model just add terms
-            %together
             output.study_model(output_lines)={strjoin(strrep(tbl(2:end-2,1),'*',':'),'+')};
             output.statistical_test(output_lines)={'N-Way ANOVA'};
-            output.source_of_variation(output_lines)=strrep(tbl(2:end-1,1),'*',':');
-            output.sum_of_squares(output_lines)=[tbl{2:end-1,2}];
-            output.df(output_lines)=[tbl{2:end-1,3}];
-            output.F_Statistic(output_lines)=[tbl{2:end-2,6},NaN]; %The Error term has not F_statistic
-
-            Number_of_Groupings=cellfun(@numel,name_table.N);
-            Number_of_Groupings(~harmonic_puller)=0;
-            output.Number_of_Groupings(output_lines)=[Number_of_Groupings;0];
-            %{
-        positional_harmonic_puller=find(harmonic_puller==1);
-        for n=1:numel(positional_harmonic_puller)
-            % while tehse two lines do take a bunch of time, in testing
-            % that is because they're called MANY times(24948)!
-            % Can we somehow call them less? Can we cache this information?
-            % slow line (4.4s)
-            idx=~cellfun(@isempty,regexpi(strrep(name_table.group_type,'*',':'),strcat('^(',strrep(tbl{1+n,1},'*',':'),')$')));
-            % slow line (6.7s)
-            output.Number_of_Groupings(length_output+n)=numel(name_table.N{idx});
-        end
-            %}
+            output.source_of_variation(output_lines)=strrep(tbl(2:end,1),'*',':');
+            output.sum_of_squares(output_lines)=[tbl{2:end,2}];
+            output.df(output_lines)=[tbl{2:end,3}];
+            output.F_Statistic(output_lines)=[tbl{2:end-2,6},NaN, NaN]; %The Error and Total term has not F_statistic
 
             output.pval(length_output+(1:numel(p)))=p;
 
-            %Make the harmonic mean the number you actually end up with
-            harmonic_mean=harmonic_mean(harmonic_puller);
-
             for n=1:numel(p)
                 output.eta2(length_output+n)=tbl{1+n,2}/tbl{end,2}; % use the SS ttotal here!
-
                 %       Eta2 = SSeffect / SStotal, where:
                 %SSeffect is the sums of squares for the effect you are studying.
                 %SStotal is the total sums of squares for all effects, errors and interactions in the ANOVA study.
                 % You might also see the formula written, equivalently, as: Eta2 = SSbetween / SStotal
                 %https://www.statisticshowto.com/eta-squared/
-% REmoving for now because not using. 
-%                 output.H2RI(length_output+n)=tbl{1+n,2}/(sum([tbl{2:end-2,2}])+(tbl{end-1,2}/harmonic_mean(n)));
-%                 %output.H2RI(length_output+n)=%Va / (Va+(Ve/n)) Ve is error
-%                 %term and Va is the effect but we want to sum up all effect but hte
-%                 %errors only are edited by the harmonic mean (the equation is the
-%                 %simple one from genenetwork for a 1 way anova--https://genenetwork.org/glossary/#h
+
+                %OURS IS A FULL HERE IT IS THE VARIATION UNIQUELY ACCOUNTED
+                %BY THE TERM!
+
+                % Partial eta squared (\(\eta _{p}^{2}\)) is an effect size measure in ANOVA ...
+                % that calculates the proportion of variance in a dependent variable uniquely ...
+                % explained by a specific independent variable, while partialing out (ignoring) ...
+                % the variance accounted for by other variables and
+                % interactions in the model ep^2 = SSEeffect/(SSeffect +
+                % SSerror)
             end
 
-            % fix for bug causing complex cohenF scores
-            % this makes them strings and crashes when calling max(...)
-            % rare edge case caused by the data
-            % so far, only happens for ION__ in CHDI 15-months
             inf_locations = find(output.F_Statistic==Inf);
+           
             if inf_locations
                 keyboard;
+                % MAybe we want to do these but I put this back within just
+                % in case for now.
+                output.df(inf_locations)=0;
+                output.F_Statistic(inf_locations)=NaN;
+                output.pval(inf_locations)=NaN;
+                output.eta2(inf_locations)=NaN;
             end
-            output.df(inf_locations)=0;
-            output.Number_of_Groupings(inf_locations)=0;
-            output.F_Statistic(inf_locations)=NaN;
-            output.pval(inf_locations)=NaN;
-            output.eta2(inf_locations)=NaN;
 
             output.cohenF(length_output+(1:numel(p)))=sqrt(output.eta2(length_output+(1:numel(p)))./(1-output.eta2(length_output+(1:numel(p)))));
 
+            %% Do Error and Total on the End
+
             %Error term entries tacked onto the end. makes it easier for us
             %to repair if there is a processing problem.
-            output.Number_of_Groupings(length_output+num_lines_to_add)=NaN;
-            output.pval(length_output+num_lines_to_add)=NaN;
-            output.eta2(length_output+num_lines_to_add)=NaN;
-%             output.H2RI(length_output+num_lines_to_add)=NaN;
-            output.cohenF(length_output+num_lines_to_add)=NaN;
+            output.pval(length_output+((numel(p)+1):num_lines_to_add))=NaN;
+            output.eta2(length_output+((numel(p)+1):num_lines_to_add))=NaN;
+            output.cohenF(length_output+((numel(p)+1):num_lines_to_add))=NaN;
 
         else
             %Bookkeeping if our N drops because a specimen doesn't have the
             %region keep for bookkepping but make all data NaN.
-            %length_output=(height(name_table)+1)*(d_idx-1);
-            num_lines_to_add = height(name_table.group_type)+1;
-
             output.ROI(output_lines)=data_subtable.ROI(1);
             output.contrast(output_lines)=data_name(d_idx);
 
             output.study_model(output_lines)={strjoin(strrep(name_table.group_type(1:end),'*',':'),'+')};
             output.statistical_test(output_lines)={'N-Way ANOVA'};
-            output.source_of_variation(output_lines)={name_table.group_type{1:end},'Error'};
+            output.source_of_variation(output_lines)={name_table.group_type{1:end},'Error','Total'};
             output.sum_of_squares(output_lines)=NaN;
             output.df(output_lines)=NaN;
             output.F_Statistic(output_lines)=NaN;
 
-            output.Number_of_Groupings(output_lines)=NaN;
             output.pval(output_lines)=NaN;
             output.eta2(output_lines)=NaN;
-%             output.H2RI(output_lines)=NaN;
             output.cohenF(output_lines)=NaN;
         end
 
 
         %% Checking For PostHoc
-
         %Pull only the data we are currently working in not the whole sheet!
-        try
-            check_raw_sig=output.pval(length_output+(1:num_lines_to_add-1))<stats_test.pval_threshold;
-        catch exception
-            keyboard;
-
-        end
+        check_raw_sig=output.pval(length_output+(1:num_lines_to_add-1))<stats_test.pval_threshold;
 
         if any(check_raw_sig) %if any entry is non-zero -- that is significantly changed at threshold level, then do the multi-compare checking
             % slow line (2.7s,3s)
@@ -314,35 +266,26 @@ for d_idx=1:numel(data_idx)
             end
         end
     else
-        %keyboard;
+        %In the case the contrast data doesn't exist in the subset, then we
+        %fill in this.
+
         output.ROI(output_lines)=data_subtable.ROI(1);
-        %output.Structure(length_output+(1:num_lines_to_add))=repmat(data_subtable.Structure(1),num_lines_to_add,1);
-        % slow line ... ? (5s,5.3s)
         output.contrast(output_lines)=data_name(d_idx);
-        %Any partial model or no interaction model just add terms
-        %together
         output.study_model(output_lines)={'unavailable. no data'};
         output.statistical_test(output_lines)={'N-Way ANOVA'};
+
         for i=1:height(name_table)
             output.source_of_variation{output_lines(i)}=name_table.group_type{i};
         end
         output.source_of_variation{output_lines(i+1)}='Error';
-        %output.source_of_variation(output_lines)={};
-        %output.source_of_variation(length_output+(1:num_lines_to_add))=strrep(tbl(2:end-1,1),'*',':');
-        % bad datra, so nan those cols
+        output.source_of_variation{output_lines(i+2)}='Total';
+
         keep_cols=column_find(output,'ROI|contrast|study_model|statistical_test|source_of_variation',1);
-        %output(output_lines,~keep_cols)=repmat(NaN,numel(output_lines),nnz(~keep_cols));
         output(output_lines,~keep_cols)=array2table(nan(numel(output_lines),nnz(~keep_cols)));
     end
-    % Check and allocate
-    if d_idx==1
-        % slow line (2.1s) hard to avoid without dramatic changes to
-        % calling function.
-        output.ROI((height(name_table)+1)*numel(data_name))=NaN;
-    end
 
-    %Now I need to put that information set onto the data in a way that is
-    %understanble...
+    %Now I need to put any multi comparison of the data in a way that I can
+    % use again.
     multi_compare_struct_arrays{d_idx}=multi_compare_single_contrast;
     clear sig_name_table_subset multi_compare_single_contrast
 end
@@ -352,21 +295,37 @@ try
 catch
     keyboard;
 end
-% Add bookkeeping information
+
+%% Get bookkeeping information
 if check_rob_sheet==1
     Bookkeeping_group_summary_list={'ROI','Structure','hemisphere_assignment','GN_Symbol','ARA_abbrev','id64_fSABI','id32_fSABI','Structure_id','GroupCount'};
 elseif check_rob_sheet==0
     Bookkeeping_group_summary_list={'ROI','Structure','hemisphere_assignment','acronym','name','id64','id32','Structure_id','GroupCount'};
 
 end
-
 data_grouping_regex=strcat('^(',strjoin(Bookkeeping_group_summary_list,'|'),')$');
-
 Information_idx=regexpi(data_subtable_columns,data_grouping_regex);
 Information_positional_idx=~cellfun(@isempty,Information_idx);
-% slow line (1.9s,2s)
 InformationSet=unique(data_subtable(:,Information_positional_idx),'rows');
 
-% slow line (6.8s,7.1s) dont think there is an easy way to avoid that.
+%% Add the Number of Groupings Per Source of variation Back in
+Number_of_Groupings=table;
+Number_of_Groupings.source_of_variation=name_table.group_type;
+Number_of_Groupings.Number_of_Groupings=cellfun(@numel,name_table.N);
+Number_of_Groupings.Number_of_Groupings(~harmonic_puller)=0;
+offset=height(Number_of_Groupings);
+Number_of_Groupings.source_of_variation(offset+1)={'Error'};
+Number_of_Groupings.Number_of_Groupings(offset+1)=NaN;
+Number_of_Groupings.source_of_variation(offset+2)={'Total'};
+Number_of_Groupings.Number_of_Groupings(offset+2)=NaN;
+
+exists = ismember('Number_of_Groupings', output.Properties.VariableNames);
+if ~exists
+    output=join(output,Number_of_Groupings,'Key','source_of_variation');
+else
+    keyboard;
+end
+
+%% ADD Booking Information to full output
 output_fullspecification=outerjoin(InformationSet,output,'MergeKeys',true);
 end

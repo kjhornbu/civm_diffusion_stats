@@ -1,30 +1,28 @@
-function [varargout] = zscoring_finder(data_table,zscore_grouping,varargin)
+function [varargout] = zscoring_finder(data_table,test_groups,varargin)
 %% Preliminary Setups
 specimen_zscore=table;
 count=1;
-      
-groups_to_remove=varargin;
 
 data_idx=column_find(data_table.Properties.VariableNames,'(_mean|volume_mm3|voxels|volume_fraction)$'); %actual idx not in logical array format
 data_name=data_table.Properties.VariableNames(:,data_idx);
 
 %% standarize the data using z-score to remove undesired effects if have covariates you want to remove
 if numel(varargin)>0
+    groups_to_remove=varargin;
     data_standardized=data_table;
     % force table into a knowable order.
     [ROI_value,~,ROI_idx]=unique(data_standardized.ROI);
     data_standardized=sortrows(data_standardized,'ROI');
 
     %Get mean and Standard deviation
-    [remove_group_mean,remove_group_std] = group_summary_statistics(data_table, data_name, groups_to_remove);
+    [remove_group_mean, remove_group_std] = pull_groupmean_groupstd(data_table,groups_to_remove);
 
-    standarization_grouping_idx=regexpi(remove_group_mean.Properties.VariableNames,strcat('^(',strjoin(groups_to_remove,'|'),')$'));
-    standarization_grouping_positional_idx=find(~cellfun(@isempty,standarization_grouping_idx)==1);
-    [remove_data_type,~,remove_data_type_idx]=unique(remove_group_mean(:,standarization_grouping_positional_idx),'stable');
+    logical_remove_mean=~cellfun(@isempty,regexpi(table2array(remove_group_mean(:,groups_to_remove)),{'-'}));
+    logical_remove_std=~cellfun(@isempty,regexpi(table2array(remove_group_std(:,groups_to_remove)),{'-'}));
 
-    zscore_remove_fulldata_idx=regexpi(data_table.Properties.VariableNames,strcat('^(',strjoin(groups_to_remove,'|'),')$'));
-    zscore_remove_fulldata_positional_idx=find(~cellfun(@isempty,zscore_remove_fulldata_idx)==1);
-    [full_data_remove_type,~,full_data_remove_type_idx]=unique(data_table(:,zscore_remove_fulldata_positional_idx),'stable');
+    [standarization_grouping_positional_idx,remove_data_type,remove_data_type_idx] = select_groupings_from_data (remove_group_mean,groups_to_remove);
+
+    [zscore_remove_fulldata_positional_idx,full_data_remove_type,full_data_remove_type_idx] = select_groupings_from_data (data_table,groups_to_remove);
 
     %% Making some assumptions about the ordering.
     for m=1:size(full_data_remove_type,1)
@@ -35,7 +33,6 @@ if numel(varargin)>0
 
         data_removemean_cells=regexpi(removemean_test.Properties.VariableNames,'(_mean|volume_mm3|voxels|volume_fraction)$'); % we actually don't want voxelss because it follows same math of all other
         data_removemean_idx=find(~cellfun(@isempty,data_removemean_cells)==1); %actual idx not in logical array format
-        data_removemean_name=removemean_test.Properties.VariableNames(~cellfun(@isempty,data_removemean_cells));
 
         [specimen_name_list,~,specimen_name_idx]=unique(full_remove_test.specimen,'stable');
 
@@ -71,38 +68,21 @@ if numel(varargin)>0
     end
     varargout{1}=data_standardized;
 else
-
 end
 
 %%  Getting Median Zscore for each specimen grouping type so that can get estimate of best specimen to pick
 if ~exist('data_standardized','var')
-    zscore_grouping_fulldata_idx=regexpi(data_table.Properties.VariableNames,strcat('^(',strjoin(zscore_grouping,'|'),')$'));
-    zscore_grouping_fulldata_positional_idx=find(~cellfun(@isempty,zscore_grouping_fulldata_idx)==1);
-    [full_data_type,~,full_data_type_idx]=unique(data_table(:,zscore_grouping_fulldata_positional_idx),'stable');
-
-    %% for each zscore type find the difference from each specimen to the "mean" response in standard deviation
-    %use this to rank order the output variables by the grouping types to
-    %select the specimen you want (say light sheet or some other "representative specimen" type application) for a given condition.
-
-    [group_mean,group_std] = group_summary_statistics(data_table,data_name,zscore_grouping);
+    [group_mean,group_std] = pull_groupmean_groupstd(data_table,test_groups);
 else
-    zscore_grouping_fulldata_idx=regexpi(data_standardized.Properties.VariableNames,strcat('^(',strjoin(zscore_grouping,'|'),')$'));
-    zscore_grouping_fulldata_positional_idx=find(~cellfun(@isempty,zscore_grouping_fulldata_idx)==1);
-    [full_data_type,~,full_data_type_idx]=unique(data_standardized(:,zscore_grouping_fulldata_positional_idx),'stable');
-
-    %% for each zscore type find the difference from each specimen to the "mean" response in standard deviation
-    %use this to rank order the output variables by the grouping types to
-    %select the specimen you want (say light sheet or some other "representative specimen" type application) for a given condition.
-
-    [group_mean,group_std] = group_summary_statistics(data_standardized,data_name,zscore_grouping);
+    [group_mean,group_std] = pull_groupmean_groupstd(data_standardized,test_groups);
 end
 
 %% Reorder columns because something schenanigans related resorted us unexpectedly
-group_mean=column_reorder(group_mean,zscore_grouping);
-group_std=column_reorder(group_std,zscore_grouping);
-full_data_type=column_reorder(full_data_type,zscore_grouping);
+group_mean=column_reorder(group_mean,test_groups);
+group_std=column_reorder(group_std,test_groups);
+full_data_type=column_reorder(full_data_type,test_groups);
 
-zscore_grouping_idx=regexpi(group_mean.Properties.VariableNames,strcat('^(',strjoin(zscore_grouping,'|'),')$'));
+zscore_grouping_idx=regexpi(group_mean.Properties.VariableNames,strcat('^(',strjoin(test_groups,'|'),')$'));
 zscore_grouping_positional_idx=find(~cellfun(@isempty,zscore_grouping_idx)==1);
 [group_type,~,group_type_idx]=unique(group_mean(:,zscore_grouping_positional_idx),'stable');
 
@@ -119,10 +99,10 @@ for m=1:size(full_data_type,1)
     end
 
     %get the match with the full options
-    for o=1:numel(zscore_grouping)
-        Match_condition(:,o)=~cellfun(@isempty,regexpi( group_type.(zscore_grouping{o}), strcat('^',full_data_type.(zscore_grouping{o})(m),'$') ) );
+    for o=1:numel(test_groups)
+        Match_condition(:,o)=~cellfun(@isempty,regexpi( group_type.(test_groups{o}), strcat('^',full_data_type.(test_groups{o})(m),'$') ) );
     end
-    logical_idx_group_type=sum(Match_condition,2)==numel(zscore_grouping);
+    logical_idx_group_type=sum(Match_condition,2)==numel(test_groups);
     positional_idx_group_type=find(logical_idx_group_type==1);
     if 1 <  numel(positional_idx_group_type)
         warning('Expected ONLY one index here!, blame james :p');
@@ -192,5 +172,25 @@ if ~exist('data_standardized','var')
 else
     varargout{2}=specimen_zscore;
 end
+
+end
+
+function [group_mean, group_std] = pull_groupmean_groupstd(data,zscore_grouping)
+
+data_idx=column_find(data.Properties.VariableNames,'(_mean|volume_mm3|voxels|volume_fraction)$'); %actual idx not in logical array format
+data_name=data.Properties.VariableNames(:,data_idx);
+
+%% for each zscore type find the difference from each specimen to the "mean" response in standard deviation
+%use this to rank order the output variables by the grouping types to
+%select the specimen you want (say light sheet or some other "representative specimen" type application) for a given condition.
+[group_mean,group_std] = group_summary_statistics(data,data_name,zscore_grouping);
+
+end
+
+function [zscore_positional_idx,unique_zscore_groups,unique_zscore_groups_positions] = select_groupings_from_data (data,zscore_grouping)
+
+zscore_idx=regexpi(data.Properties.VariableNames,strcat('^(',strjoin(zscore_grouping,'|'),')$'));
+zscore_positional_idx=find(~cellfun(@isempty,zscore_idx)==1);
+[unique_zscore_groups,~,unique_zscore_groups_positions]=unique(data(:,zscore_positional_idx),'stable');
 
 end
