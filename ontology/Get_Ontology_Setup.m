@@ -54,4 +54,4 @@ ontology_layout=sortrows(ontology_layout,'start_of_bar','descend');
 ontology_layout.L_Vertex=ontology_layout.ROI;
 ontology_layout.R_Vertex=ontology_layout.L_Vertex+180;
 
-civm_write_table(ontology_layout,'Ontology_Layout_DMBA_20260317_RobFixedOrder.txt')
+civm_write_table(ontology_layout,'Ontology_Layout_DMBA_20260317_RobFixedOrder.txt'); 

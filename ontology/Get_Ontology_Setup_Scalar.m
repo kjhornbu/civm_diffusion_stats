@@ -39,10 +39,18 @@ pos_idx=find(idx);
 ontology_layout.start_of_bar(ontology_layout.start_of_bar>0)=ontology_layout.start_of_bar(ontology_layout.start_of_bar>0)+numel(pos_idx);
 ontology_layout.start_of_bar(pos_idx)=pos_idx;
 
-for n=2:height(ontology_layout)
-    ontology_layout.ontology_order_GN_Symbol{n}=strrep(ontology_layout.ontology_order_GN_Symbol{n},' ','');
-    ontology_layout.ontology_order_GN_Symbol{n}=strrep(ontology_layout.ontology_order_GN_Symbol{n},'-B','');
-    ontology_layout.ontology_order_GN_Symbol{n}=strjoin(ontology_layout.ontology_order_GN_Symbol{n},'-');
+for n=1:height(ontology_layout)
+    temp=double(ontology_layout.ontology_order_GN_Symbol{n});
+    find_quote=temp==39;
+    temp(find_quote)=[];
+
+    find_semicolon=temp==59;
+    temp(find_semicolon)=32;
+
+    char_temp=char(temp);
+
+    ontology_layout.ontology_order_GN_Symbol{n}=strrep(char_temp,'-B','');
+    ontology_layout.ontology_order_GN_Symbol{n}=strrep(ontology_layout.ontology_order_GN_Symbol{n},' ','-');
 end
 
 ontology_layout=sortrows(ontology_layout,'start_of_bar','descend');
