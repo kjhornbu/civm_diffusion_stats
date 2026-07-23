@@ -1,6 +1,6 @@
-function [] = generate_summary_ppts(Path_table,project_id,user,pvalue_type,pval_threshold,study_model,test_cases)
+function [] = generate_summary_ppts(Path_table,project_id,user,pvalue_type,pval_threshold,study_model,cases)
 
-assert(isstruct(test_cases),'You need to update your helper code. I require test_cases as a struct now');
+assert(isstruct(cases),'You need to update your helper code. I require test_cases as a struct now');
 import mlreportgen.ppt.*;
 
 if strcmp(pvalue_type,'pval_BH')
@@ -106,7 +106,7 @@ for n=1:height(Path_table)
         Interesting_Data=check_interesting_data;
         Group_Table=civm_read_table(Path_table.GroupTable{n});
         try
-            [slidepointer] = scalar_summary_slide_setup(ppt,figure_dir,Interesting_Data,Group_Table,test_cases.control,test_cases.treatment);
+            [slidepointer] = scalar_summary_slide_setup(ppt,figure_dir,Interesting_Data,Group_Table,cases.control,cases.treatment);
         catch exception
             warning(exception.identifier,'error in summary setup slide creation: %s',exception.message);
         end

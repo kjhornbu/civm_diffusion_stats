@@ -99,12 +99,12 @@ for n=1:height(Path_table)
     end
 
     if isempty(Name_Check)
-        % remove Error term which is not useful for plotting
-        Non_ErrorTerms_idx=cellfun(@isempty,regexpi(Statistical_Results.source_of_variation,'Error'));
-        Statistical_Results=Statistical_Results(Non_ErrorTerms_idx,:);
+        % remove Error and Total term which is not useful for plotting
+        Non_ErrorTotalTerms_idx=cellfun(@isempty,regexpi(Statistical_Results.source_of_variation,'Error|Total'));
+        Statistical_Results=Statistical_Results(Non_ErrorTotalTerms_idx,:);
 
     else
-        % if we're revoing indicies we'll need to reload tables
+        % if we're removing indicies we'll need to reload tables
         last_table_loaded{1}={};
         last_table_loaded{2}={};
         last_table_loaded{3}={};
@@ -124,8 +124,8 @@ for n=1:height(Path_table)
         Statistical_Results(remove_idx_Statistical_Results,:)=[];
 
         %remove Error term which is not useful for plotting
-        Non_ErrorTerms_idx=cellfun(@isempty,regexpi(Statistical_Results.source_of_variation,'Error'));
-        Statistical_Results=Statistical_Results(Non_ErrorTerms_idx,:);
+        Non_ErrorTotalTerms_idx=cellfun(@isempty,regexpi(Statistical_Results.source_of_variation,'Error|Total'));
+        Statistical_Results=Statistical_Results(Non_ErrorTotalTerms_idx,:);
     end
     %
     %     % EXPERIMENTAL DO-NOT REPEAT code
