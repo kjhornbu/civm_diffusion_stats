@@ -1,5 +1,5 @@
 function [ config_file ] = civm_diffusion_stats(varargin)
-% no help for you 
+% no help for you HEYYYYY I TRY
 
 % Expected that google_doc is a file which civm_read_table will load
 % will save updated copy to cleaned_google_doc_path
@@ -49,6 +49,10 @@ addParameter(p, 'suffix',[], @(x) ischar(x) || isstring(x) || iscell(x));
 addParameter(p, 'allowMissing', false,  @(x) isscalar(x) && ismember(x, [false, true])); %If you are missing stuff you are caring about change option to true
 addParameter(p, 'assumeNLSAM', false,  @(x) isscalar(x) && ismember(x, [false, true])); %hey if you are missing all your data you need to look for NLSAM (change to true)
 addParameter(p, 'alternative_statsheet_dir',[], @(x) ischar(x) || isstring(x) || iscell(x)); % if you have stats that are in a flat file (like out of a samba run here is how to grab them all together and use them)-- Either put the same path in teh project research path or leave empty
+
+addParameter(p,'Scalar_Sheet_Path_csv',[], @(x) ischar(x) || isstring(x) || iscell(x));
+addParameter(p,'Connectome_Sheet_Path_csv',[], @(x) ischar(x) || isstring(x) || iscell(x));
+
 
 if isempty(getenv('USER')), user_name=getenv('USERNAME'); end
 addParameter(p, 'user', user_name, @(x) ischar(x) || isstring(x) || iscell(x)); 
@@ -304,6 +308,7 @@ if isempty(config_file)
     [~,n,~]=fileparts(dataframe_path);
     config_file=fullfile(save_dir,sprintf('%s_setup.mat',n));
 end
+
 clear n;
 % check thing exists -- intialize to do it.
 opts.keep_last_setup=0;
@@ -455,8 +460,17 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
     [values,~,idx]=unique(output_paths_table.stratification);
 
     if (numel(values) == 1 && ~cellfun(@isempty,regexpi(values,'^(-)$'))) || (numel(values)>1 && height(output_paths_table)==numel(values))
+
+        %% Create Summary Powerpoint for scalars
         for n=1:numel(values)
             output_paths_table_single=output_paths_table(n,:);
+            for pt=opts.pvalType
+                pvalue_type=pt{1};
+                generate_summary_ppts( output_paths_table_single, studyID, user,pvalue_type, opts.pvalThreshold, studymodel, Summary_Criteria);
+            end
+        end
+
+        parfor n=1:numel(values)
             group_stats_file=output_paths_table.StatsResults{n};
             processed_stats_dir=fileparts(group_stats_file);
             scalar_complex_vis_dir=fullfile(processed_stats_dir,'complex_figures');
@@ -469,7 +483,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
             column_setup = {
                 'singleside_cohen','cohenF'
                 'pvalue_extended', 'pval'
-                'pvalue_extended', 'pval_BH'%This was pvalue regular before but as rob loves getting all the exact pvalues, I did more
+                'pvalue_extended', 'pval_BH'
                 };
 
             % indicies of the summary criteria, we dont use summary criterais because
@@ -482,13 +496,14 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
             case_names=pairwise_criteria.control.case(summary_idx);
             name_code=cell(size(case_names));
             sum_compare=compare_criteria{1}(:,summary_idx);
-            for col_type_idx=1:numel(col_types)
-                for n=1:size(sum_compare,2)
-                    test_name_ctrl=strsplit(sum_compare{1,n},{':',','});
-                    test_name_treat=strsplit(sum_compare{2,n},{':',','});
 
-                    name_code{n}=strcat(strjoin(test_name_ctrl(2:2:end),'_'),'_',strjoin(test_name_treat(2:2:end),'_'));
-                    name_code{n}=strrep(name_code{n},'.','p');
+            for col_type_idx=1:numel(col_types)
+                for m=1:size(sum_compare,2)
+                    test_name_ctrl=strsplit(sum_compare{1,m},{':',','});
+                    test_name_treat=strsplit(sum_compare{2,m},{':',','});
+
+                    name_code{m}=strcat(strjoin(test_name_ctrl(2:2:end),'_'),'_',strjoin(test_name_treat(2:2:end),'_'));
+                    name_code{m}=strrep(name_code{m},'.','p');
 
                     % expect 1 column here?
                     %name_code_idx=column_find(col_names,sprintf('.*(%s)$',name_code{n}),1);
@@ -499,27 +514,27 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
                     % WARNING: ONLY the neutral works right now, make james fix the color
                     % table junk (or replace the whole thing with something smart(er/ish)).
 
-                    column_setup(end+1,:)={sprintf('%s_WN',col_types{col_type_idx}), sprintf('%s_%s',col_types{col_type_idx},name_code{n})};
+                    column_setup(end+1,:)={sprintf('%s_WN',col_types{col_type_idx}), sprintf('%s_%s',col_types{col_type_idx},name_code{m})};
                 end
             end
 
             % internally, composite ontology and slice generator follows the structure
             % of our figures (as it was programmed at the time). If we change that
             % orgzanization wed have to update the composite code.
-            try
-                ontology_and_slice_generator(group_stats_file, column_setup, scalar_complex_vis_dir, previously_loaded_labelfile);
-            catch merr
-                warning(merr.message);
-                fprintf('ontology and slice gen failed, see above\n');
-                pause(3);
-            end
+            
+            %this generates our master queue for the dataset. 
+           [main_plot_queue{n},main_composite_queue{n},~]=ontology_and_slice_generator(group_stats_file, column_setup, scalar_complex_vis_dir, previously_loaded_labelfile);
 
-            %% Create Summary Powerpoint for scalars
-            for pt=opts.pvalType
-                pvalue_type=pt{1};
-                generate_summary_ppts( output_paths_table_single, studyID, user,pvalue_type, opts.pvalThreshold, studymodel, Summary_Criteria);
-            end
+
+
         end
+
+
+        % Do Actual Running of queues
+        plot_queue=vertcat(main_plot_queue{:});
+        composite_queue=vertcat(main_composite_queue{:});
+        [function_success] = tracking_running_queues(plot_queue,composite_queue);
+
     end
 end
 %% Omni Manova Analysis

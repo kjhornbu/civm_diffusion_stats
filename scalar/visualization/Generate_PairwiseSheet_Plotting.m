@@ -28,6 +28,22 @@ for n=1:height(Path_table)
         hemisphere=Path_table.hemisphere(n);
     end
 
+    %Added in stratifications here to pull from the data. 
+
+    %What do in the case that there is no stratificaiton???
+    try
+        temp_strat=uncell(Path_table.stratification(n));
+    catch
+        temp_strat=Path_table.stratification(n);
+    end
+    do_stratification=0;
+    if ~reg_match(temp_strat,'-') %First check for a - whiche means don't straify
+        temp=strsplit(temp_strat,'=');
+        stratification_column=temp{1};
+        stratification=temp{2};
+        do_stratification=1;
+    end
+
     processed_stats_dir=fileparts(Path_table.StatsResults{n});
     figure_dir=fullfile(processed_stats_dir,fig_dir_name);
     out_file=fullfile(processed_stats_dir,strcat('Group_Statistical_Results_',strjoin(Key_Grouping_Columns{1},'_'),'.csv'));
@@ -38,7 +54,7 @@ for n=1:height(Path_table)
         continue;
     end
 
-    % load
+    % load Subject_Table
     if isempty(last_table_loaded{1}) || ~strcmp(last_table_loaded{1},Path_table.SubjectTable{n})
         %Only load the data if we have a change in the subject data table path
         %idx
@@ -50,7 +66,17 @@ for n=1:height(Path_table)
     Full_SubjectTable=column2text(Full_SubjectTable,Key_Grouping_Columns);
 
     %Filter to just the single hemisphere we are on
-    Subject_Table=Full_SubjectTable(Full_SubjectTable.hemisphere_assignment==hemisphere,:);
+    UnStratified_Subject_Table=Full_SubjectTable(Full_SubjectTable.hemisphere_assignment==hemisphere,:);
+
+    %Filter with stratification
+    if do_stratification==1
+        % since reg_match expects a string array as first input, I think it
+        % is safe to cast it to string. this is crashing because of
+        % integers in my dataframe
+        Subject_Table=UnStratified_Subject_Table(reg_match(string(UnStratified_Subject_Table.(stratification_column)),stratification),:);
+    else
+        Subject_Table=UnStratified_Subject_Table;
+    end
 
     % Filter out the missing ROIs
     [GN_names,~,GN_name_idx]=unique(Subject_Table.GN_Symbol);
@@ -73,12 +99,12 @@ for n=1:height(Path_table)
     end
 
     if isempty(Name_Check)
-        % remove Error term which is not useful for plotting
-        Non_ErrorTerms_idx=cellfun(@isempty,regexpi(Statistical_Results.source_of_variation,'Error'));
-        Statistical_Results=Statistical_Results(Non_ErrorTerms_idx,:);
+        % remove Error and Total term which is not useful for plotting
+        Non_ErrorTotalTerms_idx=cellfun(@isempty,regexpi(Statistical_Results.source_of_variation,'Error|Total'));
+        Statistical_Results=Statistical_Results(Non_ErrorTotalTerms_idx,:);
 
     else
-        % if we're revoing indicies we'll need to reload tables
+        % if we're removing indicies we'll need to reload tables
         last_table_loaded{1}={};
         last_table_loaded{2}={};
         last_table_loaded{3}={};
@@ -98,8 +124,8 @@ for n=1:height(Path_table)
         Statistical_Results(remove_idx_Statistical_Results,:)=[];
 
         %remove Error term which is not useful for plotting
-        Non_ErrorTerms_idx=cellfun(@isempty,regexpi(Statistical_Results.source_of_variation,'Error'));
-        Statistical_Results=Statistical_Results(Non_ErrorTerms_idx,:);
+        Non_ErrorTotalTerms_idx=cellfun(@isempty,regexpi(Statistical_Results.source_of_variation,'Error|Total'));
+        Statistical_Results=Statistical_Results(Non_ErrorTotalTerms_idx,:);
     end
     %
     %     % EXPERIMENTAL DO-NOT REPEAT code

@@ -1,8 +1,8 @@
 function ontology_plotting(layout_table,parent_regex,color_LUT,filename)
 
 font='FixedWidth';
-
 if strcmp(hostname,'blackbox')
+    %this is James Computer -- Its special because Linux.
    font='Liberation Mono'; 
 else
    warning('ontology_plotting font is supposed to be fixed width. You should check the ontology fonts in the SVG at least the first time and update this code accordingly.');

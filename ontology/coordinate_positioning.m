@@ -1,5 +1,6 @@
 function [ontology_layout] = coordinate_positioning(ontology_layout)
-%The full coordinate positioning in the ontology being determined
+%The full coordinate positioning in the ontology being determined based on
+%the sorting provided. 
 
 [number_of_parent_value,~,number_of_parent_idx]=unique(ontology_layout.ontology_level);
 Values_At_Level=number_of_parent_idx==1:numel(number_of_parent_value)';
@@ -19,7 +20,6 @@ for level=1:size(Values_At_Level,2)
         %data starting at 0
         unique_parent_ROI_at_level=0;
         unique_parent_ROI_at_level_idx=1;
-
     end
 
     for unique_parent_number=1:numel(unique_parent_ROI_at_level)

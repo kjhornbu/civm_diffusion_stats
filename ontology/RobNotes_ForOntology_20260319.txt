@@ -1,0 +1,27 @@
+Do a separation by strains
+Different initialization sets 
+-re track data. 
+When using genetic algorithm you do an iterative procedure doing omni-manova iteratively 
+F score for the strain effect 
+Rethink through what varun has done and create a possible solution. Doing this on the whole connectome is one ans
+
+What are we hoping to get out of this? 
+Get out of this.. all the nuances that should be used for the connectomics. 
+Combined principled approach to 
+Misdesign by tuning for incrorrect thing (nTg versus Tg) 
+
+Knowledge bases. 
+
+“Principled evaluation” use basian priors of known neuroanatomical features to do an algorithmic approach to separate the strains.
+
+Publish the 4D data sets without the connectomes. To get a starting truth point to look at the connectivity with looking at AI? 
+How to embrace what we got from claude? 
+Of all the regions that we validated are there some that make sense. 
+
+Go from what you got to what Kathryn/James will analyze.
+Switching some of the regions indicated for the 
+
+Don’t do more figures aasociated with the data. 
+
+Just do cca, fim, VCP, and MOP. 
+

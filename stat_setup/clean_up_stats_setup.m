@@ -199,5 +199,4 @@ for o=1:numel(source)
     Summary_Criteria.(source{o})=removevars(Summary_Criteria.(source{o}),'applytosummary');
     Summary_Criteria.(source{o})=column_reorder(Summary_Criteria.(source{o}),{'case','source_of_variation'});
 end
-
 end

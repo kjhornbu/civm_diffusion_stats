@@ -6,7 +6,7 @@ if data_scaling
 end
 
 %ontology_Order=civm_read_table("Ontology_Order_EdgeStrengthPlots.csv");
-ontology_Order=civm_read_table("Ontology_Layout_DMBA_20260317_RobFixedOrder.txt");
+ontology_Order=civm_read_table("Ontology_Layout_DMBA_20260317_RobFixedOrder.txt"); %This is the ontology ordering of leaf structures aka connnectomics. generated using Get_Ontology_Setup.m within the ontology folder of civm_diffusion_stats
 [ontology_Order,total_Ordering] = find_proper_ontology_order(ontology_Order,size(graphs,2)/2);
 
 for n=1:numel(comparison)
@@ -82,6 +82,24 @@ compare_group_B_pull=unique(output_difference.compare_group_B,'stable');
 data_sheet="B:\18.gaj.42\Claude_Parsed_Data\DMBA_ComputerParsable_TractDocument.csv";
 %data_sheet="Z:\All_Staff\18.gaj.42\FullAnalysis_20260224\Claude_Regional_Connection_List.txt";
 connection_LUT=civm_read_table(data_sheet);
+
+% Remove the regions that Len indicated aren't really real 2026-07-16
+sets_2_remove={{'SUB','cca'},{'CA1','cca'},...
+    {'cca','SUB'},{'cca','CA1'}};
+
+for set=1:numel(sets_2_remove)
+ A=reg_match(connection_LUT.REGION,sets_2_remove{set}{1});
+ B=reg_match(connection_LUT.NODE,sets_2_remove{set}{2});
+
+ pos_idx=find(A & B);
+
+ if isempty(pos_idx)
+     continue;
+ else
+     connection_LUT(pos_idx,:)=[];
+ end
+
+end
 
 figure_output=table;
 keep_missed_notes_claude_sheet=table;

@@ -2,10 +2,12 @@ function [] = generate_figures(save_location,Subject_Table,Group_Table,Statistic
 Save_Interesting_Data= table;
 
 interesting_path=fullfile(save_location,'Summary',strcat('Significant_Statistical_Results.csv'));
+
 if exist(interesting_path,'file')
     warning('Work appears complete, remove %s to re-run',interesting_path);
     return;
 end
+
 file_extension={'png','svg'};
 
 direction='descend';

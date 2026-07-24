@@ -1,5 +1,5 @@
 function [output_table,multicompare_table,group_output_summary] = calc_stats(data_table,test_grouping,stats_test)
-%% This is the main Calculation Script to use for calculation of statistics 
+%% This is the main Calculation Script to use for calculation of statistics
 
 
 check_rob_sheet=sum(~cellfun(@isempty,regexpi(data_table.Properties.VariableNames,'GN_Symbol')));
@@ -11,7 +11,7 @@ elseif check_rob_sheet==0
 
 end
 
-data_grouping_regex=strcat('^(',strjoin(Bookkeeping_group_summary_list,'|'),'|',strjoin(cellsimplify(test_grouping),'|'),')$'); 
+data_grouping_regex=strcat('^(',strjoin(Bookkeeping_group_summary_list,'|'),'|',strjoin(cellsimplify(test_grouping),'|'),')$');
 
 %preliminary table setup
 output_table=table;
@@ -22,7 +22,7 @@ if ~isfield(stats_test,'pval_threshold')
     stats_test.pval_threshold=0.05;
 end
 
-%we do the statistical test one roi at a time so get list to work over 
+%we do the statistical test one roi at a time so get list to work over
 [ROI_list,~]=unique(data_table.ROI);
 
 %% Getting group summary statistics
@@ -39,7 +39,7 @@ group_data_grouping_idx=regexpi(group_mean.Properties.VariableNames,data_groupin
 group_data_grouping_logical_idx=cellfun(@isempty,group_data_grouping_idx);
 group_data_grouping_names=group_mean.Properties.VariableNames(group_data_grouping_logical_idx);
 
-%put type of group data to each table which makes better for saving output result table  
+%put type of group data to each table which makes better for saving output result table
 temp_data_name=strcat(group_data_grouping_names,'_group_mean');
 group_mean.Properties.VariableNames(group_data_grouping_logical_idx)=temp_data_name;
 
@@ -88,7 +88,7 @@ for n_n=1:numel(ROI_list)
         case 'anovan_stepdown_integer_interaction'
             %Parametric N-Way Anova Steps down by level more correctly instead of all combinations to just
             %pairwise
-            error('You should use the defined matrix form of anovan instead of expecting a program to figure out valid interactions for you'); 
+            error('You should use the defined matrix form of anovan instead of expecting a program to figure out valid interactions for you');
             %[output,multicompare] = anovan_stepdown_integer_interaction_withposthoc_module(roi_subtable,test_grouping,stats_test);
         case 'anovan_defined_matrix'
             %Specific equation based form of entry of terms into the
@@ -97,8 +97,8 @@ for n_n=1:numel(ROI_list)
         case 'friedman'
             % A non-parametric N Ways Anova: NOTE cannot use groups of
             % different N in this
-             %NOT CURRENTLY ACTIVE -- Need to fix effect sizes and Coeff of
-             %variation
+            %NOT CURRENTLY ACTIVE -- Need to fix effect sizes and Coeff of
+            %variation
             %[output,multicompare] = friedman_withposthoc_module(roi_subtable,test_grouping,stats_test);
             error('friedman is not active yet');
         case 'anova_1way'
@@ -117,10 +117,10 @@ for n_n=1:numel(ROI_list)
             [output,multicompare] = kruskal_wallis_anova_withposthoc_modulev2(roi_subtable,stats_test,name_table,nway_analysis_set,length_name_nointeraction_table);
         case 'ttest'
             % The standard 2 sample t test
-             %NOT CURRENTLY ACTIVE -- Need to fix effect sizes and Coeff of
-             %variation
-             %THERE IS NO POSTHOC HERE BECAUSE YOU CAN ONLY USE t tests
-             %with 2 groupings
+            %NOT CURRENTLY ACTIVE -- Need to fix effect sizes and Coeff of
+            %variation
+            %THERE IS NO POSTHOC HERE BECAUSE YOU CAN ONLY USE t tests
+            %with 2 groupings
             %[output] = ttest_module(roi_subtable,test_grouping);
             error('t-test is not active yet');
         case 'mannwhitney'
@@ -128,35 +128,35 @@ for n_n=1:numel(ROI_list)
             % combination of Mann, Whitney, Wilcoxon and U Test  in
             % literature : https://en.wikipedia.org/wiki/Mann%E2%80%93Whitney_U_test
 
-             %currently using default option of two tailed
-             %NOT CURRENTLY ACTIVE -- Need to fix effect sizes and Coeff of
-             %variation
-             %THERE IS NO POSTHOC HERE BECAUSE YOU CAN ONLY USE t tests
-             %with 2 groupings
+            %currently using default option of two tailed
+            %NOT CURRENTLY ACTIVE -- Need to fix effect sizes and Coeff of
+            %variation
+            %THERE IS NO POSTHOC HERE BECAUSE YOU CAN ONLY USE t tests
+            %with 2 groupings
             %[output] =
             %mannwhitney_module(roi_subtable,test_grouping);
             error('mann whitney is not active yet');
         case 'manova_nway_fullinteraction'
             % A Parametric N-Way MANOVA -- Using Matlabs updated Manova
-            % Object... Will only work in matlab >2023 
+            % Object... Will only work in matlab >2023
 
-            %note this posthoc is only with the non-interaction terms! 
+            %note this posthoc is only with the non-interaction terms!
 
             [output,multicompare] = manova_nway_fullinteraction_withsimpleposthoc_module(roi_subtable,test_grouping,stats_test);
         case 'manova_nway_stepdown_interaction'
             %Need to code in the stepdown in a way that makes sense
-            %currently just the full interaction mode  Will only work in matlab >2023 
+            %currently just the full interaction mode  Will only work in matlab >2023
             %[output,multicompare] = manova_nway_stepdown_withsimpleposthoc_module(roi_subtable,test_grouping,stats_test);
             error('You should use the defined matrix form of manovan instead of expecting a program to figure out valid interactions for you');
 
         case 'manova_nway_no_interaction'
             %Need to code in the stepdown in a way that makes sense
-            %currently just the full interaction mode  Will only work in matlab >2023 
+            %currently just the full interaction mode  Will only work in matlab >2023
             [output,multicompare] = manova_nway_no_interaction_withsimpleposthoc_module(roi_subtable,test_grouping,stats_test);
 
-        case 'manova_nway_defined_matrix' 
+        case 'manova_nway_defined_matrix'
             error('manova_nway_defined_matrix is not active yet');
-            
+
     end
 
     logical_idx=cellfun(@ischar,output.contrast);
@@ -170,13 +170,13 @@ for n_n=1:numel(ROI_list)
     %have
 
     if width(output_table) ~= width(output)
-        if width(output_table) < width(output) 
+        if width(output_table) < width(output)
             %Width of output table is less than output
-            
+
             % main table is not yet initialized (it is empty)
             columns_to_add=setdiff(output.Properties.VariableNames,output_table.Properties.VariableNames);
             if numel(columns_to_add) == width(output)
-                % then output_table is totally empty (just add all the entries in the output) 
+                % then output_table is totally empty (just add all the entries in the output)
                 % ---  make it exactly the same which will give us our column names as well
                 output_table=output;
             else
@@ -188,11 +188,11 @@ for n_n=1:numel(ROI_list)
             end
         else
             % if width of output table is more than the output from stats
-            % we need to 
+            % we need to
             columns_to_add=setdiff(output_table.Properties.VariableNames,output.Properties.VariableNames);
             % add columns to output table
             for col=columns_to_add
-                %By putting these in here we aren't clearing out what we are missing 
+                %By putting these in here we aren't clearing out what we are missing
                 output.(col{1}) = nan(height(output),1);
             end
             % current roi table is incomplete. initialize with nans
@@ -200,35 +200,35 @@ for n_n=1:numel(ROI_list)
         end
     end
 
-    
-    try 
-    %only put data in the output table that we have data for... 
-    % correct assumption that data is always in the correct spot because it
-    % is consistent across all? 
 
-    output_table(length_output+(1:size(output,1)),1:size(output,2))=output;
+    try
+        %only put data in the output table that we have data for...
+        % correct assumption that data is always in the correct spot because it
+        % is consistent across all?
+
+        output_table(length_output+(1:size(output,1)),1:size(output,2))=output;
     catch exception
         keyboard;
     end
-    
-%    if length_output==0
-%        output_table.Properties.VariableNames=output.Properties.VariableNames;
-%    end
 
-%The pairwise multicomparision is breaking with 5xFAD because too many parameters getting forced in -- removed for the time being
-%2025-08-25
+    %    if length_output==0
+    %        output_table.Properties.VariableNames=output.Properties.VariableNames;
+    %    end
 
-try
-    if height(multicompare)>0
-        %exist('multicompare','var')
-        multicompare_table(length_multicompare+(1:size(multicompare,1)),1:size(multicompare,2))=multicompare;
-        if length_multicompare==0
-            multicompare_table.Properties.VariableNames=multicompare.Properties.VariableNames;
+    %The pairwise multicomparision is breaking with 5xFAD because too many parameters getting forced in -- removed for the time being
+    %2025-08-25
+
+    try
+        if height(multicompare)>0
+            %exist('multicompare','var')
+            multicompare_table(length_multicompare+(1:size(multicompare,1)),1:size(multicompare,2))=multicompare;
+            if length_multicompare==0
+                multicompare_table.Properties.VariableNames=multicompare.Properties.VariableNames;
+            end
         end
+    catch
+        warning('Multi Compare Fail probably due to sources of variation dropping out and the inital stat test triggering the anova not being fully correct (adds extra space into the table which we cannot deal with?)')
     end
-catch
-    warning('Multi Compare Fail probably due to sources of variation dropping out and the inital stat test triggering the anova not being fully correct (adds extra space into the table which we cannot deal with?)')
-end
 end
 
 end

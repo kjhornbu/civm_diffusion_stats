@@ -6,7 +6,6 @@ function stat_table=lookup_colors_apply_values(ColorArray,color_range,color_name
 % values are 1..N colors. Optionally specify the ouptut location.
 
 
-
 color_bounds = [color_range(1:end-1); color_range(2:end)];
 
 % add bin start/stop so we could save a meaningful text table version.

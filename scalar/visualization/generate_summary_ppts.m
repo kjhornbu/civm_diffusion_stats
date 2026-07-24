@@ -1,6 +1,6 @@
-function [] = generate_summary_ppts(Path_table,project_id,user,pvalue_type,pval_threshold,study_model,test_cases)
+function [] = generate_summary_ppts(Path_table,project_id,user,pvalue_type,pval_threshold,study_model,cases)
 
-assert(isstruct(test_cases),'You need to update your helper code. I require test_cases as a struct now');
+assert(isstruct(cases),'You need to update your helper code. I require test_cases as a struct now');
 import mlreportgen.ppt.*;
 
 if strcmp(pvalue_type,'pval_BH')
@@ -16,7 +16,6 @@ if ~istable(Path_table)
 end
 
 %% %each hemisphere, each erode condition make a ppt
-% last_table_loaded=cell(1,3);
 for n=1:height(Path_table)
     % Figure out which stratifications are in play here and convert to
     % words (each hemisphere, each erode condition)
@@ -39,11 +38,9 @@ for n=1:height(Path_table)
     else
         keyboard;
     end
-    
+
     processed_stats_dir=fileparts(Path_table.StatsResults{n});
     figure_dir=fullfile(processed_stats_dir,fig_dir_name);
-    %out_file=fullfile(processed_stats_dir,strcat('Group_Statistical_Results_',strjoin(Key_Grouping_Columns{1},'_'),'.csv'));
-
     summary_dir=fullfile(figure_dir,'Summary');
     interesting_data_path=fullfile(summary_dir,'Significant_Statistical_Results.csv');
 
@@ -57,14 +54,14 @@ for n=1:height(Path_table)
     f_info=dir(interesting_data_path);
     if ~isempty(f_info)
         summary_date=datetime(f_info.date);
-    else 
+    else
         summary_date=now;
     end
     ppt_name_components={project_id,voxel_wise,hemisphere_set,'Summary',datestr(summary_date,'yyyy-mm-dd')};
     scalar_analysis_ppt_summary_file=fullfile(summary_dir,[strjoin(ppt_name_components,'_'), '.pptx']);
 
     if file_time_check(scalar_analysis_ppt_summary_file,'newer',interesting_data_path)
-    %if exist(scalar_analysis_ppt_summary_file,'file')
+        %if exist(scalar_analysis_ppt_summary_file,'file')
         warning('Previously complete, not updating %s',scalar_analysis_ppt_summary_file);
         continue;
     end
@@ -77,6 +74,7 @@ for n=1:height(Path_table)
         warning('Missing template %s, using default',template_file);
         ppt = Presentation(scalar_analysis_ppt_summary_file);
     end
+
     open(ppt);
 
     %% Add Title Slide
@@ -84,7 +82,7 @@ for n=1:height(Path_table)
 
     %% Bar Chart Slide
     graph_figure=fullfile(summary_dir,'png',strcat('Scalar_Summary_Sig_',pvalue_type,'.png'));
-    
+
     if strcmp(pvalue_type,'pval_BH')
         name=['Significant at ',num2str(pval_threshold),' via BH Corrected Pvalue'];
     elseif strcmp(pvalue_type,'pval')
@@ -99,53 +97,23 @@ for n=1:height(Path_table)
 
     [slidepointer] = summary_slide_setup(ppt,name,compare_image);
 
-%     %% CohenF Plot Slides
-% 
-%     % Volume slides
-%     name = "source of variation Volume Metrics Cohen F Plots";
-%     compare_image={fullfile(summary_dir,'png',strcat('Scalar_Summary_Sig_',pvalue_type,'.png'))};
-%     [slidepointer] = summary_slide_setup(ppt,name,compare_image);
-% 
-%     
-%     %Diffusion Slides
-%     name = "source of variation Diffusion Metrics Cohen F Plots";
-%     compare_image={fullfile(summary_dir,'png',strcat('Scalar_Summary_Sig_',pvalue_type,'.png'))};
-%     [slidedata] = summary_slide_4item_setup(ppt,name,compare_image);
-
     %% Summary Slides for Each "Interesting" Contrast Per SOV
-    check_interesting_data=readtable(interesting_data_path,'Delimiter','\t');
-   
-    %because the way that the data is saved it opens poorly in civm read
-    %table we are using this to check if the file is empty before doing
-    %real work
+    check_interesting_data=civm_read_table(interesting_data_path);
+    %now civm_read_table should work with blank tables.
 
-    try
-        %If blank totally typically this shows up
-        comment_index=~cellfun(@isempty,regexpi(check_interesting_data.x_ROI,'^#'));
-    catch
-        %otherwise it could be a nan
-        comment_index=isnan(check_interesting_data.x_ROI);
-    end
-
-    try
     %If we don't have anything interesting it skips this.
-    if (height(check_interesting_data)-sum(comment_index))>0  
-        Interesting_Data=civm_read_table(interesting_data_path);
+    if height(check_interesting_data)>0
+        Interesting_Data=check_interesting_data;
         Group_Table=civm_read_table(Path_table.GroupTable{n});
-
         try
-            [slidepointer] = scalar_summary_slide_setup(ppt,figure_dir,Interesting_Data,Group_Table,test_cases.control,test_cases.treatment);
+            [slidepointer] = scalar_summary_slide_setup(ppt,figure_dir,Interesting_Data,Group_Table,cases.control,cases.treatment);
         catch exception
             warning(exception.identifier,'error in summary setup slide creation: %s',exception.message);
-            keyboard;
         end
-     else
+    else
         %Make "Blank Filler Slide"
         slidepointer = add(ppt,'Title Slide');
         replace(slidepointer,'Title','No Significant Results');
-    end
-    catch exception
-        keyboard;
     end
     close(ppt);
 end

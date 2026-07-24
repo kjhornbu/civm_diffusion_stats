@@ -280,6 +280,7 @@ for o=1:numel(voxel_wise)
             bilat_specimen_zscore=table;
             left_specimen_zscore=table;
             right_specimen_zscore=table;
+            
             try
                 if isempty(remove_zscore_grouping{i_testcondition}) && opts.findmedianspecimen==1
                     [bilat_specimen_zscore] = zscoring_finder(bilat_table,model_GROUPING);
@@ -405,7 +406,7 @@ for o=1:numel(voxel_wise)
 
             end
         catch merr
-            db_inplace(mfilename,'Error in calc stats');
+            db_inplace(mfilename,sprintf('Error in calc stats-> %s',merr.message));
         end
 
         bilat_strat_full='hemisphere=bilateral';

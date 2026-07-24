@@ -166,7 +166,7 @@ end
 
 check_size=f.InnerPosition;
 set(gca,'FontSize',fontsize,'FontName','Arial','TickDir','out');
-print(f, fullfile(directory,'edge_strength_plot',strcat('ROI_',num2str(vertex(1,1)),'_',Structure,'_Means.eps')),'-depsc','-vector');
+exportgraphics(f, fullfile(directory,'edge_strength_plot',strcat('ROI_',num2str(vertex(1,1)),'_',Structure,'_Means.pdf')),'ContentType','vector');
 close all;
 
 %% Make output plots -- Average Mean Plots (Blue) -- ANNOTATIONS Labels (THE KEY VERTICES!!!).
@@ -216,7 +216,7 @@ xticklabels("");
 yticks(0);
 yticklabels("");
 
-print(f2, fullfile(directory,'annotations',strcat('ANNOTATIONS_ROI_',num2str(vertex(1,1)),'_',Structure,'_Means.eps')),'-depsc','-vector');
+exportgraphics(f2, fullfile(directory,'annotations',strcat('ANNOTATIONS_ROI_',num2str(vertex(1,1)),'_',Structure,'_Means.pdf')),'ContentType','vector');
 
 close all;
 
@@ -266,7 +266,7 @@ if make_Left_Axis
         yticks(0);
         yticklabels("");
 
-        print(f3a, fullfile(directory,'annotations',strcat('ontology_Level',num2str(levels),'.eps')),'-depsc','-vector');
+        exportgraphics(f3a, fullfile(directory,'annotations',strcat('ontology_Level',num2str(levels),'.pdf')),'ContentType','vector');
 
     end
     close all;
@@ -301,7 +301,7 @@ if make_Left_Axis
     yticks(0);
     yticklabels("");
 
-    print(f3, fullfile(directory,'annotations',strcat('ANNOTATIONS_LEFTAXIS_A_Means.eps')),'-depsc','-vector');
+    exportgraphics(f3, fullfile(directory,'annotations',strcat('ANNOTATIONS_LEFTAXIS_A_Means.pdf')),'ContentType','vector');
     close all;
 
     %% Make output plots -- Average Mean Plots (Blue) -- Left Super labels for Y axis.
@@ -323,7 +323,7 @@ if make_Left_Axis
     yticks(0);
     yticklabels("");
 
-    print(f3, fullfile(directory,'annotations',strcat('ANNOTATIONS_LEFTAXIS_B_Means.eps')),'-depsc','-vector');
+    exportgraphics(f3, fullfile(directory,'annotations',strcat('ANNOTATIONS_LEFTAXIS_B_Means.pdf')),'ContentType','vector');
     close all;
 
     %% Make output plots -- Average Mean Plots (Blue) -- Left Super labels for Y axis.
@@ -347,7 +347,7 @@ if make_Left_Axis
     yticks(0);
     yticklabels("");
 
-    print(f3, fullfile(directory,'annotations',strcat('ANNOTATIONS_LEFTAXIS_C_Means.eps')),'-depsc','-vector');
+    exportgraphics(f3, fullfile(directory,'annotations',strcat('ANNOTATIONS_LEFTAXIS_C_Means.pdf')),'ContentType','vector');
     close all;
 end
 end
