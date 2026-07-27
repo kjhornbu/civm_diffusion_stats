@@ -283,14 +283,21 @@ for o=1:numel(voxel_wise)
             
             try
                 if isempty(remove_zscore_grouping{i_testcondition}) && opts.findmedianspecimen==1
-                    [bilat_specimen_zscore] = zscoring_finder(bilat_table,model_GROUPING);
-                    [left_specimen_zscore] = zscoring_finder(left_table,model_GROUPING);
-                    [right_specimen_zscore] = zscoring_finder(right_table,model_GROUPING);
-                elseif ~isempty(remove_zscore_grouping{i_testcondition})
+                    [bilat_specimen_zscore] = zscoring_finder(bilat_table,model_GROUPING,opts.findmedianspecimen);
+                    [left_specimen_zscore] = zscoring_finder(left_table,model_GROUPING,opts.findmedianspecimen);
+                    [right_specimen_zscore] = zscoring_finder(right_table,model_GROUPING,opts.findmedianspecimen);
+                elseif ~isempty(remove_zscore_grouping{i_testcondition}) && opts.findmedianspecimen==1
+                    [bilat_table_standardized,bilat_specimen_zscore] = zscoring_finder(bilat_table,model_GROUPING,opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
+                    [left_table_standardized,left_specimen_zscore] = zscoring_finder(left_table,model_GROUPING,opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
+                    [right_table_standardized,right_specimen_zscore] = zscoring_finder(right_table,model_GROUPING,opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
 
-                    [bilat_table_standardized,bilat_specimen_zscore] = zscoring_finder(bilat_table,model_GROUPING,remove_zscore_grouping{i_testcondition}{:});
-                    [left_table_standardized,left_specimen_zscore] = zscoring_finder(left_table,model_GROUPING,remove_zscore_grouping{i_testcondition}{:});
-                    [right_table_standardized,right_specimen_zscore] = zscoring_finder(right_table,model_GROUPING,remove_zscore_grouping{i_testcondition}{:});
+                    civm_write_table(bilat_table_standardized,fullfile(save_location,strcat(group_names{m},'_Bilat_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
+                    civm_write_table(left_table_standardized,fullfile(save_location,strcat(group_names{m},'_Left_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
+                    civm_write_table(right_table_standardized,fullfile(save_location,strcat(group_names{m},'_Right_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
+                elseif ~isempty(remove_zscore_grouping{i_testcondition}) && opts.findmedianspecimen==0
+                    [bilat_table_standardized] = zscoring_finder(bilat_table,model_GROUPING,opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
+                    [left_table_standardized] = zscoring_finder(left_table,model_GROUPING,opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
+                    [right_table_standardized] = zscoring_finder(right_table,model_GROUPING,opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
 
                     civm_write_table(bilat_table_standardized,fullfile(save_location,strcat(group_names{m},'_Bilat_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
                     civm_write_table(left_table_standardized,fullfile(save_location,strcat(group_names{m},'_Left_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
@@ -370,13 +377,22 @@ for o=1:numel(voxel_wise)
         right_specimen_zscore=table;
         try
             if isempty(remove_zscore_grouping{i_testcondition}) && opts.findmedianspecimen==1
-                [bilat_specimen_zscore] = zscoring_finder(bilat_table,test_conditions{i_testcondition});
-                [left_specimen_zscore] = zscoring_finder(left_table,test_conditions{i_testcondition});
-                [right_specimen_zscore] = zscoring_finder(right_table,test_conditions{i_testcondition});
-            elseif ~isempty(remove_zscore_grouping{i_testcondition})
-                [bilat_table_standardized,bilat_specimen_zscore] = zscoring_finder(bilat_table,test_conditions{i_testcondition},remove_zscore_grouping{i_testcondition}{:});
-                [left_table_standardized,left_specimen_zscore] = zscoring_finder(left_table,test_conditions{i_testcondition},remove_zscore_grouping{i_testcondition}{:});
-                [right_table_standardized,right_specimen_zscore] = zscoring_finder(right_table,test_conditions{i_testcondition},remove_zscore_grouping{i_testcondition}{:});
+                [bilat_specimen_zscore] = zscoring_finder(bilat_table,test_conditions{i_testcondition},opts.findmedianspecimen);
+                [left_specimen_zscore] = zscoring_finder(left_table,test_conditions{i_testcondition},opts.findmedianspecimen);
+                [right_specimen_zscore] = zscoring_finder(right_table,test_conditions{i_testcondition},opts.findmedianspecimen);
+            elseif ~isempty(remove_zscore_grouping{i_testcondition}) && opts.findmedianspecimen==1 
+                [bilat_table_standardized,bilat_specimen_zscore] = zscoring_finder(bilat_table,test_conditions{i_testcondition},opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
+                [left_table_standardized,left_specimen_zscore] = zscoring_finder(left_table,test_conditions{i_testcondition},opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
+                [right_table_standardized,right_specimen_zscore] = zscoring_finder(right_table,test_conditions{i_testcondition},opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
+
+                civm_write_table(bilat_table_standardized,fullfile(save_location,strcat('Bilat_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
+                civm_write_table(left_table_standardized,fullfile(save_location,strcat('Left_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
+                civm_write_table(right_table_standardized,fullfile(save_location,strcat('Right_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
+
+            elseif ~isempty(remove_zscore_grouping{i_testcondition}) && opts.findmedianspecimen == 0 
+                [bilat_table_standardized] = zscoring_finder(bilat_table,test_conditions{i_testcondition},opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
+                [left_table_standardized] = zscoring_finder(left_table,test_conditions{i_testcondition},opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
+                [right_table_standardized] = zscoring_finder(right_table,test_conditions{i_testcondition},opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
 
                 civm_write_table(bilat_table_standardized,fullfile(save_location,strcat('Bilat_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
                 civm_write_table(left_table_standardized,fullfile(save_location,strcat('Left_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
