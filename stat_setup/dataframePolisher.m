@@ -35,12 +35,11 @@ for n=1:height(dataFrame)
         else
             dataFrame.label_lookup_path{n}=temp_connectome_data.lookup;
         end
-        if nnz(reg_match(opts.analysisPipelineType,'Connectome'))
-            %  For connectomes only grab the label files
-            dataFrame.label_path{n}=temp_connectome_data.labels; %WE NEED THIS FOR CONNECTOMES!!!! WHY DO YOU COMMENT IT OUT JAMES/HARRISON? NEED TO FIX HOW WE GET SCALES FOR CONNECTOME FIRST
-        end
 
+   
+        %dataFrame.label_path{n}=temp_connectome_data.labels; %WE NEED THIS FOR CONNECTOMES!!!! WHY DO YOU COMMENT IT OUT JAMES/HARRISON? NEED TO FIX HOW WE GET SCALES FOR CONNECTOME FIRST
         dataFrame.connectome_obj{n}=temp_connectome_data;
+
     elseif numel(fieldnames(temp_connectome_data.headfile)) == 0 && ~isempty(opts.alternative_statsheet_dir) &&...
             ~any(reg_match(opts.stats_archive,'research[\/]?$'))
         check='flat_file_load';
@@ -99,7 +98,6 @@ elseif reg_match(check,'^(connectome_dir_load)$')
 end
 
 found_connectomes=ismember('connectome_file',dataFrame.Properties.VariableNames);
-found_labels=ismember('label_path',dataFrame.Properties.VariableNames);
 
 %% validate we found data to process,
 % we need stats files, or connectome files in order to process
@@ -118,9 +116,14 @@ if sum(found_stats)>=1
     input_path=dataFrame.connectome_obj;
     output_path=polished_stats;
 
-%% now polish the stats
-    stats_polisher_bulk(output_path,input_path,opts.fullAtlasOntology,opts.scalarContrastMetrics)
+%% now polish the stats and add in the labels with the new method.
+    stats_polisher_bulk(output_path,input_path,opts.fullAtlasOntology,opts.scalarContrastMetrics);
+    [df_label_data] = label_selecting_bulk(input_path,opts.scalarContrastMetrics);
 
+    assert(nnz(cellfun(@isempty,df_label_data))==0 && reg_match(opts.analysisPipelineType,'Connectome'), 'Did not find Labels and Labels are Absolutely Needed for Connectome Runs');
+    dataFrame.label_path=df_label_data;
+
+    found_labels=ismember('label_path',dataFrame.Properties.VariableNames);
     %% Validate polishing worked.
     for n=1:height(dataFrame)
         temp_connectome_data=dataFrame.connectome_obj{n};
@@ -146,9 +149,6 @@ if sum(found_stats)>=1
         end
         % if any labels were found, its presumed we're supposed to have
         % labels.
-        if found_labels
-            dataFrame.label_path{n}=temp_connectome_data.labels;
-        end
     end
 end
 

@@ -1,4 +1,4 @@
-function [ ] = stats_polisher_bulk(df_stat_path,df_connectome_obj,fullAtlasOntology,default_scalarContrast)
+function [] = stats_polisher_bulk(df_stat_path,df_connectome_obj,fullAtlasOntology,default_scalarContrast)
 %This does both polished and erode at the same time... are we okay with
 %that or is that going to cause problems because of changing the types of
 %things to whatever name you want for stats? we could have it better look
@@ -23,10 +23,12 @@ parfor n=1:numel(df_connectome_obj)
 
             total_idx=erode_idx&level_idx&bilateral_idx&nickname_idx;
 
+
             if isempty(temp_atlas_data)
                 temp_atlas_data=temp_connectome_data.lookup;
             end
 
+   
             if isempty(temp_connectome_data)||isempty(total_idx)|| ~exist(runno_region_data.stats{total_idx},'file')
                 % if no input file, cannot polish. This can happen on if we do not have an archived connectome dir, OR re-run if
                 % archive were disconnected. Someplace else we should address
