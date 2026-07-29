@@ -39,8 +39,8 @@ if ~exist('out','var') && mod(arg_count,2) && ischar(varargin{end}) || isstring(
     varargin(end)=[];
 elseif exist('out','var') 
     supported=list2cell('pdf png svg');
-    assert( all(ismember(fieldnames(out), supported)), ...
-        'Unsupported output type requested. only %s allowed.',strjoin(supported,', '));
+%     assert( all(ismember(fieldnames(out), supported)), ...
+%         'Unsupported output type requested. only %s allowed.',strjoin(supported,', '));
     clear supported;
 end
 
@@ -287,7 +287,7 @@ if exist('out','var')
     %
     % In NEWER versions of matlab we could use export graphics with svg
     % output, HOWEVER 2021b cannot do that!
-    %{ 
+  
     %% FAIL-TRY blarg
     if isfield(out,'svg') && ~exist(out.svg,'file')
         print(fig_colormap, out.svg, '-dsvg', '-vector');
@@ -297,7 +297,8 @@ if exist('out','var')
         print(fig_colormap, out.png, '-dpng', '-r600');
         %exportgraphics(fig_colormap, out.png, 'Resolution', 600);
     end
-    %}
+    
+    %{
     %% Updated Doodly doo!
     %if isfield(out,'pdf')
     exportgraphics(fig_colormap, out.pdf,'BackgroundColor','none','ContentType','vector','Resolution',600);
@@ -308,5 +309,6 @@ if exist('out','var')
     if isfield(out,'png')
         pdf2png(out.pdf, out.png);
     end
+    %}
 end
 

@@ -122,7 +122,6 @@ if sum(found_stats)>=1
 
     assert(nnz(cellfun(@isempty,df_label_data))==0 && reg_match(opts.analysisPipelineType,'Connectome'), 'Did not find Labels and Labels are Absolutely Needed for Connectome Runs');
     dataFrame.label_path=df_label_data;
-
     found_labels=ismember('label_path',dataFrame.Properties.VariableNames);
     %% Validate polishing worked.
     for n=1:height(dataFrame)
