@@ -6,6 +6,12 @@ idx_LEFT=table2array(big_table(:,idx))==-1;
 %RIGHT
 idx_RIGHT=table2array(big_table(:,idx))==1;
 
+big_table.Structure(idx_LEFT)=strrep(big_table.Structure(idx_LEFT),'_left','');
+big_table.Structure(idx_RIGHT)=strrep(big_table.Structure(idx_RIGHT),'_right','');
+
+big_table.GN_Symbol(idx_LEFT)=strrep(big_table.GN_Symbol(idx_LEFT),'-L','');
+big_table.GN_Symbol(idx_RIGHT)=strrep(big_table.GN_Symbol(idx_RIGHT),'-R','');
+
 %Get the Data Columns to perform COV on
 meanANDvol_idx=~cellfun(@isempty,regexpi(big_table.Properties.VariableNames,'_mean$|^vol|'));
 meanANDvol_name=big_table.Properties.VariableNames(:,meanANDvol_idx);
@@ -15,6 +21,14 @@ check_for_rob_sheet=sum(~cellfun(@isempty,regexpi(big_table.Properties.VariableN
 %If there is no entry with GN_Symbol in it then we go the RCCF original polish sheet names else use robs
 if check_for_rob_sheet==1
     %Get common information columns
+% Repair Left/Right book keeping structures so they will collapse together.
+% 
+    big_table.Structure(idx_LEFT)=strrep(big_table.Structure(idx_LEFT),'_left','');
+    big_table.Structure(idx_RIGHT)=strrep(big_table.Structure(idx_RIGHT),'_right','');
+
+    big_table.GN_Symbol(idx_LEFT)=strrep(big_table.GN_Symbol(idx_LEFT),'-L','');
+    big_table.GN_Symbol(idx_RIGHT)=strrep(big_table.GN_Symbol(idx_RIGHT),'-R','');
+
     idx=regexp(big_table.Properties.VariableNames,'^(specimen|Structure|GN_Symbol|ARA_name|ARA_abbrev|structure_id|group[0-9]+|subgroup[0-9]+)$');
 elseif check_for_rob_sheet==0
     %Get common information columns
@@ -57,7 +71,7 @@ CoV_output=table;
 %If there is no entry with GN_Symbol in it then we go the RCCF original polish sheet names else use robs
 if check_for_rob_sheet==1
     %Get common information columns
-    idx=regexp(Data_table.Properties.VariableNames,'^(specimen|ARA_name|ARA_abbrev|structure_id|group[0-9]+|subgroup[0-9]+)$');
+    idx=regexp(Data_table.Properties.VariableNames,'^(specimen|Structure|GN_Symbol|ARA_name|ARA_abbrev|structure_id|group[0-9]+|subgroup[0-9]+)$');
 elseif check_for_rob_sheet==0
     %Get common information columns
     idx=regexp(Data_table.Properties.VariableNames,'^(specimen|acronym|name|structure_id|group[0-9]+|subgroup[0-9]+)$');
