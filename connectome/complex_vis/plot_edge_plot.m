@@ -1,5 +1,5 @@
 function [figure_entries,make_Left_Axis] = plot_edge_plot(directory,vertex,matrix_2_print,selection_pull,data_y_labels,ontology_Order,idx_aboveThreshold,make_Left_Axis,idx_inOntologyOrder,max_entry)
-width=3;%width=2*3.3;  -- What width do you want the figures to be (at minimum -- if the font doesn't fit on the graph it will make it bigger).
+width=3.3;%width=2*3.3;  -- What width do you want the figures to be (at minimum -- if the font doesn't fit on the graph it will make it bigger).
 fontsize=6; %apparent final font size in the figure (typically viewed on mac)
 tiny_font=4;
 
