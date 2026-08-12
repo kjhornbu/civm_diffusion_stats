@@ -105,6 +105,7 @@ dataframe_path=opts.dataframePath;
 config_file=opts.configFile;
 save_dir=opts.statSaveDir;
 
+%% Need to add a check about labels when we are keeping a dataframe to make sure we actually able to use the dataframe provided -- that is has labels for connectome
 %% Data setup -- User Input form
 opts.keep_last_frame = 0; % if 0 we are NOT keeping the last data frame, if 1 we ARE keeping the last dataframe
 for m=1:numel(opts.using_series)
@@ -149,6 +150,8 @@ for m=1:numel(opts.using_series)
 end
 
 if ~opts.keep_last_frame % if 0 we are NOT keeping the last data frame, if 1 we ARE keeping the last dataframe
+
+    %% NOT KEEPING LAST DATAFRAME
     for m=1:numel(opts.using_series)
         if reg_match(opts.using_series{m},'^(googleDocPath)$')
             notebook=civm_read_table(opts.(opts.using_series{m}));
@@ -250,6 +253,7 @@ if ~opts.keep_last_frame % if 0 we are NOT keeping the last data frame, if 1 we 
         end
     end
 else
+    %% KEEPING LAST DATAFRAME
     for m=1:numel(opts.using_series)
         if reg_match(opts.using_series{m},'^(googleDocPath)$')
             notebook=civm_read_table(opts.(opts.using_series{m}));
@@ -271,6 +275,7 @@ else
             %do visualization to do final cleanup of cloudnotebook
             if m==1
                 continue;
+                %% CHECK THAT NOTEBOOK HERE FOR IF YOU HAVE THE THING?
             else
                 if ~exist('notebook','var')
                     % if we've not loaded a bunch of notebooks and combined them
@@ -289,6 +294,7 @@ else
             % force all columns to be treated as text.
             if m==1
                 continue;
+                %% CHECK THAT NOTEBOOK HERE FOR IF YOU HAVE THE THING?
             else
                 if ~exist('notebook','var')
                     notebook=civm_read_table(opts.cleanedGoogleDocPath);
@@ -470,6 +476,12 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
             end
         end
 
+        if isempty(test_remove_criteria{1}) 
+            col_types={'cohenD','percent_change'};
+        else
+            col_types={'absolute_error'};
+        end
+        
         parfor n=1:numel(values)
             group_stats_file=output_paths_table.StatsResults{n};
             processed_stats_dir=fileparts(group_stats_file);
@@ -479,7 +491,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
             %% list off the "cool" columns to go plot
 
             %these are set columns that are fixed color ranges for the data
-            col_types={'cohenD','percent_change'};
+            %col_types={'cohenD','percent_change'};
             column_setup = {
                 'singleside_cohen','cohenF'
                 'pvalue_extended', 'pval'

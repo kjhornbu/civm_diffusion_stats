@@ -64,7 +64,7 @@ selected_parents = {'^(CEN-B|CCX-B)$','DIE-B','^(RVG-B|MID-B|HBR-B|CBN-B|CBX-B)$
 % that code expects (gray_1,gray_2,gray_3,white)
 composite_ontology_order= [1,2,3,4];
 
-change_data_type='percent_change|cohenD|estimated_power'; 
+change_data_type='percent_change|cohenD|estimated_power|absolute_error'; 
 % these are assignable color ranges that you can modify via shifting the white
 % center and maximal color bar value -- rather than the other color ranges which are fixed.
 
@@ -156,6 +156,9 @@ for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
                     if reg_match(LUT_type{i_column}{1},'percent_change')
                         c_mm={'min',-0.1,'max',0.1}; % This is the color range
                         c_neutral={'neutral',[-0.025, 0.025]};%KH Shifted from 0.05 to 0.01 on 202600130 to better represent CHDI-- and 2.5% on 20260327 You should do this within the name of the color itself
+                    elseif reg_match(LUT_type{i_column}{1},'absolute_error')
+                        c_mm={'min',-3,'max',3}; % This is the color range
+                        c_neutral={'neutral',[-0.5, 0.5]};% absolute_error uses the same color range as CohenD/percent Change but the white center is +/- 0.5  and color extends to +/- 3
                     elseif reg_match(LUT_type{i_column}{1},'estimated_power')
                         c_mm={'min',-0.95,'max',0.95}; % This is the color range
                         c_neutral={'neutral',[-0.7, 0.7]};% Estimated power uses the same color range as CohenD/percent Change but the white center is +/- 70% and color extends to

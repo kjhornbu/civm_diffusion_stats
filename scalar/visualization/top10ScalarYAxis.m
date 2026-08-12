@@ -41,19 +41,19 @@ elseif (reg_match(Contrast,'^(fa|nqa|gfa)(_.*)?$'))==1
         low_bound=0;
         top_bound=1;
     else
-        ylabel(Current_Fig.CurrentAxes,strcat('Z-score of',32,strrep(Contrast,'_','-')'));
+        ylabel(Current_Fig.CurrentAxes,strcat('Z-score of',32,strrep(Contrast,'_','-')));
     end
 elseif  (reg_match(Contrast,'^(ad|rd|md)(_.*)?$'))==1
     if low_bound>=0
         ylabel(Current_Fig.CurrentAxes,strcat(strrep(Contrast,'_','-'),' (mm^{2}/s)'));
     else
-        ylabel(Current_Fig.CurrentAxes,strcat('Z-score of',32,strrep(Contrast,'_','-')'));
+        ylabel(Current_Fig.CurrentAxes,strcat('Z-score of',32,strrep(Contrast,'_','-')));
     end
 elseif (reg_match(Contrast,'^(dwi|qa|iso)(_.*)?$'))==1
     if low_bound>=0
         ylabel(Current_Fig.CurrentAxes,strcat(strrep(Contrast,'_','-'),' (-)'));
     else
-        ylabel(Current_Fig.CurrentAxes,strcat('Z-score of',32,strrep(Contrast,'_','-')'));
+        ylabel(Current_Fig.CurrentAxes,strcat('Z-score of',32,strrep(Contrast,'_','-')));
     end
 end
 

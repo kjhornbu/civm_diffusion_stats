@@ -1,6 +1,6 @@
 function [figure_entries,make_Left_Axis] = plot_edge_plot(directory,vertex,matrix_2_print,selection_pull,data_y_labels,ontology_Order,idx_aboveThreshold,make_Left_Axis,idx_inOntologyOrder,max_entry)
 width=3;%width=2*3.3;  -- What width do you want the figures to be (at minimum -- if the font doesn't fit on the graph it will make it bigger).
-fontsize=8; %apparent final font size in the figure (typically viewed on mac)
+fontsize=6; %apparent final font size in the figure (typically viewed on mac)
 tiny_font=4;
 
 %{
@@ -111,7 +111,7 @@ scaled_value=(value-0)./(1--0); %The min and max of the caxis we are using for t
 A_indexed = uint8(255 * (scaled_value) + 1);
 imwrite(A_indexed, new_stretched_colormap, fullfile(directory,'edge_strength_plot',strcat('ROI_',num2str(vertex(1,1)),'_',Structure,'_colored_matrix.png')));
 
-%% Make output plots -- Average Mean Plots (Blue)
+%% Make output plots -- Average Mean Plots (formerly "Blue" plots)
 f=figure;
 EntryA=width*printfactor; %width
 if size(matrix_2_print,1)>2
@@ -166,7 +166,7 @@ end
 
 check_size=f.InnerPosition;
 set(gca,'FontSize',fontsize,'FontName','Arial','TickDir','out');
-exportgraphics(f, fullfile(directory,'edge_strength_plot',strcat('ROI_',num2str(vertex(1,1)),'_',Structure,'_Means.pdf')),'ContentType','vector');
+print(f, fullfile(directory,'edge_strength_plot',strcat('ROI_',num2str(vertex(1,1)),'_',Structure,'_Means.pdf')),'-dpdf');
 close all;
 
 %% Make output plots -- Average Mean Plots (Blue) -- ANNOTATIONS Labels (THE KEY VERTICES!!!).

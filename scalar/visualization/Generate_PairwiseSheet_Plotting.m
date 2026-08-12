@@ -28,7 +28,7 @@ for n=1:height(Path_table)
         hemisphere=Path_table.hemisphere(n);
     end
 
-    %Added in stratifications here to pull from the data. 
+    %Added in stratifications here to pull from the data.
 
     %What do in the case that there is no stratificaiton???
     try
@@ -70,10 +70,21 @@ for n=1:height(Path_table)
 
     %Filter with stratification
     if do_stratification==1
+
         % since reg_match expects a string array as first input, I think it
         % is safe to cast it to string. this is crashing because of
-        % integers in my dataframe
-        Subject_Table=UnStratified_Subject_Table(reg_match(string(UnStratified_Subject_Table.(stratification_column)),stratification),:);
+        % integers in my dataframe -- nope don't do this it breaks the data
+        % by only looking at 1 entry and pulling one entry. 
+
+        %Subject_Table=UnStratified_Subject_Table(reg_match(string(UnStratified_Subject_Table.(stratification_column)),stratification),:);
+
+        % Actually shouild be using the column to text to convert the
+        % stratification into a category and then go from there. 
+        
+        UnStratified_Subject_Table=column2text(UnStratified_Subject_Table,stratification_column);
+        key_column=UnStratified_Subject_Table.(stratification_column);
+        Subject_Table=UnStratified_Subject_Table(reg_match(key_column,stratification),:);
+
     else
         Subject_Table=UnStratified_Subject_Table;
     end

@@ -120,7 +120,10 @@ if sum(found_stats)>=1
     stats_polisher_bulk(output_path,input_path,opts.fullAtlasOntology,opts.scalarContrastMetrics);
     [df_label_data] = label_selecting_bulk(input_path,opts.scalarContrastMetrics);
 
-    assert(nnz(cellfun(@isempty,df_label_data))==0 && reg_match(opts.analysisPipelineType,'Connectome'), 'Did not find Labels and Labels are Absolutely Needed for Connectome Runs');
+    if reg_match(opts.analysisPipelineType,'Connectome')
+        assert(nnz(cellfun(@isempty,df_label_data))==0, 'Did not find Labels and Labels are Absolutely Needed for Connectome Runs!!!');
+    end
+
     dataFrame.label_path=df_label_data;
     found_labels=ismember('label_path',dataFrame.Properties.VariableNames);
     %% Validate polishing worked.
