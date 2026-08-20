@@ -2,6 +2,8 @@ function [ ] = Plot_N_Save_Pval_from_Rcode(save_dir,csv_out,group,subgroup,defin
 %If R Figure Did not save run this file(save_dir,csv_out,df);
 
 % readtable treats empty values as NaN or '', depending on column datatype
+% -- Changed to NA for some sources when shifted to tibble structure.
+% 2026-08-20 Tibbles are a specific type of dataframes in R.
 
 Statistical_Test_Result=readtable(csv_out);
 
@@ -17,7 +19,7 @@ for n=1:numel(source_of_variation_entry)
 
     check_for_interactions=strsplit(source_of_variation_entry{n},':');
 
-    if isempty(regexpi(source_of_variation_entry{n},'NaN|Residuals'))
+    if isempty(regexpi(source_of_variation_entry{n},'NaN|Residuals|NA'))
         if numel(check_for_interactions)==1
             [corrected_grouping_name] = clean_general_entries_in_source_of_variation(group,subgroup,source_of_variation_entry(n));
             Statistical_Test_Result.source_of_variation(source_of_variation_idx==n)=corrected_grouping_name;
@@ -31,7 +33,7 @@ for n=1:numel(source_of_variation_entry)
     end
 end
 
-logical_idx=~cellfun(@isempty,regexpi(source_of_variation_entry,'NaN|Residuals'));
+logical_idx=~cellfun(@isempty,regexpi(source_of_variation_entry,'NaN|Residuals|NA'));
 positional_idx=find(logical_idx);
 logical_idx_all=sum(source_of_variation_idx==positional_idx',2)>0;
 
@@ -95,7 +97,7 @@ if size(source_of_variation_entry,1)~=numel(source_of_variation_idx)
         source_of_variation_entry{n}=strrep(source_of_variation_entry{n},'*','x');
         source_of_variation_entry{n}=strrep(source_of_variation_entry{n},':','x');
 
-        if isempty(regexpi(source_of_variation_entry{n},'NaN'))
+        if isempty(regexpi(source_of_variation_entry{n},'NaN|NA'))
 
             size_df=size(Statistical_Test_Result(source_of_variation_idx==n,:),1);
 

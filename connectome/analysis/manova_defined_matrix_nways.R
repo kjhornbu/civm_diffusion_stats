@@ -14,7 +14,7 @@ if (! dir.exists(wks_r_lib) ){
 
 .libPaths(wks_r_lib,FALSE)
 #lib.names <- c("dplyr","conflicted","purrr")
-lib.names <- c("effectsize","dplyr","conflicted","purrr","readr")
+lib.names <- c("effectsize","dplyr","conflicted","purrr","readr","car","tidyverse")
 for (lib_name in lib.names) {
   if (! requireNamespace(lib_name) ){
     print(c("Installing missing package:",lib_name))
@@ -53,9 +53,9 @@ tryCatch({
 })
 
 #Grab number of sources of variation in the study
-number_of_sources_of_variation = as.numeric(args[3])
+number_of_sources_of_variation <- as.numeric(args[3])
 #Get the actual equation for the model
-source_of_variation = args[4]
+source_of_variation <- args[4]
 print("Data loaded by R")
 
 print("Performing MANOVA")

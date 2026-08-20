@@ -1,15 +1,56 @@
 #!/usr/bin/env Rscript
 # Functions to Do N-way Manova on an ASE embedding generated in Matlab
 
-#require(tidyverse)
+library(tidyverse)
 library(effectsize)
 library(dplyr)
 library(purrr)
-
+library(car)
 library(conflicted)
 
 conflicts_prefer(stats::filter)
 conflicts_prefer(stats::lag)
+
+# Create a tibble saving Structure
+write_to_tibble <- function(statistical_output,
+                            vertex,
+                            source_of_variation,
+                            DF,
+                            approxF,
+                            pvalue,
+                            cohens_f,
+                            cohens_f2,
+                            eta2,
+                            omega2) {
+  if (nrow(statistical_output) > 0) {
+    statistical_output <- add_row(
+      statistical_output,
+      vertex = rep(vertex, length(source_of_variation)),
+      source_of_variation = source_of_variation,
+      DF = DF[1:length(source_of_variation)],
+      approxF = approxF[1:length(source_of_variation)],
+      pval = pvalue[1:length(source_of_variation)],
+      cohenF = cohens_f,
+      cohenFSquared = cohens_f2,
+      eta2 = eta2,
+      omega2 = omega2
+    )
+  } else{
+    statistical_output <- tibble(
+      vertex = rep(vertex, length(source_of_variation)),
+      source_of_variation = source_of_variation,
+      DF = DF[1:length(source_of_variation)],
+      approxF = approxF[1:length(source_of_variation)],
+      pval = pvalue[1:length(source_of_variation)],
+      cohenF = cohens_f,
+      cohenFSquared = cohens_f2,
+      eta2 = eta2,
+      omega2 = omega2
+    )
+  }
+  return(statistical_output)
+}
+
 
 # MANOVA Setup Function
 format_manova <- function(df,
@@ -55,284 +96,108 @@ manova_significance_testing <- function(df,
                  ") ~ ",
                  independent_variable)
   
-  #This figures out the number of full interactions at any level
   vertex_list = 1:number_of_vertices
-  
-  # Pre allocating all the vectors of output (pvalue, effect size, eta2, source of variation, vertex)
-  repeat_term = number_of_vertices * number_of_sources_of_variation
-  
-  pvec <- rep(0, repeat_term)
-  DoFvec <- rep(0, repeat_term)
-  Fstatvec <- rep(0, repeat_term)
-  effectvec <- rep(0, repeat_term)
-  effectsquaredvec <- rep(0, repeat_term)
-  eta2vec <- rep(0, repeat_term)
-  omega2vec <- rep(0, repeat_term)
-  source_of_variation_vec <- rep(0, repeat_term)
-  vertex_vec <- rep(0, repeat_term)
-  
-  vertex_adjust <- rep(0, number_of_vertices)
+  df.statistical_output = tibble()
   
   for (i in vertex_list) {
     vseq <- seq(i, nrow(df), by = number_of_vertices)
     
     if (number_of_vertices > 1) {
       df.subset <- df[df$vertex %in% vseq, ]
-      vertex_adjust[i] <- unique(df.subset$vertex)
     } else{
       df.subset <- df
-      vertex_adjust[i] <- vertex_list[i]
     }
     
-    saving_vector_index <-
-      number_of_sources_of_variation * (i - 1) + (1:number_of_sources_of_variation)
+    saving_vector_index <- number_of_sources_of_variation * (i - 1) + (1:number_of_sources_of_variation)
     
     if (sum(is.nan(df.subset[, col_dependant_variable[1]])) > 0) {
       #If there is a NaN in the subset we should just escape and not the math.
-      
+      DF <- rep(NaN, number_of_sources_of_variation)
+      approxF <- rep(NaN, number_of_sources_of_variation)
       pval <- rep(NaN, number_of_sources_of_variation)
-      DoF <- rep(NaN, number_of_sources_of_variation)
-      Fstat <-rep(NaN, number_of_sources_of_variation)
-      effect <- NaN
-      effect_squared <- NaN
-      eta2 <- NaN
-      omega2 <- NaN
-      
-      # Now shift all into long term saving.
-      an.error.occured <- FALSE
-      tryCatch({
-        pvec[saving_vector_index] <- pval[1:number_of_sources_of_variation]
-      }
-      , error = function(e) {
-        an.error.occured <<- TRUE
-      })
-      
-      an.error.occured <- FALSE
-      tryCatch({
-        effectvec[saving_vector_index] <- effect
-        
-      }
-      , error = function(e) {
-        an.error.occured <<- TRUE
-      })
-      
-      an.error.occured <- FALSE
-      tryCatch({
-        effectsquaredvec[saving_vector_index] <- effect_squared
-        
-      }
-      , error = function(e) {
-        an.error.occured <<- TRUE
-      })
-      
-      an.error.occured <- FALSE
-      tryCatch({
-        eta2vec[saving_vector_index] <- eta2
-        
-      }
-      , error = function(e) {
-        an.error.occured <<- TRUE
-      })
-      
-      an.error.occured <- FALSE
-      tryCatch({
-        omega2vec[saving_vector_index] <- omega2
-        
-      }
-      , error = function(e) {
-        an.error.occured <<- TRUE
-      })
-      
-      source_of_variation_vec[saving_vector_index] <-
-        rep(NaN, number_of_sources_of_variation)
-      
-      
-      if (number_of_vertices > 1) {
-        if (vertex_list[i] > number_of_vertices / 2) {
-          vertex_list[i] <- vertex_list[i] - number_of_vertices / 2 + 1000
-        }
-      }
-      vertex_vec[saving_vector_index] <- vertex_list[i]
+      effect <- rep(NaN, number_of_sources_of_variation)
+      effect_squared <- rep(NaN, number_of_sources_of_variation)
+      eta2 <- rep(NaN, number_of_sources_of_variation)
+      omega2 <- rep(NaN, number_of_sources_of_variation)
+      source_of_variation_vec <- rep(NA, number_of_sources_of_variation)
       
     } else{
-      statistical_result <- manova(as.formula(form), data = df.subset)
+      mixed = 0
+      model <- tryCatch({
+        lm(form, data = df.subset)
+      }, error = function(e) {
+        mixed <<- 1
+        lmer(form, data = df.subset)
+      })
       
+      #statistical_result <- manova(as.formula(form), data = df.subset)
+      #statistical_result_summary_table <- summary(statistical_result) -- Use this with the standard manova but don't need for using car::Anova
       
-      if (sd(statistical_result$residuals[, ]) == 0) {
+      if (sd(model$residuals[, ]) == 0) {
+        DF <- rep(NaN, number_of_sources_of_variation)
+        approxF <- rep(NaN, number_of_sources_of_variation)
         pval <- rep(NaN, number_of_sources_of_variation)
-        DoF <- rep(NaN, number_of_sources_of_variation)
-        Fstat <-rep(NaN, number_of_sources_of_variation)
-        effect <- NaN
-        effect_squared <- NaN
-        eta2 <- NaN
-        omega2 <- NaN
-        source_of_variation_vec[saving_vector_index] <-
-          rep(NaN, number_of_sources_of_variation)
-        
+        effect <- rep(NaN, number_of_sources_of_variation)
+        effect_squared <- rep(NaN, number_of_sources_of_variation)
+        eta2 <- rep(NaN, number_of_sources_of_variation)
+        omega2 <- rep(NaN, number_of_sources_of_variation)
+        source_of_variation_vec <- rep(NA, number_of_sources_of_variation)
         
       } else{
-        statistical_result_summary_table <- summary(statistical_result)
+        statistical_result <- Anova(model, type = "III")
         
-        # Adding Degree of Freedom
-        tryCatch({
-          DoF <- (statistical_result_summary_table$stats[, "Df"])
-        }
-        , error = function(e) {
-          an.error.occured <<- TRUE
-        })
+        # create output extraction -- need this for the linear model leading into the anova
         
-        # Adding approximate F
-        an.error.occured <- FALSE
-        tryCatch({
-          Fstat <- (statistical_result_summary_table$stats[, "approx F"])
-        }
-        , error = function(e) {
-          an.error.occured <<- TRUE
-        })
+        outtests <- car:::print.Anova.mlm
+        body(outtests)[[16]] <- quote(invisible(tests))
+        body(outtests)[[15]] <- NULL
         
-        #Adding Pvalue
-        an.error.occured <- FALSE
-        tryCatch({
-          pval <- (statistical_result_summary_table$stats[, "Pr(>F)"])
-        }
-        , error = function(e) {
-          an.error.occured <<- TRUE
-        })
+        statistical_result_summary_table <- outtests(statistical_result)
         
-        source_of_variation_vec[saving_vector_index] <- (statistical_result_summary_table$row.names[1:number_of_sources_of_variation])
-      }
-      
-     
-      an.error.occured <- FALSE
-      tryCatch({
-        effect_squared <- pvec[saving_vector_index] <- pval[1:number_of_sources_of_variation]
-      }
-      , error = function(e) {
-        an.error.occured <<- TRUE
-      })
-      
-      an.error.occured <- FALSE
-      tryCatch({
-        effect_squared <- cohens_f_squared(statistical_result)$Cohens_f2_partial
-      }
-      , error = function(e) {
-        an.error.occured <<- TRUE
-      })
-      
-      
-       an.error.occured <- FALSE
-      tryCatch({
+        DF <- statistical_result_summary_table$Df[1 + (1:number_of_sources_of_variation)]
+        approxF <- statistical_result_summary_table$`approx F`[1 + (1:number_of_sources_of_variation)]
+        pval<-statistical_result_summary_table$`Pr(>F)`[1 + (1:number_of_sources_of_variation)]
         effect <- cohens_f(statistical_result)$Cohens_f_partial
-      }
-      , error = function(e) {
-        an.error.occured <<- TRUE
-      })
-      
-      an.error.occured <- FALSE
-      tryCatch({
         effect_squared <- cohens_f_squared(statistical_result)$Cohens_f2_partial
-      }
-      , error = function(e) {
-        an.error.occured <<- TRUE
-      })
-      
-      an.error.occured <- FALSE
-      tryCatch({
         eta2 <- eta_squared(statistical_result)$Eta2_partial
-      }
-      , error = function(e) {
-        an.error.occured <<- TRUE
-      })
-      
-      an.error.occured <- FALSE
-      tryCatch({
         omega2 <- omega_squared(statistical_result)$Omega2_partial
+        source_of_variation_vec <-statistical_result$terms[1 + (1:number_of_sources_of_variation)]
+        
+        # manova uses 1-number_of sources_of_variation, car::anova is 2:number of soruces of variation+1 with a type 3... we are using type 3 rather than 2 just in case interaction matters.(safer)
+        #statistical_result_summary_table <- summary(statistical_result)
+        #DF <- (statistical_result_summary_table$stats[, "Df"])
+        #approxF <- (statistical_result_summary_table$stats[, "approx F"])
+        #pval <- (statistical_result_summary_table$stats[, "Pr(>F)"])
+        #effect <- cohens_f(statistical_result)$Cohens_f_partial
+        #effect_squared <- cohens_f_squared(statistical_result)$Cohens_f2_partial
+        #eta2 <- eta_squared(statistical_result)$Eta2_partial
+        #omega2 <- omega_squared(statistical_result)$Omega2_partial
+        #source_of_variation_vec <- (statistical_result_summary_table$row.names[1:number_of_sources_of_variation])
       }
-      , error = function(e) {
-        an.error.occured <<- TRUE
-      })
-      
-      # Now shift all into long term saving.
-      an.error.occured <- FALSE
-      tryCatch({
-        pvec[saving_vector_index] <- pval[1:number_of_sources_of_variation]
-      }
-      , error = function(e) {
-        an.error.occured <<- TRUE
-      })
-      
-      an.error.occured <- FALSE
-      tryCatch({
-        Fstatvec[saving_vector_index] <- Fstat[1:number_of_sources_of_variation]
-      }
-      , error = function(e) {
-        an.error.occured <<- TRUE
-      })
-      
-      an.error.occured <- FALSE
-      tryCatch({
-        DoFvec[saving_vector_index] <- DoF[1:number_of_sources_of_variation]
-      }
-      , error = function(e) {
-        an.error.occured <<- TRUE
-      })
-      
-      an.error.occured <- FALSE
-      tryCatch({
-        effectvec[saving_vector_index] <- effect
-      }
-      , error = function(e) {
-        an.error.occured <<- TRUE
-      })
-      
-      an.error.occured <- FALSE
-      tryCatch({
-        effectsquaredvec[saving_vector_index] <- effect_squared
-      }
-      , error = function(e) {
-        an.error.occured <<- TRUE
-      })
-      
-      an.error.occured <- FALSE
-      tryCatch({
-        eta2vec[saving_vector_index] <- eta2
-      }
-      , error = function(e) {
-        an.error.occured <<- TRUE
-      })
-      
-      an.error.occured <- FALSE
-      tryCatch({
-        omega2vec[saving_vector_index] <- omega2
-      }
-      , error = function(e) {
-        an.error.occured <<- TRUE
-      })
-      
-      if (number_of_vertices > 1) {
-        if (vertex_list[i] > number_of_vertices / 2) {
-          vertex_list[i] <- vertex_list[i] - number_of_vertices / 2 + 1000
-        }
-      }
-      vertex_vec[saving_vector_index] <- vertex_list[i]
-      
     }
+    
+    if (number_of_vertices > 1) {
+      if (vertex_list[i] > number_of_vertices / 2) {
+        vertex_list[i] <- vertex_list[i] - number_of_vertices / 2 + 1000
+      }
+    }
+    
+    df.statistical_output <- write_to_tibble(
+      df.statistical_output,
+      vertex_list[i],
+      source_of_variation_vec,
+      DF,
+      approxF,
+      pval,
+      effect,
+      effect_squared,
+      eta2,
+      omega2
+    )
   }
   
-  df.statistical_output <- data.frame(
-    vertex = vertex_vec,
-    source_of_variation = source_of_variation_vec,
-    DF = DoFvec,
-    approxF = Fstatvec,
-    pval = pvec,
-    cohenF = effectvec,
-    cohenFSquared = effectsquaredvec,
-    eta2 = eta2vec,
-    omega2 = omega2vec
-  )
-  df.statistical_output <-
-    df.statistical_output %>% mutate(order_pval =
-                                       rank(pval))
+  df.statistical_output <- df.statistical_output %>% mutate(order_pval =
+                                                              rank(pval))
   df.statistical_output <- df.statistical_output %>% arrange(pval)
   
   return(df.statistical_output)
