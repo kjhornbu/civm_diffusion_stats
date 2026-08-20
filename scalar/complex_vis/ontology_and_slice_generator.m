@@ -90,6 +90,12 @@ Statistical_Results=civm_read_table(group_stats_file,[],[],true);
 stat_col_numbers=column_find(Statistical_Results,sprintf('^(%s)$',strjoin(columns_to_plot,'|')));
 assert(numel(stat_col_numbers)==numel(unique(columns_to_plot)), 'Requested columns not properly resolved, check the requested columns');
 
+for n=1:numel(stat_col_numbers)
+    if isstring(Statistical_Results.(stat_col_numbers(n)))||ischar(Statistical_Results.(stat_col_numbers(n)))||iscell(Statistical_Results.(stat_col_numbers(n)))
+        Statistical_Results.(stat_col_numbers(n))=str2double(Statistical_Results.(stat_col_numbers(n)));
+    end
+end
+
 % but this isn't finding it twice??? What if I want multiple things plotted
 % different color ranges -- don't do it here.
 
