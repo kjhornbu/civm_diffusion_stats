@@ -1,6 +1,10 @@
 function [ontology_layout] = rob_order_fixer(ontology_layout,parent_structure,full)
-% in the case that you want an ontology but fixed with the flipping of the structures that all should be on the BRS but are not change full to a 1. 
-%% 1 -- Put CEN and Bottom of CCX
+% in the case that you want an ontology but fixed with the flipping of the
+% structures that all should be on the BRS but are not change full to a 1.
+% You have to also allow the region that triggers the correction of that
+% region '^(RVG-B|MID-B|HBR-B|CBN-B|CBX-B)$'
+
+%% 1 -- Put CEN at Bottom of CCX
 CEN_logical_idx=~cellfun(@isempty,regexpi(ontology_layout.GN_Symbol,'^(CEN)'));
 CEN_positional_idx=find(CEN_logical_idx==1);
 temp_CEN=ontology_layout(CEN_positional_idx,:);

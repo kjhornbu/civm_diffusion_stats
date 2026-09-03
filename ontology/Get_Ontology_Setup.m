@@ -23,11 +23,13 @@ ontology_with_stats=innerjoin(ontology_with_stats,Label_Ontology_Centroid_cleane
 % remove temporaries.
 clear atlas_centroid_file check_data_in_centroid logical_check_data_in_centroid atlas_centroids Label_Ontology_Centroid_cleaned
 
-selected_parents = {'BRN-B'};
-%selected_parents ={'^(RVG-B|MID-B|HBR-B|CBN-B|CBX-B)$'};
+%selected_parents = {'BRN-B'};
+selected_parents ={'^(RVG-B|MID-B|HBR-B|CBN-B|CBX-B)$'};
 
+% The full isn't doing anything.... uhhhhh what is going on here. -- I need
+% to use the other selected parents first!
 for parent=1:numel(selected_parents)
-    [ontology_layout] = gen_ontology_ordered(ontology_with_stats,selected_parents{parent});
+    [ontology_layout] = gen_ontology_ordered(ontology_with_stats,selected_parents{parent},1);
 end
 
 [ontology_layout] = coordinate_positioning(ontology_layout);
@@ -43,7 +45,7 @@ pos_idx=find(idx);
 ontology_layout.start_of_bar(ontology_layout.start_of_bar>0)=ontology_layout.start_of_bar(ontology_layout.start_of_bar>0)+numel(pos_idx);
 ontology_layout.start_of_bar(pos_idx)=pos_idx;
 
-for n=2:height(ontology_layout)
+for n=1:height(ontology_layout)
     ontology_layout.ontology_order_GN_Symbol{n}=strrep(ontology_layout.ontology_order_GN_Symbol{n},' ','');
     ontology_layout.ontology_order_GN_Symbol{n}=strrep(ontology_layout.ontology_order_GN_Symbol{n},'-B','');
     ontology_layout.ontology_order_GN_Symbol{n}=strjoin(ontology_layout.ontology_order_GN_Symbol{n},'-');
@@ -54,4 +56,5 @@ ontology_layout=sortrows(ontology_layout,'start_of_bar','descend');
 ontology_layout.L_Vertex=ontology_layout.ROI;
 ontology_layout.R_Vertex=ontology_layout.L_Vertex+180;
 
-civm_write_table(ontology_layout,'Ontology_Layout_DMBA_20260317_RobFixedOrder.txt'); 
+civm_write_table(ontology_layout,'Ontology_Layout_DMBA_20260821_RobFixedOrder.txt'); 
+%civm_write_table(ontology_layout,'Ontology_Layout_DMBA_20260317_RobFixedOrder.txt');

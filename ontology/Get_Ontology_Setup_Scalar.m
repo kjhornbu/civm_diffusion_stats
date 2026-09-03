@@ -1,7 +1,9 @@
-% clear all
-% close all;
+ clear all
+ close all;
 
-Path_to_Ontology={"Z:\All_Staff\18.gaj.42\FullAnalysis_20260505\Scalar_and_Volume\anovan_1000010000100001\AgeClass_Strain_Perfusionat_Sex\Non_Erode\Bilateral\complex_figures_EstimatedPower-260709_FromCohenF\ontology_layouts\CEN_CCX_ontology_layout.csv"};
+%Path_to_Ontology={"Z:\All_Staff\18.gaj.42\FullAnalysis_20260505\Scalar_and_Volume\anovan_1000010000100001\AgeClass_Strain_Perfusionat_Sex\Non_Erode\Bilateral\complex_figures_EstimatedPower-260709_FromCohenF\ontology_layouts\CEN_CCX_ontology_layout.csv"};
+Path_to_Ontology={"Z:\All_Staff\18.gaj.42\Prior\FullAnalysis_20260505\Scalar_and_Volume\anovan_1000010000100001\AgeClass_Strain_Perfusionat_Sex\Non_Erode\Bilateral\complex_figures_EMM_AdjustedPercentChangeYO_withproportionalweights\ontology_layouts\CEN_CCX_ontology_layout.csv"};
+
 
 ontology_layout = civm_read_table(Path_to_Ontology);
 ontology_layout.length_of_bar=[];
