@@ -54,9 +54,10 @@ main_grid = uigridlayout(fig,[2,1]); % Have two grids one with all the info in i
 main_grid.ColumnWidth = {'1x'};
 main_grid.RowHeight = {'1x',65};
 
-%% Begin with any Reasonable Group Pairwise Comparison (those from the james algorithm)
+%% Begin with any Reasonable Group Pairwise Comparison (those from the james algorithm)--> this breaks for some things we are doing! ahhhh
 Categorical_Entries=struct;
-[~,algorithm_Output] = james_to_study_inDataFrameEntry(dataFrame);
+[algorithm_Output] = AnyColumn_Final_Viability(dataFrame);
+
 %only_interesting_col_names=algorithm_Output.Properties.VariableNames;
 for n=1:numel(only_interesting_col_names)
     logical_idx_lut=~cellfun(@isempty,algorithm_Output.(only_interesting_col_names{n}));

@@ -162,7 +162,8 @@ dataFrame.connectome_obj=[];
 % This loop marks which specimen are missing one of their data files.
 data_cols=column_find(dataFrame,'^(stat_path|connectome_file)$',1);
 missing_data_idx=zeros(height(dataFrame),1,'logical');
-for col_name = dataFrame.Properties.VariableNames(data_cols)
+for col_name = dataFrame.Properties.VariableNames(data_cols) %This doesn't do what you think
+    
     missing_data_idx=missing_data_idx|cellfun(@isempty,dataFrame.(uncell(col_name)));
 end
 % Remove all eroded stats if any are not found.
