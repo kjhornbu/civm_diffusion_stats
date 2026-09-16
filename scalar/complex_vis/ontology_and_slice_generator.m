@@ -100,7 +100,40 @@ end
 % different color ranges -- don't do it here.
 
 [source_of_variation_names,~,source_of_variation_idx]=unique(Statistical_Results.source_of_variation);
-[contrast_names,~,contrast_idx]=unique(Statistical_Results.contrast);
+[~, colNum] = ismember('contrast', Statistical_Results.Properties.VariableNames);
+%if we don't ahve contrasts it probably is a connectome
+if colNum~=0
+    [contrast_names,~,contrast_idx]=unique(Statistical_Results.contrast);
+else
+    contrast_names={'None'};
+    contrast_idx=true(height(Statistical_Results),1);
+end
+
+check_connectome=column_find(Statistical_Results,'hemisphere_assignment|contrast');
+
+if isempty(check_connectome)
+    idx=Statistical_Results.ROI<1000;
+    Statistical_Results.hemisphere_assignment(idx)=-1;
+
+    idx=Statistical_Results.ROI>1000;
+    Statistical_Results.hemisphere_assignment(idx)=1;
+
+   % ontology_with_stats=ontology_with_stats(ontology_with_stats.ROI<=1180 & ontology_with_stats.ROI>0 & ontology_with_stats.ROI~=1175 & ontology_with_stats.ROI~=175,:);
+
+    idx=ontology_with_stats.ROI<1000;
+    ontology_with_stats.hemisphere_assignment(idx)=-1;
+
+    idx=ontology_with_stats.ROI>1000 & ontology_with_stats.ROI<10000;
+    ontology_with_stats.hemisphere_assignment(idx)=1;
+
+    ontology_lookup=ontology_lookup(ontology_lookup.ROI<=1180 & ontology_lookup.ROI>0 & ontology_lookup.ROI~=1175 & ontology_lookup.ROI~=175,:);
+    idx=ontology_lookup.ROI<1000;
+    ontology_lookup.hemisphere_assignment(idx)=-1;
+
+    idx=ontology_lookup.ROI>1000;
+    ontology_lookup.hemisphere_assignment(idx)=1;
+end
+
 % remove temporaries.
 clear stat_col_numbers
 
@@ -133,6 +166,7 @@ for i_column=1:numel(columns_to_plot) % Each of the contrast types we are doing
             contrast_logical_idx=contrast_idx==i_contrast;
             plot_idx=and(contrast_logical_idx,source_of_variation_logical_idx);
             segmented_Statistical_Results=Statistical_Results(plot_idx,:);
+
 
             %% figure out where to save
             sov=source_of_variation_names(i_sov);

@@ -6,12 +6,6 @@ idx_LEFT=table2array(big_table(:,idx))==-1;
 %RIGHT
 idx_RIGHT=table2array(big_table(:,idx))==1;
 
-big_table.Structure(idx_LEFT)=strrep(big_table.Structure(idx_LEFT),'_left','');
-big_table.Structure(idx_RIGHT)=strrep(big_table.Structure(idx_RIGHT),'_right','');
-
-big_table.GN_Symbol(idx_LEFT)=strrep(big_table.GN_Symbol(idx_LEFT),'-L','');
-big_table.GN_Symbol(idx_RIGHT)=strrep(big_table.GN_Symbol(idx_RIGHT),'-R','');
-
 %Get the Data Columns to perform COV on
 meanANDvol_idx=~cellfun(@isempty,regexpi(big_table.Properties.VariableNames,'_mean$|^vol|'));
 meanANDvol_name=big_table.Properties.VariableNames(:,meanANDvol_idx);
@@ -32,7 +26,11 @@ if check_for_rob_sheet==1
     idx=regexp(big_table.Properties.VariableNames,'^(specimen|Structure|GN_Symbol|ARA_name|ARA_abbrev|structure_id|group[0-9]+|subgroup[0-9]+)$');
 elseif check_for_rob_sheet==0
     %Get common information columns
+        big_table.Structure(idx_LEFT)=strrep(big_table.Structure(idx_LEFT),'_left','');
+    big_table.Structure(idx_RIGHT)=strrep(big_table.Structure(idx_RIGHT),'_right','');
+
     idx=regexp(big_table.Properties.VariableNames,'^(specimen|acronym|name|structure_id|group[0-9]+|subgroup[0-9]+)$');
+
 end
 
 

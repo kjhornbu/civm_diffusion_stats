@@ -44,26 +44,40 @@ end
 
 
 % Create separate Table called slicer_LUT from the found colors
+
 cols_data_meta=column_find(data_table,'gn_Symbol|abbrev|hemisphere_assignment');
+
+
 slicer_LUT=data_table(:,[t_colors,cols_data_meta]);
 
-t_l=slicer_LUT;
-t_l.hemisphere_assignment=repmat(-1,height(t_l),1);
-t_l.GN_Symbol=strrep(t_l.GN_Symbol,'-B','-L'); %Make Left Case
+[a,b,c]=unique(slicer_LUT.hemisphere_assignment);
 
-t_r=slicer_LUT;
-t_r.hemisphere_assignment=repmat(1,height(t_r),1); %Correct to +1
-t_r.GN_Symbol=strrep(t_r.GN_Symbol,'-B','-R'); %Make Right Case
+if nnz(a==0)
+    t_l=slicer_LUT;
+    t_l.hemisphere_assignment=repmat(-1,height(t_l),1);
+    t_l.GN_Symbol=strrep(t_l.GN_Symbol,'-B','-L'); %Make Left Case
 
-% ADD Left and Right Hemisphere entries but with the same color as the
-% Bilateral
-slicer_LUT=[t_l;t_r;slicer_LUT];
-clear t_l t_r;
+    t_r=slicer_LUT;
+    t_r.hemisphere_assignment=repmat(1,height(t_r),1); %Correct to +1
+    t_r.GN_Symbol=strrep(t_r.GN_Symbol,'-B','-R'); %Make Right Case
 
-%This is not really idx ontology as in the proper ordering, this is the index as in looking up in ontology
-ontology.idx_ontology=( 1:height(ontology) )'; 
+    % ADD Left and Right Hemisphere entries but with the same color as the
+    % Bilateral
 
-slicer_LUT=join(slicer_LUT,ontology,'Keys','GN_Symbol','RightVariables',{'ROI','Structure','idx_ontology'});
+    slicer_LUT=[t_l;t_r;slicer_LUT];
+
+    clear t_l t_r;
+end
+
+ %This is not really idx ontology as in the proper ordering, this is the index as in looking up in ontology
+ontology.idx_ontology=( 1:height(ontology) )';
+
+if nnz(cellfun(@isempty,slicer_LUT.GN_Symbol))==0
+    slicer_LUT=join(slicer_LUT,ontology,'Keys','GN_Symbol','RightVariables',{'ROI','Structure','idx_ontology'});
+else
+    slicer_LUT=join(slicer_LUT,ontology,'Keys',{'ARA_abbrev','hemisphere_assignment'},'RightVariables',{'ROI','Structure','idx_ontology'});
+end
+
 required_cols = list2cell('ROI Structure GN_Symbol ARA_abbrev');
 
 % Select the cannonical atlas out of the full atlas ontology

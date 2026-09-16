@@ -310,7 +310,7 @@ InformationSet=unique(data_subtable(:,Information_positional_idx),'rows');
 
 %% Add the Number of Groupings Per Source of variation Back in
 Number_of_Groupings=table;
-Number_of_Groupings.source_of_variation=name_table.group_type;
+Number_of_Groupings.source_of_variation=strrep(name_table.group_type,'*',':');
 Number_of_Groupings.Number_of_Groupings=cellfun(@numel,name_table.N);
 Number_of_Groupings.Number_of_Groupings(~harmonic_puller)=0;
 offset=height(Number_of_Groupings);

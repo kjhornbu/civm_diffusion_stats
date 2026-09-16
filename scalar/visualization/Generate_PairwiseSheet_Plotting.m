@@ -89,8 +89,13 @@ for n=1:height(Path_table)
         Subject_Table=UnStratified_Subject_Table;
     end
 
+    check_for_rob_sheet=sum(~cellfun(@isempty,regexpi(Subject_Table.Properties.VariableNames,'^GN_Symbol$'))); 
     % Filter out the missing ROIs
-    [GN_names,~,GN_name_idx]=unique(Subject_Table.GN_Symbol);
+    if check_for_rob_sheet==1
+        [GN_names,~,GN_name_idx]=unique(Subject_Table.GN_Symbol);
+    elseif check_for_rob_sheet==0
+        [GN_names,~,GN_name_idx]=unique(Subject_Table.acronym);
+    end
     specimen=unique(Subject_Table.specimen);
 
     missing_ROI_logical_idx = sum(GN_name_idx==1:numel(GN_names))<numel(specimen);
@@ -120,19 +125,33 @@ for n=1:height(Path_table)
         last_table_loaded{2}={};
         last_table_loaded{3}={};
 
+        check_for_rob_sheet=sum(~cellfun(@isempty,regexpi(Subject_Table.Properties.VariableNames,'^GN_Symbol$'))); 
         % Remove from Subject Table
-        remove_idx_SubjectTable=~cellfun(@isempty,regexpi(Subject_Table.GN_Symbol,Name_Check));
+        if check_for_rob_sheet==1
+            remove_idx_SubjectTable=~cellfun(@isempty,regexpi(Subject_Table.GN_Symbol,Name_Check));
+        elseif check_for_rob_sheet==0
+            remove_idx_SubjectTable=~cellfun(@isempty,regexpi(Subject_Table.acronym,Name_Check));
+        end
         Subject_Table(remove_idx_SubjectTable,:)=[];
 
         % Remove from Group_Table
-        remove_idx_GroupTable=~cellfun(@isempty,regexpi(Group_Table.GN_Symbol,Name_Check));
+        check_for_rob_sheet=sum(~cellfun(@isempty,regexpi(Group_Table.Properties.VariableNames,'^GN_Symbol$'))); 
+        if  check_for_rob_sheet==1
+            remove_idx_GroupTable=~cellfun(@isempty,regexpi(Group_Table.GN_Symbol,Name_Check));
+        elseif  check_for_rob_sheet==0
+            remove_idx_GroupTable=~cellfun(@isempty,regexpi(Group_Table.acronym,Name_Check));
+        end
         Group_Table(remove_idx_GroupTable,:)=[];
 
-        % Remove from Statistical_Results
 
         %remove missing ROI
-        remove_idx_Statistical_Results=~cellfun(@isempty,regexpi(Statistical_Results.GN_Symbol,Name_Check));
-        Statistical_Results(remove_idx_Statistical_Results,:)=[];
+        check_for_rob_sheet=sum(~cellfun(@isempty,regexpi(Statistical_Results.Properties.VariableNames,'^GN_Symbol$'))); 
+         if  check_for_rob_sheet==1
+             remove_idx_Statistical_Results=~cellfun(@isempty,regexpi(Statistical_Results.GN_Symbol,Name_Check));
+         elseif check_for_rob_sheet==0
+             remove_idx_Statistical_Results=~cellfun(@isempty,regexpi(Statistical_Results.acronym,Name_Check));
+         end
+         Statistical_Results(remove_idx_Statistical_Results,:)=[];
 
         %remove Error term which is not useful for plotting
         Non_ErrorTotalTerms_idx=cellfun(@isempty,regexpi(Statistical_Results.source_of_variation,'Error|Total'));

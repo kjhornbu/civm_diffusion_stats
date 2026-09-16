@@ -1,4 +1,4 @@
-function [make_axis] = create_rectangular_hit_map(save_dir,color_lookup_paths,color_lookup_name,ontology_ordering,make_axis)
+function [make_axis] = create_rectangular_hit_map(save_dir,color_lookup_paths,color_lookup_name,ontology_ordering,make_axis,hemisphere)
 % color_lookup_paths: is the path to the lookup file in the exact order you
 % want them in along the x axis.
 % color_lookup_name: is a name you want represented for the data along on
@@ -6,10 +6,17 @@ function [make_axis] = create_rectangular_hit_map(save_dir,color_lookup_paths,co
 % ontology_ordering: is a single file ordering you want for the y axis of the data. If
 % you are to filter the lookup data you will remove regions from the
 % ontology ordering. THAT SHOULD BE DONE BEFORE IT PASSES INTO HERE.
+with_threshold=1;
+
+color_LUT(1,1:3)=[186 186 186];
+color_LUT(2,1:3)=[219.9 43.6 87.1];
+color_LUT(3,1:3)=[235.5 110 51.5];
+color_LUT(4,1:3)=[251.1 176.4 15.9];
+color_LUT(5,1:3)=[255 216.25 100];
 
 load_ontology_individually=0;
 if ~istable(ontology_ordering)
-    if numel(ontology_ordering)==1
+    if (numel(ontology_ordering)==1 || ischar(ontology_ordering))
         indiv_ontology_ordering=civm_read_table(ontology_ordering);
     else
         load_ontology_individually=1;
@@ -30,8 +37,38 @@ for n=1:numel(color_lookup_paths)
         indiv_ontology_ordering=civm_read_table(ontology_ordering{n});
     end
 
-    temp_data=data{n}(data{n}.hemisphere_assignment==0,:);
+    temp_data=data{n}(data{n}.hemisphere_assignment==hemisphere,:);
     temp_data.ROI=[];
+
+    if with_threshold
+
+        for m=1:height(color_LUT)
+            value(m,1,:)=temp_data.('c_r')-color_LUT(m,1);
+            value(m,2,:)=temp_data.('c_g')-color_LUT(m,2);
+            value(m,3,:)=temp_data.('c_b')-color_LUT(m,3);
+
+            combined_value(m,:)=value(m,1,:)+value(m,2,:)+value(m,3,:);
+        end
+
+        [~,min_value_idx]=min(abs(combined_value));
+
+        clear SET_IDX;
+
+        logical_set_idx=min_value_idx'==1:height(color_LUT);
+
+        %have [1 2 3 4 5] want [1 5 4 3 2]
+        dataoffset=[1 5 4 3 2];
+        for m=1:height(color_LUT)
+            SET_IDX(logical_set_idx(:,m))=dataoffset(m);
+        end
+
+        temp_data.color_index=SET_IDX';
+
+        adjust_color_idx=temp_data.color_index<4;
+        temp_data.c_r(adjust_color_idx)=186;
+        temp_data.c_g(adjust_color_idx)=186;
+        temp_data.c_b(adjust_color_idx)=186;
+    end
 
     data_w_ontology=innerjoin(temp_data,indiv_ontology_ordering,'Keys',{'Structure','GN_Symbol','hemisphere_assignment','ARA_abbrev'});
 
@@ -39,6 +76,8 @@ for n=1:numel(color_lookup_paths)
 
     key_data_size(n)=height(key_data{n});
 end
+
+
 
 if numel(key_data_size)>1
     assert(nnz(key_data_size(1)==key_data_size(2:end)),'You have different sized key data -- you sure you giving the correct sheets to this function?');
@@ -113,7 +152,7 @@ end
 selection_Number_y=numel(data_y_labels);
 selection_Number_x=numel(data_x_labels);
 
-position_matrix_in=([0 0 position_matrix(4) position_matrix(3)]/2.54); 
+position_matrix_in=([0 0 position_matrix(4) position_matrix(3)]/2.54);
 %% Data Figure Generate
 f=figure;
 set(gcf,'PaperUnits', 'inches','PaperPosition',(96/72)*position_matrix_in,'InnerPosition',position_matrix_in,'PaperPositionMode', 'manual');
@@ -123,14 +162,14 @@ rectangle("Position",[0.5 (selection_Number_x)+0.5 0.5 (selection_Number_y)+0.5]
 
 for region=1:size(hit_map,1)
     for stratification=1:size(hit_map,2)
-    rectangle('Position',[stratification-1 region-1  1 1],'FaceColor',hit_map(region,stratification,1:3)./255,'EdgeColor',[1 1 1]);
+        rectangle('Position',[stratification-1 region-1  1 1],'FaceColor',hit_map(region,stratification,1:3)./255,'EdgeColor',[1 1 1]);
     end
 end
 
-    xticks(0);
-    xticklabels("");
-    yticks(0);
-    yticklabels("");
+xticks(0);
+xticklabels("");
+yticks(0);
+yticklabels("");
 
 axis([0 selection_Number_x 0 selection_Number_y]);
 print(f, out.pdf,'-dpdf','-painters');
@@ -154,12 +193,12 @@ if make_axis
         text(0,positioning(n),strcat(data_y_labels{n}),'HorizontalAlignment','left','VerticalAlignment','middle','FontSize',fontsize,'FontName','FixedWdith');
         line(y_line_coor,[positioning(n),positioning(n)],'Color','black');
     end
-    
+
     xticks(0);
     xticklabels("");
     yticks(0);
     yticklabels("");
-    
+
     print(fL, fullfile(p,'Left_Axis.pdf'),'-dpdf','-painters');
 
     %% x-axis generate
@@ -189,8 +228,8 @@ end
 end
 
 function [x_line_coor]=match_xy_axis(position_matrix_in,y_line_coor)
-%in row column now instead of column row. 
-offset = (6/231); % we want an offset that is nominally at the length of BXDFamily name which is 6 ticks of 231. 
+%in row column now instead of column row.
+offset = (6/231); % we want an offset that is nominally at the length of BXDFamily name which is 6 ticks of 231.
 x_line_coor=position_matrix_in(3)*(diff(y_line_coor))/position_matrix_in(4); % WE convert the difference along x into a difference on y.
 x_line_coor=[offset,offset+x_line_coor];
 end
