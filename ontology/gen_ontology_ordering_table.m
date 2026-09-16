@@ -6,22 +6,39 @@ function [ontology_layout] = gen_ontology_ordering_table(Label_Ontology,Statisti
 %be blank to fill slots)
 ontology_layout=table;
 
+
 ontology_layout.ROI=Statistical_Results.ROI;
 ontology_layout.Structure=Statistical_Results.Structure;
+
 ontology_layout.hemisphere_assignment=Statistical_Results.hemisphere_assignment;
 ontology_layout.GN_Symbol=Statistical_Results.GN_Symbol;
 ontology_layout.ARA_abbrev=Statistical_Results.ARA_abbrev;
-ontology_layout.id64_fSABI=Statistical_Results.id64_fSABI;
+%ontology_layout.id64_fSABI=Statistical_Results.id64_fSABI;
+backup_checking=0;
+if nnz(cellfun(@isempty,Statistical_Results.GN_Symbol))>0
+    backup_checking=1;
+end
 
 %% for each ROI figure out parentage
-for ROI=1:height(ontology_layout)
-    ontology_logical_idx=~cellfun(@isempty,regexpi(Label_Ontology.GN_Symbol,ontology_layout.GN_Symbol(ROI)));
-    ontology_positional_idx=find(ontology_logical_idx==1);
 
+for ROI=1:height(ontology_layout)
+
+    if backup_checking==0
+        ontology_logical_idx=~cellfun(@isempty,regexpi(Label_Ontology.GN_Symbol,ontology_layout.GN_Symbol(ROI)));
+    else
+        ontology_logical_idx=~cellfun(@isempty,regexpi(Label_Ontology.ARA_abbrev,strcat('^(',ontology_layout.ARA_abbrev(ROI),')$')));
+        ROI_select_idx=Label_Ontology.ROI==ontology_layout.ROI(ROI);
+        
+        ontology_logical_idx=and(ontology_logical_idx,ROI_select_idx);
+    end
+
+    ontology_positional_idx=find(ontology_logical_idx==1);
     try
         ontology_layout.id32_fSABI(ROI)=Label_Ontology.id32_fSABI(ontology_positional_idx);
+        ontology_layout.id64_fSABI(ROI)=Label_Ontology.id64_fSABI(ontology_positional_idx);
     catch
         ontology_layout.id32_fSABI(ROI)=str2double(Label_Ontology.id32_fSABI{ontology_positional_idx});
+        ontology_layout.id64_fSABI(ROI)=str2double(Label_Ontology.id64_fSABI{ontology_positional_idx});
     end
 
     ontology_layout.ontology_volume(ROI)=Label_Ontology.volume_mm3(ontology_positional_idx);
@@ -40,6 +57,8 @@ for ROI=1:height(ontology_layout)
         ontology_layout.ontology_order_GN_Symbol{ROI}=ancestor.GN_Symbol;
         ontology_layout.ontology_order_Structure{ROI}=ancestor.Structure;
     end
+
+
 end
 
 %% Check existing regions in ontology to make sure have 100% coverage of parent structures.
@@ -48,11 +67,9 @@ unique_parent_ROIs=unique_parent_ROIs(unique_parent_ROIs>0);
 unique_parent_ROIs=unique_parent_ROIs(sum(ontology_layout.ROI==unique_parent_ROIs')==0);
 
 %% Add more parents if needed for full coverage
-
 offset=height(ontology_layout);
 
 for ROI=1:numel(unique_parent_ROIs)
-
     ontology_logical_idx=Label_Ontology.ROI==unique_parent_ROIs(ROI);
     ontology_positional_idx=find(ontology_logical_idx==1);
     [ancestor,r_idx]=get_ancestor_rows(Label_Ontology,ontology_positional_idx,true);
@@ -93,9 +110,10 @@ ontology_layout.ontology_most_child=~logical(sum(check_parents,2)); %The things 
 
 ontology_layout=sortrows(ontology_layout,{'ontology_level','centroid_PA'},{'ascend','ascend'});
 
+
 if ~exist('full','var')
     full=0;
 end
-ontology_layout=rob_order_fixer(ontology_layout,parent_structure,full);
 
+ontology_layout=rob_order_fixer(ontology_layout,parent_structure,full);
 end
