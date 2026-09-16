@@ -1,12 +1,13 @@
 function [idx_aboveThreshold,idx_top, positional_idx_top,node_keyvertices_entries] = find_key_vertices(key_node,matrix_2_print,matrix_2_print_names,ontology_Order)
-
+Using_threshold=0.01;
 %% What if instead we bake into this where the high signal is... that is we want at least 50% of the large effect vertices seen in the node but not noise vertices... that would be like
 % Thresholding on 1% of the signal 
 idx=reg_match(matrix_2_print_names,'edge');
 matrix_2_print_single=matrix_2_print{idx};
 Matrix_Criteria=mean(matrix_2_print_single);
+%Matrix_Criteria=sum(matrix_2_print_single.*[47;60])/sum([47;60]);
 
-idx_aboveThreshold=(Matrix_Criteria./max(Matrix_Criteria))>0.01;
+idx_aboveThreshold=(Matrix_Criteria./max(Matrix_Criteria))>Using_threshold;
 idx_NOT_uncharted=[~cellfun(@isempty,ontology_Order.GN_Symbol);~cellfun(@isempty,ontology_Order.GN_Symbol)]';
 
 %Check effect size for nodes...
@@ -22,25 +23,30 @@ end
 
 idx_NOT_nan=~isnan(Cohen_Matrix_Criteria); %If there are nan's that leak through remove them here
 
-idx_10pct_noUncharted_nonan_inOntologyOrder=idx_aboveThreshold&idx_NOT_uncharted&idx_NOT_nan;
-pos_idx_10pct_noUncharted_nonan_inOntologyOrder=find(idx_10pct_noUncharted_nonan_inOntologyOrder);
+idx_thres_noUncharted_nonan_inOntologyOrder=idx_aboveThreshold&idx_NOT_uncharted&idx_NOT_nan;
+pos_idx_thres_noUncharted_nonan_inOntologyOrder=find(idx_thres_noUncharted_nonan_inOntologyOrder);
 
 %% Filtering to Top 15 Vertices within the Node
 N=15;
-if sum(idx_10pct_noUncharted_nonan_inOntologyOrder)>N
+if sum(idx_thres_noUncharted_nonan_inOntologyOrder)>N
     %[~,b]=sort(matrix_Criteria(idx_10pct_noUncharted_inOntologyOrder),'descend');
-    [~,b]=sort(Cohen_Matrix_Criteria(idx_10pct_noUncharted_nonan_inOntologyOrder),'descend','ComparisonMethod','abs','MissingPlacement','last'); %the isnan checker should take care of the nan but in anyway "aces" should be low value for sorting.
-    idx_10pct_noUncharted_inOntologyOrder_TopN=zeros(size(idx_10pct_noUncharted_nonan_inOntologyOrder));
-    idx_10pct_noUncharted_inOntologyOrder_TopN(pos_idx_10pct_noUncharted_nonan_inOntologyOrder(b(1:N)))=1;
+    [~,b]=sort(Cohen_Matrix_Criteria(idx_thres_noUncharted_nonan_inOntologyOrder),'descend','ComparisonMethod','abs','MissingPlacement','last'); %the isnan checker should take care of the nan but in anyway "aces" should be low value for sorting.
+    idx_10pct_noUncharted_inOntologyOrder_TopN=zeros(size(idx_thres_noUncharted_nonan_inOntologyOrder));
+    idx_10pct_noUncharted_inOntologyOrder_TopN(pos_idx_thres_noUncharted_nonan_inOntologyOrder(b(1:N)))=1;
     idx_top=idx_10pct_noUncharted_inOntologyOrder_TopN>0;
 else
-    idx_top=idx_10pct_noUncharted_nonan_inOntologyOrder;
+    idx_top=idx_thres_noUncharted_nonan_inOntologyOrder;
 end
 
 positional_idx_top=find(idx_top);
 
 %% Getting key vertex information
 node_keyvertices_entries=table;
+idx=reg_match(matrix_2_print_names,'percent');
+matrix_2_print_percentChange=matrix_2_print{idx};
+
+idx=reg_match(matrix_2_print_names,'edge_std');
+matrix_2_print_edge_std=matrix_2_print{idx};
 
 for vertex_set=1:numel(positional_idx_top)
     node_keyvertices_entries.ROI_Node(vertex_set)=key_node;
@@ -68,7 +74,15 @@ for vertex_set=1:numel(positional_idx_top)
     temp_split=strsplit(ontology_Order.GN_Symbol{adjust_idx},'-');
     node_keyvertices_entries.GN_Symbol_Vertex{vertex_set}=strjoin(temp_split(1:numel(temp_split)-1),'_');
 
-    node_keyvertices_entries.average_CohenD_value(vertex_set)=Cohen_Matrix_Criteria(positional_idx_top(vertex_set));
+    node_keyvertices_entries.CohenD_value(vertex_set)=Cohen_Matrix_Criteria(positional_idx_top(vertex_set));
+    node_keyvertices_entries.Signal_1(vertex_set)=matrix_2_print_single(1,positional_idx_top(vertex_set));
+    node_keyvertices_entries.Signal_2(vertex_set)=matrix_2_print_single(2,positional_idx_top(vertex_set));
+    node_keyvertices_entries.Signal_1_std(vertex_set)=matrix_2_print_edge_std(1,positional_idx_top(vertex_set));
+    node_keyvertices_entries.Signal_2_std(vertex_set)=matrix_2_print_edge_std(2,positional_idx_top(vertex_set));
+    node_keyvertices_entries.percent_Change(vertex_set)=matrix_2_print_percentChange(positional_idx_top(vertex_set));
+    node_keyvertices_entries.average_Signal_value(vertex_set)=Matrix_Criteria(positional_idx_top(vertex_set));
+    node_keyvertices_entries.average_Signal_value_of_Max(vertex_set)=Matrix_Criteria(positional_idx_top(vertex_set))./max(Matrix_Criteria);
+    node_keyvertices_entries.threshold_used(vertex_set)=Using_threshold;
 end
 
 end

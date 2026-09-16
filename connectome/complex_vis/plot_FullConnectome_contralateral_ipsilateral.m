@@ -65,6 +65,8 @@ for m=1:numel(value_compare)
             A_indexed = uint8(255 * (scaled_value) + 1);
             imwrite(A_indexed, map, fullfile(directory_full,strcat(value_selection{n},'_',value_compare{m},'colored_matrix.png')));
 
+            imwrite(A_indexed(set_horz_slice_positional,:), map, fullfile(directory_full,strcat(value_selection{n},'_',value_compare{m},'colored_matrix_SUB.png')));
+
             f=figure;
 
             EntryA=width*printfactor; %width

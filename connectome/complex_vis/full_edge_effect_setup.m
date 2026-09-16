@@ -5,7 +5,9 @@ if data_scaling
     graphs=graphs.*dataframe.scale; % not pulling from the saved graphs --- we are getting it from the dataframe (ie typically the archive)
 end
 
-ontology_Order=civm_read_table("Ontology_Layout_DMBA_20260317_RobFixedOrder.txt");
+%ontology_Order=civm_read_table("Ontology_Layout_DMBA_20260317_RobFixedOrder.txt");
+ontology_Order=civm_read_table("Ontology_Layout_DMBA_20260821_RobFixedOrder.txt"); %This is fixed so it has the correction for cerebellum This is the ontology ordering of leaf structures aka connnectomics. generated using Get_Ontology_Setup.m within the ontology folder of civm_diffusion_stats
+
 [ontology_Order,total_Ordering] = find_proper_ontology_order(ontology_Order,size(graphs,2)/2);
 
 for n=1:numel(comparison)
@@ -81,13 +83,13 @@ compare_group_B_pull=unique(output_difference.compare_group_B,'stable');
 figure_output=table;
 
 for n=1:numel(meaningful_nodes)
-    [matrix_2_print_edge,data_y_labels] = setup_matrix2print(output_connectome,selection_pull,meaningful_nodes(n),total_Ordering,'edge','',compare_group_A_pull,compare_group_B_pull);
+    [matrix_2_print_edge,data_y_labels,matrix_2_print_edge_std] = setup_matrix2print(output_connectome,selection_pull,meaningful_nodes(n),total_Ordering,'edge','',compare_group_A_pull,compare_group_B_pull);
     [matrix_2_print_cohenD,data_y_labels_cohenD] = setup_matrix2print(output_difference,selection_pull,meaningful_nodes(n),total_Ordering,'effect','cohenD_difference',compare_group_A_pull,compare_group_B_pull);
     [matrix_2_print_percent,data_y_labels_percent] = setup_matrix2print(output_difference,selection_pull,meaningful_nodes(n),total_Ordering,'effect','percent_difference',compare_group_A_pull,compare_group_B_pull);
     [matrix_2_print_rawdiff,~] = setup_matrix2print(output_difference,selection_pull,meaningful_nodes(n),total_Ordering,'effect','raw_difference',compare_group_A_pull,compare_group_B_pull);
 
-    matrix_2_print={matrix_2_print_edge;matrix_2_print_cohenD;matrix_2_print_percent;matrix_2_print_rawdiff};
-    matrix_2_print_names={'edge','cohenD','percent','raw_diff'};
+    matrix_2_print={matrix_2_print_edge;matrix_2_print_edge_std;matrix_2_print_cohenD;matrix_2_print_percent;matrix_2_print_rawdiff};
+    matrix_2_print_names={'edge','edge_std','cohenD','percent','raw_diff'};
 
     [idx_aboveThreshold,idx_10pct_noUncharted_inOntologyOrder_Top15,positional_idx_10pct_noUncharted_inOntologyOrder_Top15,node_keyvertices_entries] = find_key_vertices(meaningful_nodes(n),matrix_2_print,matrix_2_print_names,ontology_Order);
 

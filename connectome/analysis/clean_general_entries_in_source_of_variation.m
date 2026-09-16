@@ -34,6 +34,4 @@ for n=1:numel(general_entry_source_of_variation)
         %correct subgroup[0-9] and group|group[0-9] terms
     end
 end
-
-
 end
