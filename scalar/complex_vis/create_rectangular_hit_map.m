@@ -6,13 +6,18 @@ function [make_axis] = create_rectangular_hit_map(save_dir,color_lookup_paths,co
 % ontology_ordering: is a single file ordering you want for the y axis of the data. If
 % you are to filter the lookup data you will remove regions from the
 % ontology ordering. THAT SHOULD BE DONE BEFORE IT PASSES INTO HERE.
-with_threshold=1;
+with_threshold=0;
 
-color_LUT(1,1:3)=[186 186 186];
-color_LUT(2,1:3)=[219.9 43.6 87.1];
-color_LUT(3,1:3)=[235.5 110 51.5];
+if ~exist('hemisphere','var')
+    hemisphere = 0;
+end
+
+color_LUT(1,1:3)=[200 200 200];
+color_LUT(2,1:3)=[186 186 186];
+color_LUT(3,1:3)=[255 216.25 100];
 color_LUT(4,1:3)=[251.1 176.4 15.9];
-color_LUT(5,1:3)=[255 216.25 100];
+color_LUT(5,1:3)=[235.5 110 51.5];
+color_LUT(6,1:3)=[219.9 43.6 87.1];
 
 load_ontology_individually=0;
 if ~istable(ontology_ordering)
@@ -37,6 +42,7 @@ for n=1:numel(color_lookup_paths)
         indiv_ontology_ordering=civm_read_table(ontology_ordering{n});
     end
 
+
     temp_data=data{n}(data{n}.hemisphere_assignment==hemisphere,:);
     temp_data.ROI=[];
 
@@ -56,28 +62,22 @@ for n=1:numel(color_lookup_paths)
 
         logical_set_idx=min_value_idx'==1:height(color_LUT);
 
-        %have [1 2 3 4 5] want [1 5 4 3 2]
-        dataoffset=[1 5 4 3 2];
         for m=1:height(color_LUT)
-            SET_IDX(logical_set_idx(:,m))=dataoffset(m);
+            SET_IDX(logical_set_idx(:,m))=m;
         end
 
         temp_data.color_index=SET_IDX';
 
         adjust_color_idx=temp_data.color_index<4;
-        temp_data.c_r(adjust_color_idx)=186;
-        temp_data.c_g(adjust_color_idx)=186;
-        temp_data.c_b(adjust_color_idx)=186;
+        temp_data.c_r(adjust_color_idx)=color_LUT(1,1);
+        temp_data.c_g(adjust_color_idx)=color_LUT(1,2);
+        temp_data.c_b(adjust_color_idx)=color_LUT(1,3);
     end
 
     data_w_ontology=innerjoin(temp_data,indiv_ontology_ordering,'Keys',{'Structure','GN_Symbol','hemisphere_assignment','ARA_abbrev'});
-
     key_data{n}=sortrows(data_w_ontology,{'start_of_bar','ontology_level'},{'descend','ascend'});
-
     key_data_size(n)=height(key_data{n});
 end
-
-
 
 if numel(key_data_size)>1
     assert(nnz(key_data_size(1)==key_data_size(2:end)),'You have different sized key data -- you sure you giving the correct sheets to this function?');
