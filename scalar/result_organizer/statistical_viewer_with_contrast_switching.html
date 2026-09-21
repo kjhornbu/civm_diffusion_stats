@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statistical Viewer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+    }
+
+    #top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #1a1a2e;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    #dataset-label {
+      color: #a0aec0;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+
+    #dataset-name {
+      color: #e2e8f0;
+      font-size: 0.9rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .divider {
+      color: #4a5568;
+      font-size: 1.2rem;
+      user-select: none;
+    }
+
+    .metric-btn {
+      background: none;
+      border: 1px solid #4a5568;
+      color: #a0aec0;
+      padding: 5px 13px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .metric-btn:hover {
+      border-color: #63b3ed;
+      color: #63b3ed;
+    }
+
+    .metric-btn.active {
+      background: #63b3ed;
+      border-color: #63b3ed;
+      color: #1a1a2e;
+      font-weight: 700;
+    }
+
+    #iframe-container {
+      padding: 0;
+    }
+
+    #viewer {
+      display: block;
+      width: 100%;
+      height: calc(100vh - 96px);
+      border: none;
+      background: white;
+    }
+
+    #nav-bar {
+      position: sticky;
+      bottom: 0;
+      background: #1a1a2e;
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 -2px 6px rgba(0,0,0,0.3);
+    }
+
+    .nav-btn {
+      background: none;
+      border: 1px solid #4a5568;
+      color: #a0aec0;
+      padding: 7px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.15s;
+    }
+
+    .nav-btn:hover {
+      border-color: #63b3ed;
+      color: #63b3ed;
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.3;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    #nav-counter {
+      color: #718096;
+      font-size: 0.8rem;
+    }
+  </style>
+  <script src=".config.js" type="text/javascript"></script>
+</head>
+<body>
+
+<div id="top-bar">
+  <span id="dataset-label">Dataset</span>
+  <span id="dataset-name"></span>
+ <!-- Hard coded buttons.
+  <span class="divider">|</span>
+  <button class="metric-btn" data-metric="CohenD"       onclick="selectMetric('CohenD')">Cohen D</button>
+  <span class="divider">|</span>
+  <button class="metric-btn" data-metric="percent_change" onclick="selectMetric('percent_change')">Percent Change</button>
+  <span class="divider">|</span>
+  <button class="metric-btn" data-metric="pval_BH"      onclick="selectMetric('pval_BH')">Pvalue BH</button>
+  <span class="divider">|</span>
+  <button class="metric-btn" data-metric="CohenF"      onclick="selectMetric('CohenF')">Cohen F</button>
+-->
+  <!-- Button auto-gen script from the METRICS var loaded from .config.js -->
+  <script>
+  function add_metric_button(metric) {
+    <!-- <span class="divider">|</span> -->
+    //<button class="metric-btn" data-metric="CohenD"       onclick="selectMetric('CohenD')">Cohen D</button>
+    
+    // get element top-bar
+    var bar = document.getElementById("top-bar")
+    
+    var spn = document.createElement("SPAN");
+    spn.setAttribute("class", "divider")
+    var dt = document.createTextNode("|");
+    spn.appendChild(dt);
+    bar.appendChild(spn);
+    
+    var btn = document.createElement("BUTTON");
+    //var btn = document.createElement( metric + "button" );
+    var t = document.createTextNode(metric);
+
+    //btn.setAttribute("style","color:red;font-size:23px");
+    btn.setAttribute("class", "metric-btn");
+    btn.setAttribute("data-metric",metric)
+    btn.appendChild(t);
+    <!-- document.body.appendChild(btn); -->
+    bar.appendChild(btn);
+
+    <!-- btn.setAttribute("onclick", function() { selectMetric(metric) }); -->
+    btn.onclick = function() { selectMetric(metric) };
+
+  }
+  /* examples
+  add_metric_button("CohenF")
+  alert( METRICS.length  )
+  alert( METRICS[0] )
+  */
+  for (var i = 0; i < METRICS.length; i++ ){
+    add_metric_button(METRICS[i]);
+  }
+  
+  </script>
+</div>
+
+<div id="iframe-container">
+  <iframe id="viewer" src="about:blank"></iframe>
+</div>
+
+<div id="nav-bar">
+  <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Prev</button>
+  <span id="nav-counter"></span>
+  <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+</div>
+
+<script>
+  // ─── CONFIGURATION ──────────────────────────────────────────────────────────
+  // should be loaded from config.js, BASE_PATH, METRICS, DATASETS
+  // ─── END CONFIGURATION ──────────────────────────────────────────────────────
+
+  let currentDataset = 0;
+  let currentMetric  = METRICS[0];
+
+  function buildURL(datasetIndex, metric) {
+    const ds = DATASETS[datasetIndex];
+
+    return `${BASE_PATH}/${ds.folder}/${ds.prefix}_${metric}.htm`; // /${ds.experiment} add this for going across experiments
+  }
+
+  function render() {
+    const ds = DATASETS[currentDataset];
+
+    // Update label
+    document.getElementById("dataset-name").textContent = ds.label;
+
+    // Update metric buttons
+    document.querySelectorAll(".metric-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.metric === currentMetric);
+    });
+
+    // Update iframe
+    document.getElementById("viewer").src = buildURL(currentDataset, currentMetric);
+
+    // Update nav
+    document.getElementById("nav-counter").textContent =
+      `${currentDataset + 1} / ${DATASETS.length}`;
+    //document.getElementById("prev-btn").disabled = currentDataset === 0;
+    //document.getElementById("next-btn").disabled = currentDataset === DATASETS.length - 1;
+  }
+
+  function selectMetric(metric) {
+    currentMetric = metric;
+    render();
+  }
+
+  function navigate(delta) {
+    next = currentDataset + delta;
+    if (next < 0 ) {
+      next=DATASETS.length - 1 ;
+    } else if (next >= DATASETS.length) {
+      next=0;
+    }
+    if (next >= 0 && next < DATASETS.length) {
+      currentDataset = next;
+      render();
+    }
+  }
+
+  // Init
+  render();
+</script>
+</body>
+</html>
