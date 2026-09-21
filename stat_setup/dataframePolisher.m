@@ -35,9 +35,13 @@ for n=1:height(dataFrame)
         else
             dataFrame.label_lookup_path{n}=temp_connectome_data.lookup;
         end
-
+        if nnz(reg_match(opts.analysisPipelineType,'Connectome'))
+            %  For connectomes only grab the label files
+            %WE NEED THIS FOR CONNECTOMES!!!! WHY DO YOU COMMENT IT OUT JAMES/HARRISON? NEED TO FIX HOW WE GET SCALES FOR CONNECTOME FIRST
+            % :D :p :D
+            dataFrame.label_path{n}=temp_connectome_data.regionaldata(1).labels;
+        end
    
-        %dataFrame.label_path{n}=temp_connectome_data.labels; %WE NEED THIS FOR CONNECTOMES!!!! WHY DO YOU COMMENT IT OUT JAMES/HARRISON? NEED TO FIX HOW WE GET SCALES FOR CONNECTOME FIRST
         dataFrame.connectome_obj{n}=temp_connectome_data;
 
     elseif numel(fieldnames(temp_connectome_data.headfile)) == 0 && ~isempty(opts.alternative_statsheet_dir) &&...
@@ -151,6 +155,10 @@ if sum(found_stats)>=1
         end
         % if any labels were found, its presumed we're supposed to have
         % labels.
+        if found_labels
+            % dataFrame.label_path{n}=temp_connectome_data.labels;
+            dataFrame.label_path{n}=temp_connectome_data.regionaldata(1).labels;
+        end
     end
 end
 

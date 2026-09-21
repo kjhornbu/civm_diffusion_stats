@@ -155,8 +155,8 @@ print(figH, out_png,'-dpng','-r600');
 exportgraphics(figH, out.pdf,'BackgroundColor','none','ContentType','vector','Resolution',600);
 
 %% convert saved pdf to svg and png via inkscape
-warning('NOT GENERATING svg or png from pdf because inkscape based conversion in ontology_plotting.m is busted (');
-
+% warning('NOT GENERATING svg or png from pdf because inkscape based conversion in ontology_plotting.m is busted (');
+% return;
 %{
 Alt2 form of inkscape
 Errors in the inkscape command when ran as command line basically it was
@@ -174,8 +174,6 @@ does runnign inkscape from command prompt work???
 Test CTX02-3-1 and see if same behavior. 
 %}
 
-
-return;
 cmd=sprintf('inkscape --export-filename=%s %s', out.svg, out.pdf);
 [s,sout]=system(cmd);
 retry=5;
@@ -185,7 +183,10 @@ while retry > 0 && s ~= 0 && ~exist(out.svg,'file')
     [s,sout]=system(cmd);
     retry=retry-1;
 end
-assert(s~=0,'inkscape conversion failed with error %s\ncmd:\t%s',sout,cmd);
+%assert(s~=0,'inkscape conversion failed with error %s\ncmd:\t%s',sout,cmd);
+if s~=0 
+    warning('inkscape conversion failed with error %s\ncmd:\t%s',sout,cmd);
+end
 
 cmd=sprintf('inkscape --export-filename=%s --export-dpi=600 %s',out.png,out.pdf);
 [s,sout]=system(cmd);
