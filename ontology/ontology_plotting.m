@@ -173,7 +173,7 @@ TRY THIS NEXT:
 does runnign inkscape from command prompt work???
 Test CTX02-3-1 and see if same behavior. 
 %}
-
+return;
 cmd=sprintf('inkscape --export-filename=%s %s', out.svg, out.pdf);
 [s,sout]=system(cmd);
 retry=5;

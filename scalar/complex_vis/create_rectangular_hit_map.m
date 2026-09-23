@@ -47,7 +47,6 @@ for n=1:numel(color_lookup_paths)
     temp_data.ROI=[];
 
     if with_threshold
-
         for m=1:height(color_LUT)
             value(m,1,:)=temp_data.('c_r')-color_LUT(m,1);
             value(m,2,:)=temp_data.('c_g')-color_LUT(m,2);

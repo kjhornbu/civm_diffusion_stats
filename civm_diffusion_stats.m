@@ -482,7 +482,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
             col_types={'absolute_error'};
         end
         
-        parfor n=1:numel(values)
+        for n=1:numel(values)
             group_stats_file=output_paths_table.StatsResults{n};
             processed_stats_dir=fileparts(group_stats_file);
             scalar_complex_vis_dir=fullfile(processed_stats_dir,'complex_figures');
