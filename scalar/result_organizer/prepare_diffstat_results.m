@@ -10,7 +10,7 @@ function prepare_diffstat_results(varargin)
 % composite files, and or re-try complex compositing.
 %
 
-
+%% ALL input options
 p = inputParser;
 
 % === Positional arguments ===
@@ -118,12 +118,13 @@ addParameter(p,'hide_transfer_log',true,@validate_bool);
 parse(p, varargin{:});
 opts=p.Results; 
 
-%% definitions
+%% Standard Definitions
+% Hemisphere and slice levels
 % matlab civm-definitions anyone? 
 hemisphere_mapping=struct('Left',-1, 'Bilateral',0, 'Right', 1);
 scalar_complex_fig_slice_levels=list2cell('M1p98 M2p96 M3p96 M4p88');
 
-%% more input handling
+%% Checking if moving files. 
 moved_data=false;
 if not( strcmp(opts.base_path_old,'unchanged') )
     warning([ ...
@@ -308,6 +309,7 @@ end
 files.diff_stat_opts=fullfile(p,names.diff_stat_opts);
 con_opts=struct;
 if exist(files.diff_stat_opts,'file')
+    %breaks if you use strings.
     con_opts=matfile(files.diff_stat_opts);
     con_opts=con_opts.opts;
     dirs.stats_save=con_opts.statSaveDir;
@@ -1900,271 +1902,18 @@ catch merr
     err_print(log_inkey, err_idx.in_multicopy, 'output')
 end
 
-
 end
 
-function recreate_colorbars(job_holder,log_inkey,log_outkey)
-% should add an output-path setup here, to help validate input md5.
-out_map=containers.Map();
-input_cksums=job_holder.keys();
-for idx_f=1:numel(input_cksums)
-    md5=input_cksums{idx_f};
-    if ~ out_map.isKey( job_holder(md5).output )
-        S=job_holder(md5);
-        S.md5=md5;
-        out_map( job_holder(md5).output )=S;
-    elseif ~strcmp( md5, out_map(job_holder(md5).output).md5 ) 
-        % outmap set, but md5 for inputs is different.
-        next_input=job_holder(md5).input;
-        cur_input=out_map(job_holder(md5).output).input;
-        tab_in=civm_read_table(next_input,[],[],1);
-        tab_cur=civm_read_table(cur_input,[],[],1);
-        count_diff=table_compare(tab_cur,tab_in);
-        if not( count_diff )
-            % same, so we dont care, unqueue this md5.
-            % uh, that could be an interator bug if we just remove key. 
-            % lets set cached key to empty string instead.
-            input_cksums{idx_f}='';
-            continue;
-        else
-            % loaded tables are different... ruh-roh
-            keyboard;
-        end
-    end
-end
-clear idx_f S;
 
-for idx_f=1:numel(input_cksums)
-    md5=input_cksums{idx_f};
-    if isempty(md5)
-        % we blank out the cached key for any which are redundant.
-        continue;
-    end
-    % this should already be taken care of, shouldn't it?
-    %out_dir=fileparts(job_holder(md5).output);
-    %if ~exist(out_dir,'dir')
-    %    mkdir(out_dir);
-    %end
-    if file_time_check(job_holder(md5).output, 'new', job_holder(md5).input)
-        % data ready, do nothing, even though this
-        % empty looks funny this is on purpose for
-        % branch prediction. (historical testing showed
-        % this was a useful optimization, not validated on current matlab version.)
-        fprintf('');
-    else
-        % i think file_time_check is ... dumb,
-        % The SECOND file must exist! This makes some logic non-obvious.
-        % I should adjust it to better handle files
-        % which should be present and files which should
-        % not.
-        tab_lut=civm_read_table(job_holder(md5).input,[],[],1);
-        % cannot log these the same way, these conflict with the previously
-        % copied LUT files. 
-        % log_entry(job_holder(md5).input,job_holder(md5).output,log_inkey,log_outkey);
-        lookup_plot(table2struct(tab_lut),'proportional',false,'out_height',4,job_holder(md5).output);
-    end
-end
-end
 
-function process_singleton_transfers(job_holder,log_inkey,log_outkey)
-% This is for transfers where we may have many equivalent inputs with a
-% single output. We queue up those transfers instead of running them in
-% place because the copy/re-copy rules are different than for slice images
-% or others.
-% 
-% job_holder is a map, keys are md5 of the input file. values are struct
-% with input=path, output=path, and md5=md5(spurious?).
-for md5=job_holder.keys
-    md5=uncell(md5);
-    % this should already be taken care of, shouldn't it?
-    %out_dir=fileparts(job_holder(k).output);
-    %if ~exist(out_dir,'dir')
-    %    mkdir(out_dir);
-    %end
 
-    md5_out=md5;
-    if exist(job_holder(md5).output,'file')
-        md5_out=GetMD5(job_holder(md5).output,'file');
-    end
-    % getting collisions
-    if ~strcmp(md5,md5_out)
-        % load both tables, do a table compare
-        tab_in=civm_read_table(job_holder(md5).input,[],[],1);
-        tab_cur=civm_read_table(job_holder(md5).output,[],[],1);
-        count_diff=table_compare(tab_cur,tab_in);
-        if not( count_diff )
-            % same, so we dont care.
-            continue;
-        else
-            % loaded tables are different... ruh-roh
-            keyboard;
-        end
-    end
-    if ~strcmp(md5,md5_out)
-        [d,n,e]=fileparts(job_holder(k).output);
-        bak=fullfile(d,sprintf('%s_%s%s',n,md5_out,e));
-        if exist(bak,'file')
-            delete(bak);
-        end
-        movefile(job_holder(k).output,bak);
-        if job_holder.isKey(md5)
-            job_holder.remove(md5)
-        end
-        warning('file collision and does not match, previous file will be renamed. %s',bak);
-        md5_out=md5;
-    end
-    assert(strcmp(md5,md5_out),'queued singleton file transfer has differing input datafiles.');
-        
-    update_file(job_holder(md5).input,job_holder(md5).output,log_inkey,log_outkey)
-end
-end
 
-function queue_singleton_transfer_glurp(job_holder, in_filepath, out_filepath, log_inkey, log_outkey)
 
-md5=persistentmd5(in_filepath,'file');
-md5_out=md5;
-if exist(out_filepath,'file')
-    md5_out=GetMD5(out_filepath,'file');
-end
-% getting collisions
-if ~strcmp(md5,md5_out)
-    % load both tables, do a table compare
-    keyboard;
-end
-if ~strcmp(md5,md5_out)
-    [d,n,e]=fileparts(out_filepath);
-    bak=fullfile(d,sprintf('%s_%s%s',n,md5_out,e));
-    if exist(bak,'file')
-        delete(bak);
-    end
-    movefile(out_filepath,bak);
-    if job_holder.isKey(md5)
-        job_holder.remove(md5)
-    end
-    warning('file collision and does not match, previous file will be renamed. %s',bak);
-    md5_out=md5;
-end
-assert(strcmp(md5,md5_out));
-if ~job_holder.isKey(md5)
-    job_holder(md5)=struct('input',in_filepath,'output',out_filepath);
-    log_entry(in_filepath,out_filepath,log_inkey,log_outkey);
-else
-    assert(strcmp(job_holder(md5).output,out_filepath));
-end
 
-end
 
-function md5=persistentmd5(varargin)
-try
-    md5=GetMD5(varargin{:});
-catch merr
-    [~,n,e]=fileparts(varargin{1});
-    t=fullfile(tempdir,sprintf('%s%s',n,e));
-    copyfile(varargin{1},t);
-    varargin{1}=t;
-    md5=GetMD5(varargin{:});
-    delete(t);
-end
-end
 
-function queue_singleton_transfer(job_holder, in_filepath, out_filepath)
-md5=persistentmd5(in_filepath,'file');
-if ~job_holder.isKey(md5)
-    job_holder(md5)=struct('input',in_filepath,'output',out_filepath);
-else
-    % get oldest of current file, and last one set?
-    % does it even matter?
-end
-end
 
-function update_file(current,file_dest,log_inkey,log_outkey)
-%% add entries to mapping error detection logs.
-log_entry(current,file_dest,log_inkey,log_outkey);
 
-%% check if done, and copy if not.
-if file_time_check(file_dest,'new',current)
-    % data ready, do nothing, even though this
-    % empty looks funny this is on purpose for
-    % branch prediction. (historical testing showed
-    % this was a useful optimization, not validated on current matlab version.)
-    fprintf('');
-else
-    % i think file_time_check is ... dumb,
-    % The SECOND file must exist! This makes some logic non-obvious.
-    % I should adjust it to better handle files
-    % which should be present and files which should
-    % not.
-    %
-    copyfile(current,file_dest);
-end
-end
 
-function log_entry(in_filepath,out_filepath,log_inkey,log_outkey)
-if ~ log_outkey.isKey(out_filepath)
-    log_outkey(out_filepath)={in_filepath};
-else
-    C=log_outkey(out_filepath);
-    if ~ ismember(in_filepath,C)
-        C{end+1}=in_filepath;
-        log_outkey(out_filepath)=C;
-    end
-end
-if ~ log_inkey.isKey(in_filepath)
-    log_inkey(in_filepath)={out_filepath};
-else
-    C=log_inkey(in_filepath);
-    if ~ ismember(out_filepath,C)
-        C{end+1}=out_filepath;
-        log_inkey(in_filepath)=C;
-    end
-end
-end
 
-function log_save(fid,f_map,value_type)
 
-kys=f_map.keys();
-if strcmp(value_type,'output')
-    char='->';
-elseif strcmp(value_type,'input')
-    char='<-';
-else
-    warning('failure');
-    keyboard;
-end
-for k=kys
-    mf=f_map(uncell(k));
-    fprintf(fid,'%s\n',uncell(k));
-    if 1 == numel(mf)
-        fprintf(fid,'\t%s  %s\n', char, strjoin(mf,'\n\t'));
-    else
-        fprintf(fid,'\t%s ERR extra %s:\n', char, value_type);
-        fprintf('\t  %s\n',strjoin(mf,'\n\t'));
-    end
-end
-end
-
-function err_print(f_map,err_idx,value_type)
-if strcmp(value_type,'output')
-    char='->';
-elseif strcmp(value_type,'input')
-    char='<-';
-else
-    warning('failure');
-    keyboard;
-end
-kys=f_map.keys();
-kys=kys(err_idx);
-for k=kys
-    mf=f_map(uncell(k));
-    fprintf('%s\n',uncell(k));
-    if 1 < numel(mf)
-        fprintf('\t%s ERR extra %s:\n\t', char, value_type);
-        fprintf('  %s\n',strjoin(mf,'\n\t'));
-    else
-        fprintf('\t%s  %s\n', char, strjoin(mf,'\n\t'));
-        % this is an error becuase i only expect to be printing error
-        % conditions.
-        error('error on error print, you muppet.');
-    end
-end
-end
