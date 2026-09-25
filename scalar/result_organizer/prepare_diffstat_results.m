@@ -179,7 +179,6 @@ end
 
 warning('so many input flags! what should i use!');
 
-
 %% helper vars to reduce workspace clutter.
 % structs to hold the many name parts, defind here so the fields are in a
 % satisfyingly order, highly similar to their use in file/folder paths (at the time this code was written).
@@ -373,6 +372,7 @@ conf_stat=conf_stats.configuration_struct;
 conf_pair=conf_stats.pairwise_criteria;
 
 %% get group and subgroup with their numbers.
+% Get Groups and subgroupsutlized in the model 
 %... do i need this?
 column_config=struct;
 idx_group= not( cellfun('isempty',conf_stat.test_criteria.GROUP) );
@@ -412,6 +412,7 @@ for idx_g=1:numel(subgroups)
         );
 end
 clear idx_g desc;
+
 clear clear idx_group idx_subgroup numble ic;
 % This is equivalent to the model_table headings.
 %columns_of_interest=[groups;subgroups];
@@ -447,33 +448,13 @@ conf_complex=struct;
 % conf_complex.stat_param=list2cell('result effect');
 conf_complex.stat_param=list2cell('result effect');
 
-%{
-    function list=list_update(list,updates)
-        if ~ischar(updates)
-            if isstring(updates)
-                updates=cellstr(updates);
-            end
-            for upd=updates
-                op=upd{1}(1);
-                wrd=op=upd{1}(2:end);
-                if op == '+'
-                    list{end+1}=wrd;
-                elseif op == '-'
-                    list=list(~ismember(list,{wrd}));
-                else
-                    error(['unsupored update pattern, use leading character +/- to indicate adding or removing.\n' ...
-                        'If replacing entire list, do NOT specify a cell array, specify a space separated list']);
-                end
-            end
-        else
-            list=list2cell(updates);
-        end
-    end
-%}
 if ~ischar(opts.complex_stat_param) || ~strcmp(opts.complex_stat_param,'unchanged')
     opts.complex_stat_param=list2cell(opts.complex_stat_param);
     conf_complex.stat_param=list_update(conf_complex.stat_param,opts.complex_stat_param);
 end
+
+% Some of these are hard coded which isn't really that great. 
+
 conf_complex.result=struct;
 conf_complex.result.param='pval_BH'; % or pval
 conf_complex.result.color_table='pvalue_extended'; % or pvalue, or pvalue_robadingdong... for his extra green version
@@ -499,6 +480,8 @@ conf_complex.sex_comparison='UNRESOLVED';
 % This should be multi-comprison for each non-control study condition
 % EXCLUDING the mixed study comparison.
 conf_complex.sex_study={'UNRESOLVED'};
+
+
 if 1 < numel(conf_complex.stat_param)
     % while we've though ahead for both pval_BH and cohenF, and considered
     % pval, we're really NOT ready for arbitrary combinations, and we're
@@ -506,6 +489,7 @@ if 1 < numel(conf_complex.stat_param)
     warning('testing limited transfering more than one of: %s (error potential increased)',strjoin(conf_complex.stat_param));
     pause(2);
 end
+
 % use these vars to pick out what we'll be organizing
 % column_config
 % conf_stat.stratification
@@ -549,6 +533,7 @@ for col=statmodel_columns
     test_tab=column_rename(test_tab, ...
         uncell(col), sprintf('%s_%s',uncell(col), pairwise_keywords.compare));
 end
+
 % key order very specific to sort in order of comparisons to match input. 
 % ordering key added to ensure exact match without relying on auto sort of
 % others.
@@ -1792,55 +1777,12 @@ end
 clear m_struct;
 
 %% transfer all the colorbars, luts,  and slicer lookups
-process_singleton_transfers(LUT_jobs,log_inkey,log_outkey);
-process_singleton_transfers(slicer_lookup_jobs,log_inkey,log_outkey);
-% process_singleton_transfers(colorbar_jobs);
-recreate_colorbars(colorbar_jobs,log_inkey,log_outkey);
+processFigures(LUT_jobs,slicer_lookup_jobs,colorbar_jobs,log_inkey,log_outkey)
 
-%% create html files
-% files.html_out
-% save('testing_debug');
-% load('testing_debug');
-for htm=files.html_out.keys()
-    htm=uncell(htm);
-    html_conf=files.html_out(htm);
-    
-    if strcmp(html_conf.type,'slice')
-        %success=write_slice_htm(out_htm, headings, slices, colorbar)
-        headings=struct('h3',html_conf.stratification, ...
-            'h4',sprintf('%s %s',html_conf.contrast, html_conf.column_variant) );
-        % html_conf.column_name
-        %{
-        out_htm=html_conf.output;
-        slices=html_conf.slices;
-        colorbar=html_conf.colorbar;
-        %}
-        if not( file_time_check(html_conf.output,'new',html_conf.colorbar) )
-            warning('TODO multi-file time check, include code');
-            write_slice_htm(html_conf.output, headings, html_conf.slices, html_conf.colorbar);
-        end
-    elseif strcmp(html_conf.type,'effect_distribution')
-        headings=struct('h3',html_conf.stratification, ...
-            'h4',sprintf('effect distribution %s', html_conf.column_name) );
-        % forcing update temporarily.
-        % if not( file_time_check(html_conf.output,'new',[html_conf.summary_sov,html_conf.efects]) )
-            warning('TODO multi-file time check, include code');
-            write_effect_dist_htm(html_conf.output, headings, html_conf.summary_sov, html_conf.effects);
-        % end
-    elseif strcmp(html_conf.type,'statistical_view')
-        % THIS SHOULD BE DONE LAST SOMEHOW. 
-        %if not( file_time_check(html_conf.output,'new', fieldnames(html_conf.out_types) ) )
-            warning('TODO multi-file time check, include code');
-            write_statistical_view_htm(html_conf.output, html_conf.contrasts, fieldnames(html_conf.out_types));
-        %end
-    else
-        warning('unhandled html conf type');
-        keyboard;
+%% Create actual HTML Pages
+generateHtmlPages(files)
 
-    end
-
-end
-
+%% Setup and Create Output Log
 %% change log output position when there is only one stratification element
 if 1 == numel(names.erode_dirs) ...
         && 1 == numel(names.stratification)
@@ -1857,51 +1799,8 @@ if ~opts.abort_on_missing
     disp(missing_table);
     pause(15);
 end
-%% test log to ensure we only transfered 1 to 1.
-err_idx=struct('out_overwrite',zeros(1,log_outkey.length,'logical'), ...
-    'in_multicopy',zeros(1,log_inkey.length,'logical'));
-% first look at our out files
-err_k='out_overwrite';
-processed_files=log_outkey.keys();
-for idx_file=1:numel(processed_files)
-    err_idx.(err_k)(idx_file)= 1 < numel( log_outkey(processed_files{idx_file}) );
-end
 
-err_k='in_multicopy';
-processed_files=log_inkey.keys();
-for idx_file=1:numel(processed_files)
-    err_idx.(err_k)(idx_file)= 1 < numel( log_inkey(processed_files{idx_file}) );
-end
-clear err_k processed_files idx_file;
-
-try
-    assert(nnz(err_idx.out_overwrite)==0,'data handling error, some ouputs would have had multiple inputs');
-    assert(nnz(err_idx.in_multicopy)==0,'data handling error, some inputs were copied to multiple outputs');
-    assert(log_inkey.length == log_outkey.length,'data handling error, count of inputs and outputs does not match');
-    if exist(files.log_out,'file')
-        delete(files.log_out);
-    end
-    if exist(files.log_out_mat,'file')
-        delete(files.log_out_mat);
-    end
-    [fid,fm]=fopen(files.log_out,'w');
-    log_save(fid,log_outkey,'input');
-    % this'd be less clear.
-    % log_save(fid,log_inkey,'output');
-    fclose(fid);
-    if ispc && opts.hide_transfer_log
-        fileattrib(files.log_out,'+h','');
-    end
-catch merr
-    warning(merr.message);
-    % save mat version of log when in error
-    fprintf('Saving error log %s\n',files.log_out_mat);
-    save(files.log_out_mat,'log_outkey','log_inkey');
-
-    err_print(log_outkey,err_idx.out_overwrite,'input')
-    err_print(log_inkey, err_idx.in_multicopy, 'output')
-end
-
+createOutputLog(files,opts,log_outkey,log_inkey)
 end
 
 
