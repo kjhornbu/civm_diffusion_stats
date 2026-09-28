@@ -1,4 +1,4 @@
-function fig_colormap = lookup_plot_gpt1(stat_colors,varargin)
+function fig_colormap = lookup_plot(stat_colors,varargin)
 % fig_colormap = lookup_plot_gpt1(stat_colors, [ ARGS, out_struct])
 % Given an input colors table(or structure), plot and optionally save
 % This function might be better named as "LUT_plot", as it does NOT plot a
@@ -66,6 +66,7 @@ calibrated_height=p_pos(4);
 % minimum width inches for the color bar
 min_plot_width=0.2;
 min_plot_width=0.125;
+
 % how much area the label axis will use
 axis_area=0.275;
 % blank margin on right side

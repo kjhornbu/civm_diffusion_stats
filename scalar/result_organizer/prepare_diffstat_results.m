@@ -10,6 +10,11 @@ function prepare_diffstat_results(varargin)
 % composite files, and or re-try complex compositing.
 %
 
+%% Standard Definitions
+% Hemisphere and slice levels
+hemisphere_mapping=struct('Left',-1, 'Bilateral',0, 'Right', 1);
+scalar_complex_fig_slice_levels=list2cell('M1p98 M2p96 M3p96 M4p88');
+
 %% ALL input options
 p = inputParser;
 
@@ -118,11 +123,7 @@ addParameter(p,'hide_transfer_log',true,@validate_bool);
 parse(p, varargin{:});
 opts=p.Results; 
 
-%% Standard Definitions
-% Hemisphere and slice levels
-% matlab civm-definitions anyone? 
-hemisphere_mapping=struct('Left',-1, 'Bilateral',0, 'Right', 1);
-scalar_complex_fig_slice_levels=list2cell('M1p98 M2p96 M3p96 M4p88');
+
 
 %% Checking if moving files. 
 moved_data=false;
@@ -605,7 +606,7 @@ idx_pairwise.primary_sex=       idx_pairwise.primary_potential & idx_pairwise.pr
 kw=sprintf('%s_val',pairwise_keywords.reference);
 %pairwise_keywords.(kw)= ...
 %    conf_pair.control.(column_config.group1)(idx_pairwise.primary_comparison);
-pairwise_keywords.(kw)=conf_pair.control.(column_config.group1);
+pairwise_keywords.(kw)=conf_pair.control.(column_config.group1); % Group1 == primary condition always. 
 
 idx_pairwise.primary_control = idx_pairwise.primary_control & conf_pair.control.(column_config.group1) == pairwise_keywords.(kw);
 % Like idx.primary_control, nail down idx.primary_treatment.
@@ -626,6 +627,7 @@ idx_pairwise.sex_study=     idx_pairwise.sex_potential & idx_pairwise.sex_sov & 
 if nnz(comparison_table.applytosummary) ~= numel(comparison_table.applytosummary)
     warning('Not all comparisons were generated in complex figures! We have a config deficiency between applytosummary and generate complex');
 end
+
 %% watchout, last second blending of applytosummary with indcies
 conf_complex.primary_comparison=comparison_table(idx_pairwise.primary_comparison&comparison_table.applytosummary,:);
 conf_complex.primary_sex=comparison_table(idx_pairwise.primary_sex&comparison_table.applytosummary,:);
@@ -681,7 +683,7 @@ if ~isempty(conf_stat.stratification) && ~reg_match(conf_stat.stratification,'no
     %if isnumeric(se) && ~reg_match(opts.stratification_output_name,'%.+i')
     %    se=cellfun(@num2str,num2cell(se),'UniformOutput',false);
     %end
-    stratification_elements=se;
+    stratification_elements=se; %values of stratification
     
     %% handle partial stratification
     % when stratifying we may have asked for a limit of output. 
@@ -880,16 +882,13 @@ for idx_erode=1:numel(names.erode_dirs)
         % I dont like this name. 
         dirs.effect_distribution_out=fullfile(dirs.summary_out,'effect_distribution');
 
-        
         % Where will the outputs go? 
         %{
         out/stat_data?
         out/stat_data/summary?
         out/stat_data/tables?
         %}
-        sheet_table_idx=row_find(names.strat.relevant_stat_runs,'voxel_wise',names.erode);
-        assert(opts.guess_scalar_paths || numel(sheet_table_idx)==1,'Failed to select correct row of the relevant stat runs');
-        
+
         % reset intentionally to prevent stale entry confusion.
         files.subject_table='UNRESOLVED';
         files.group_table='UNRESOLVED';
@@ -899,6 +898,9 @@ for idx_erode=1:numel(names.erode_dirs)
         % SubjectTable includes all subjects for all stratifications we're
         % processing, and may also include additional subjects!
         if ~opts.guess_scalar_paths
+            sheet_table_idx=row_find(names.strat.relevant_stat_runs,'voxel_wise',names.erode);
+            assert(opts.guess_scalar_paths || numel(sheet_table_idx)==1,'Failed to select correct row of the relevant stat runs');
+
             files.subject_table=names.strat.relevant_stat_runs.SubjectTable{sheet_table_idx};
             files.group_table=names.strat.relevant_stat_runs.GroupTable{sheet_table_idx};
 
@@ -946,10 +948,19 @@ for idx_erode=1:numel(names.erode_dirs)
 
         assert(not( opts.include_significant_summary_table ) || exist(files.significant_table,'file'), ...
             'Data reorganization has caused a failure.');
-        assert(not( opts.include_summary_figures ) || exist(files.significant_graph_sov,'file'), ...
-            'Data reorganization has caused a failure.');
-        assert(not( opts.include_summary_figures ) || exist(files.significant_graph_contrast,'file'), ...
-            'Data reorganization has caused a failure.');
+
+        % in cases where the anovan is 1 way you won't have both sov and
+        % contrast significnat graph. 
+
+        if  exist(files.significant_graph_sov,'file') && exist(files.significant_graph_contrast,'file')
+            assert(not( opts.include_summary_figures ) || exist(files.significant_graph_sov,'file'), ...
+                'Data reorganization has caused a failure.');
+            assert(not( opts.include_summary_figures ) || exist(files.significant_graph_contrast,'file'), ...
+                'Data reorganization has caused a failure.');
+        else
+             assert(not( opts.include_summary_figures ) || exist(files.significant_graph,'file'), ...
+                'Data reorganization has caused a failure.');
+        end
 
         % idk how we'll use this.
         % files.subject_median_zscore
@@ -1423,7 +1434,7 @@ OR we just look for '_None$' and regexprep that?
                         % this should represent the primary compariaon,
                         % and primary+sex comparisons.
                         names.pair_sex_suff=cell(1,height(temp_table));
-                        if ~reg_match(conf_stat.stratification,'sex')
+                        if ~reg_match(conf_stat.stratification,'sex') & numel(idx_sex_cols)==2
                             % Validate that sex cols ar both the same meaning
                             % we're not testing female vs male.
                             diff_1=setdiff( temp_table.(idx_sex_cols(1)), temp_table.(idx_sex_cols(2)) );
@@ -1506,6 +1517,7 @@ OR we just look for '_None$' and regexprep that?
 
                         clear job_holder in_filepath out_filepath;
                     end
+
                     param_pair='UNRESOLVED';
                     for idx_pair=1:numel(names.pair)
                         names.slice=struct();
@@ -1624,9 +1636,6 @@ cohenD/cohenDMale/(slice files 1..4)
 
                             %out_name=sprintf('%s_%s_%s_CohenF.svg',names.strat.output, fig_set, contrast);
                             out_name=sprintf('%s_%s_CohenF_%s.svg', contrast, fig_set, names.strat.output);
-
-                            
-
 
                             out_filepath=fullfile(dirs.effect_distribution_out,out_name);
                             update_file(in_filepath,out_filepath,log_inkey,log_outkey);
@@ -1783,7 +1792,8 @@ processFigures(LUT_jobs,slicer_lookup_jobs,colorbar_jobs,log_inkey,log_outkey)
 generateHtmlPages(files)
 
 %% Setup and Create Output Log
-%% change log output position when there is only one stratification element
+
+% change log output position when there is only one stratification element
 if 1 == numel(names.erode_dirs) ...
         && 1 == numel(names.stratification)
     files.log_out=fullfile(opts.statsViewDir, names.strat.output, ...
