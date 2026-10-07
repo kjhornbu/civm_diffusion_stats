@@ -568,14 +568,22 @@ if  1 < numel(groups)
 end
 idx_pairwise=struct;
 % areas where the primary pair is NOT none may be the primary comparison
-idx_pairwise.primary_control    = ~ row_find(conf_pair.control,column_config.group1,'None',1);
-idx_pairwise.primary_treatment  = ~ row_find(conf_pair.treatment,column_config.group1,'None',1);
-% idx.primary_diff=row_find(conf_pair.control,column_config.group1,conf_pair.treatment.(column_config.group1),1)
-%idx.primary_diff=setdiff(conf_pair.control.(column_config.group1),conf_pair.treatment.(column_config.group1))
-idx_pairwise.primary_diff = conf_pair.control.(column_config.group1) ~= conf_pair.treatment.(column_config.group1);
+try
+    idx_pairwise.primary_control    = ~ row_find(conf_pair.control,column_config.group1,'None',1);
+    idx_pairwise.primary_treatment  = ~ row_find(conf_pair.treatment,column_config.group1,'None',1);
+    groupset='group1';
+catch
+    %keyboard
+    %If not 1 then probably do 2
+    idx_pairwise.primary_control    = ~ row_find(conf_pair.control,column_config.group2,'None',1);
+    idx_pairwise.primary_treatment  = ~ row_find(conf_pair.treatment,column_config.group2,'None',1);
+    groupset='group2';
+end
+
+idx_pairwise.primary_diff = conf_pair.control.(column_config.(groupset)) ~= conf_pair.treatment.(column_config.(groupset));
 idx_pairwise.primary_potential = idx_pairwise.primary_control & idx_pairwise.primary_treatment & idx_pairwise.primary_diff;
 % will idx.primary_sov and idx.primary_potential ever be different?
-idx_pairwise.primary_sov=row_find(comparison_table,'source_of_variation',column_config.group1,1);
+idx_pairwise.primary_sov=row_find(comparison_table,'source_of_variation',column_config.(groupset),1);
 
 idx_pairwise.sex_potential = zeros(size(idx_pairwise.primary_potential),'logical');
 if ~reg_match(conf_stat.stratification,'sex') ...
@@ -605,20 +613,20 @@ idx_pairwise.primary_sex=       idx_pairwise.primary_potential & idx_pairwise.pr
 % to only those lines where it is the primary control.
 kw=sprintf('%s_val',pairwise_keywords.reference);
 %pairwise_keywords.(kw)= ...
-%    conf_pair.control.(column_config.group1)(idx_pairwise.primary_comparison);
-pairwise_keywords.(kw)=conf_pair.control.(column_config.group1); % Group1 == primary condition always. 
+%    conf_pair.control.(column_config.(groupset))(idx_pairwise.primary_comparison);
+pairwise_keywords.(kw)=conf_pair.control.(column_config.(groupset)); % Group1 == primary condition always. 
 
-idx_pairwise.primary_control = idx_pairwise.primary_control & conf_pair.control.(column_config.group1) == pairwise_keywords.(kw);
+idx_pairwise.primary_control = idx_pairwise.primary_control & conf_pair.control.(column_config.(groupset)) == pairwise_keywords.(kw);
 % Like idx.primary_control, nail down idx.primary_treatment.
 pairwise_keywords.(sprintf('%s_val',pairwise_keywords.compare))= ...
-    conf_pair.treatment.(column_config.group1)(idx_pairwise.primary_comparison);
+    conf_pair.treatment.(column_config.(groupset))(idx_pairwise.primary_comparison);
 
 kw=sprintf('%s_val',pairwise_keywords.compare);
 %pairwise_keywords.(kw)= ...
-%    conf_pair.treatment.(column_config.group1)(idx_pairwise.primary_comparison);
-pairwise_keywords.(kw)=conf_pair.treatment.(column_config.group1);
+%    conf_pair.treatment.(column_config.(groupset))(idx_pairwise.primary_comparison);
+pairwise_keywords.(kw)=conf_pair.treatment.(column_config.(groupset));
 
-idx_pairwise.primary_treatment = idx_pairwise.primary_treatment & conf_pair.treatment.(column_config.group1)== pairwise_keywords.(kw);
+idx_pairwise.primary_treatment = idx_pairwise.primary_treatment & conf_pair.treatment.(column_config.(groupset))== pairwise_keywords.(kw);
 
 idx_pairwise.sex_comparison=idx_pairwise.sex_potential & idx_pairwise.sex_sov & idx_pairwise.primary_control & ~idx_pairwise.primary_diff;
 idx_pairwise.sex_study=     idx_pairwise.sex_potential & idx_pairwise.sex_sov & idx_pairwise.primary_treatment & ~idx_pairwise.primary_diff;
@@ -1364,7 +1372,7 @@ for idx_erode=1:numel(names.erode_dirs)
                         temp_column_names=temp_table.Properties.VariableNames;
                         % get indicies for the column categories,
                         % group1, sex, reference, comare
-                        idx_g1_cols=column_find(temp_column_names, sprintf('^%s', column_config.group1), 1);
+                        idx_g1_cols=column_find(temp_column_names, sprintf('^%s', column_config.(groupset)), 1);
                         idx_sex_cols=zeros(size(idx_g1_cols),'logical');
                         req_sex_col=0;
                         if ~reg_match(conf_stat.stratification,'sex') ...
@@ -1374,12 +1382,12 @@ for idx_erode=1:numel(names.erode_dirs)
                         end
 
                         assert(nnz(idx_g1_cols)==2,'should only find %s with sufixes: %s and %s', ...
-                            column_config.group1, pairwise_keywords.reference, pairwise_keywords.compare)
+                            column_config.(groupset), pairwise_keywords.reference, pairwise_keywords.compare)
                         assert(nnz(idx_sex_cols)==req_sex_col,'should only find sex with sufixes: %s and %s', ...
                             pairwise_keywords.reference, pairwise_keywords.compare);
                         if req_sex_col
                             assert(~any(find(idx_g1_cols)==find(idx_sex_cols)),'%s and sex columns should be unique.', ...
-                                column_config.group1);
+                                column_config.(groupset));
                         end
 
                         idx_col_ref=column_find(temp_column_names, sprintf('_%s$',pairwise_keywords.reference), 1);
