@@ -67,7 +67,7 @@ default_scalarContrast(1).level={'0'};
 default_scalarContrast(1).bilateral=false;
 default_scalarContrast(1).nickname={'leaf'};
 default_scalarContrast(1).stat_extension={strcat('_e',default_scalarContrast(1).erode,'_L',default_scalarContrast(1).level,'_',default_scalarContrast(1).nickname,'.txt')};
-default_scalarContrast(1).List=list2cell("volume_mm3 volume_fraction fa_mean ad_mean md_mean rd_mean");
+default_scalarContrast(1).List=list2cell("volume_mm3 volume_fraction fa_mean ad_mean md_mean rd_mean tdi_mean"); % Right now we can't do things others than the _mean --- IE I can't do STD is that because of hard coding I did?
 
 %Examples for how to do other types
 % [1] Eroded stats

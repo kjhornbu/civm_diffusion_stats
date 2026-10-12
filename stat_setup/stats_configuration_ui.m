@@ -85,15 +85,18 @@ waitfor(next_button,'ButtonPushedFcn');
         end
 
         %Check that is proper number series
-        for n=1:numel(Data_str)
-            Data_Num(n)=str2num(Data_str{n});
-        end
+        %If we make the column empty don't check here. 
+        if ~isempty(Data_str)
+            for n=1:numel(Data_str)
+                Data_Num(n)=str2num(Data_str{n});
+            end
 
-        [val,~,val_idx]=unique(Data_Num);
-        number_of_vals=sum(val_idx==val)>1;
+            [val,~,val_idx]=unique(Data_Num);
+            number_of_vals=sum(val_idx==val)>1;
 
-        if sum(number_of_vals)>0
-            colorupdaterequired=true;
+            if sum(number_of_vals)>0
+                colorupdaterequired=true;
+            end
         end
 
         Data{event.Indices(1),event.Indices(2)}={current_val};
