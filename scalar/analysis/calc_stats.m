@@ -1,4 +1,4 @@
-function [output_table,multicompare_table,group_output_summary] = calc_stats(data_table,test_grouping,stats_test)
+function [output_table,multicompare_table,group_output_summary] = calc_stats(data_table,user_contrasts_to_study,test_grouping,stats_test)
 %% This is the main Calculation Script to use for calculation of statistics
 
 
@@ -28,7 +28,8 @@ end
 %% Getting group summary statistics
 
 %get the data columns in the dataset
-data_cells=regexpi(data_table.Properties.VariableNames,'(_mean|voxels|volume_mm3|volume_fraction)$');
+data_regex=strcat('^(',strjoin(user_contrasts_to_study,'|'),')$');
+data_cells=regexpi(data_table.Properties.VariableNames,data_regex);
 data_idx=find(~cellfun(@isempty,data_cells)==1); %actual idx not in logical array format
 data_name=data_table.Properties.VariableNames(:,data_idx);
 

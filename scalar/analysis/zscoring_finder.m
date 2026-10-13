@@ -1,4 +1,4 @@
-function [varargout] = zscoring_finder(data_table,test_groups,do_median,groups_to_remove)
+function [varargout] = zscoring_finder(data_table,user_contrasts_to_study,test_groups,do_median,groups_to_remove)
 %% validate that nargout is the right value when conditions are set.
 if exist('groups_to_remove','var') && do_median && numel(groups_to_remove)>0
     assert(nargout == 2, 'Wrong number of outputs for this given function');
@@ -8,7 +8,7 @@ end
 
 %% standarize the data using z-score to remove undesired effects if have covariates you want to remove
 if exist('groups_to_remove','var')
-    [data_standardized]=zscore_method(data_table,groups_to_remove);
+    [data_standardized]=zscore_method(data_table,user_contrasts_to_study,groups_to_remove);
     varargout{1}=data_standardized;
 end
 
@@ -17,12 +17,12 @@ if do_median==1
     %% Preliminary Setups
     specimen_zscore=table;
     if ~exist('data_standardized','var')
-        [data_standardized_keygroups]=zscore_method(data_table,test_groups);
+        [data_standardized_keygroups]=zscore_method(data_table,user_contrasts_to_study,test_groups);
     else
-        [data_standardized_keygroups]=zscore_method(data_standardized,test_groups);
+        [data_standardized_keygroups]=zscore_method(data_standardized,user_contrasts_to_study,test_groups);
     end
 
-    [data_name, data_idx] = data_idx_name(data_standardized_keygroups);
+    [data_name, data_idx] = data_idx_name(data_standardized_keygroups,user_contrasts_to_study);
     [specimen_name_list,~,specimen_name_idx]=unique(data_standardized_keygroups.specimen,'stable');
 
     for n=1:numel(specimen_name_list)
@@ -49,7 +49,7 @@ if do_median==1
         end
 
         specimen_zscore.Mean_MedianZscore(n)=mean(table2array(specimen_zscore(n,length_group+(1:length_temp))));
-        specimen_zscore.mean_ABS_MedianZscore(n)=mean(abs(table2array(specimen_zscore(n,length_group+(1:length_temp)))));
+        specimen_zscore.Mean_ABS_MedianZscore(n)=mean(abs(table2array(specimen_zscore(n,length_group+(1:length_temp)))));
 
         specimen_zscore.Mean_MedianZscore_FA_Vol(n)=mean(table2array(specimen_zscore(n,~cellfun(@isempty,regexp(specimen_zscore.Properties.VariableNames,'^(fa|volume_mm3)')))));
         specimen_zscore.Mean_ABS_MedianZscore_FA_Vol(n)=mean(abs(table2array(specimen_zscore(n,~cellfun(@isempty,regexp(specimen_zscore.Properties.VariableNames,'^(fa|volume_mm3)'))))));
@@ -63,13 +63,14 @@ if do_median==1
 end
 end
 
-function [name, idx] = data_idx_name(data)
-idx=column_find(data.Properties.VariableNames,'(_mean|volume_mm3|voxels|volume_fraction)$'); %actual idx not in logical array format
+function [name, idx] = data_idx_name(data,user_contrasts_to_study)
+key_entry_regex=strcat('^(',strjoin(user_contrasts_to_study,'|'),')$');
+idx=column_find(data.Properties.VariableNames,key_entry_regex); %actual idx not in logical array format
 name=data.Properties.VariableNames(:,idx);
 end
 
-function [group_mean, group_std] = pull_groupmean_groupstd(data,grouping)
-[data_name, ~] = data_idx_name(data);
+function [group_mean, group_std] = pull_groupmean_groupstd(data,grouping,user_contrasts_to_study)
+[data_name, ~] = data_idx_name(data,user_contrasts_to_study);
 [group_mean,group_std] = group_summary_statistics(data,data_name,grouping);
 end
 
@@ -79,19 +80,19 @@ groupcol_inData_positional_idx=find(~cellfun(@isempty,groupcol_inData_idx)==1);
 [unique_groups,~,unique_groups_positions]=unique(data(:,groupcol_inData_positional_idx));
 end
 
-function [data_standardized]=zscore_method(data_table,groups_to_select)
+function [data_standardized]=zscore_method(data_table,user_contrasts_to_study,groups_to_select)
 data_standardized=data_table;
 % force table into a knowable order.
 data_standardized=sortrows(data_standardized,'ROI');
 
 %Get mean and Standard deviation
-[remove_group_mean, remove_group_std] = pull_groupmean_groupstd(data_standardized,groups_to_select);
+[remove_group_mean, remove_group_std] = pull_groupmean_groupstd(data_standardized,groups_to_select,user_contrasts_to_study);
 
 data_standardized=column_reorder(data_standardized,groups_to_select);
 remove_group_mean=column_reorder(remove_group_mean,groups_to_select);
 remove_group_std=column_reorder(remove_group_std,groups_to_select);
 
-[~, data_idx] = data_idx_name(data_standardized);
+[~, data_idx] = data_idx_name(data_standardized,user_contrasts_to_study);
 
 [~,full_data_remove_type,full_data_remove_type_idx] = select_groupings_from_data(data_standardized,groups_to_select);
 [~,remove_group_mean_type,remove_group_mean_type_idx] = select_groupings_from_data(remove_group_mean,groups_to_select);
@@ -115,7 +116,7 @@ for m=1:size(full_data_remove_type,1)
     removemean=sortrows(remove_group_mean(remove_group_mean_type_idx==mean_pos,:),'ROI');
     removestd=sortrows(remove_group_std(remove_group_std_type_idx==std_pos,:),'ROI');
 
-    [~, data_removemean_idx] = data_idx_name(removemean);
+    [~, data_removemean_idx] = data_idx_name(removemean,user_contrasts_to_study);
     [specimen_name_list,~,specimen_name_idx]=unique(full_remove.specimen,'stable');
 
     for o=1:size(specimen_name_list,1)

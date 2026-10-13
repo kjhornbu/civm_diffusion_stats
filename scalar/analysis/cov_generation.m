@@ -1,4 +1,5 @@
-function [CoV_output] = cov_generation(big_table)
+function [CoV_output] = cov_generation(big_table,user_contrasts_to_study)
+% WE ACTUALLY WANT THE MEAN AND VOL HERE BECAUSE WE ARE 
 %Pull Hemisphere Assignments we are interested in
 idx=~cellfun(@isempty,regexpi(big_table.Properties.VariableNames,'hemisphere_assignment'));
 %LEFT
@@ -7,16 +8,17 @@ idx_LEFT=table2array(big_table(:,idx))==-1;
 idx_RIGHT=table2array(big_table(:,idx))==1;
 
 %Get the Data Columns to perform COV on
-meanANDvol_idx=~cellfun(@isempty,regexpi(big_table.Properties.VariableNames,'_mean$|^vol|'));
-meanANDvol_name=big_table.Properties.VariableNames(:,meanANDvol_idx);
+key_entry_regex=strcat('^(',strjoin(user_contrasts_to_study,'|'),')$');
+key_entry_idx=~cellfun(@isempty,regexpi(big_table.Properties.VariableNames,key_entry_regex)); % This needs to get adjusted so the key variables interested in by the statistical analysis are checked.
+key_entry_name=big_table.Properties.VariableNames(:,key_entry_idx);
 
-check_for_rob_sheet=sum(~cellfun(@isempty,regexpi(big_table.Properties.VariableNames,'^GN_Symbol$'))); 
+check_for_rob_sheet=sum(~cellfun(@isempty,regexpi(big_table.Properties.VariableNames,'^GN_Symbol$')));
 
 %If there is no entry with GN_Symbol in it then we go the RCCF original polish sheet names else use robs
 if check_for_rob_sheet==1
     %Get common information columns
-% Repair Left/Right book keeping structures so they will collapse together.
-% 
+    % Repair Left/Right book keeping structures so they will collapse together.
+    %
     big_table.Structure(idx_LEFT)=strrep(big_table.Structure(idx_LEFT),'_left','');
     big_table.Structure(idx_RIGHT)=strrep(big_table.Structure(idx_RIGHT),'_right','');
 
@@ -26,13 +28,11 @@ if check_for_rob_sheet==1
     idx=regexp(big_table.Properties.VariableNames,'^(specimen|Structure|GN_Symbol|ARA_name|ARA_abbrev|structure_id|group[0-9]+|subgroup[0-9]+)$');
 elseif check_for_rob_sheet==0
     %Get common information columns
-        big_table.Structure(idx_LEFT)=strrep(big_table.Structure(idx_LEFT),'_left','');
+    big_table.Structure(idx_LEFT)=strrep(big_table.Structure(idx_LEFT),'_left','');
     big_table.Structure(idx_RIGHT)=strrep(big_table.Structure(idx_RIGHT),'_right','');
 
     idx=regexp(big_table.Properties.VariableNames,'^(specimen|acronym|name|structure_id|group[0-9]+|subgroup[0-9]+)$');
-
 end
-
 
 %The actual rows to use are specimen|name|
 entry_names=big_table.Properties.VariableNames(~cellfun(@isempty,idx));
@@ -43,9 +43,9 @@ do_mean = @(x) mean (x,'omitnan');
 
 %Find std and mean
 %std result of each contrast and the std regional brain volume for each specimen
-std_table_meanANDvol=varfun(do_std,big_table(logical(idx_LEFT+idx_RIGHT),:),'GroupingVariables',entry_names(:),'InputVariables',meanANDvol_name);
+std_table_meanANDvol=varfun(do_std,big_table(logical(idx_LEFT+idx_RIGHT),:),'GroupingVariables',entry_names(:),'InputVariables',key_entry_name);
 %mean result of each contrast and the mean regional brain volume for each specimen
-mean_table_meanANDvol=varfun(do_mean,big_table(logical(idx_LEFT+idx_RIGHT),:),'GroupingVariables',entry_names(:),'InputVariables',meanANDvol_name);
+mean_table_meanANDvol=varfun(do_mean,big_table(logical(idx_LEFT+idx_RIGHT),:),'GroupingVariables',entry_names(:),'InputVariables',key_entry_name);
 
 %putting the mean and standard deviation across hemisphere data into output
 %table

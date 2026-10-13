@@ -47,7 +47,6 @@ output_path_table.Posthoc={};
 output_path_table.GroupTable={};
 output_path_table.SubjectTable={};
 
-
 for o=1:numel(voxel_wise)
     if o==1
         keep_save_location=save_location;
@@ -123,33 +122,65 @@ for o=1:numel(voxel_wise)
     %% Refilter the Subject data table to Just "interesting" contrasts
 
     ideal_contrast_list=all_ideal_contrast_list{o};
-    all_contrast_list='(_mean|voxels|volume_mm3|volume_fraction)$';
 
-    %Finding contrast columns to keep
-    keep_user_defined_idx=column_find(User_Defined_big_table.Properties.VariableNames,strcat('^(',strjoin(ideal_contrast_list,'|'),')$'),1);
-    keep_idx=column_find(big_table.Properties.VariableNames,strcat('^(',strjoin(ideal_contrast_list,'|'),')$'),1);
+    for n=1:height(ideal_contrast_list)
+        if isempty(regexpi(ideal_contrast_list(n),'(voxels|volume_mm3|volume_fraction)$'))
+            temp=strsplit(ideal_contrast_list(n),'_');
+            contrast_select(n)=temp(1);
+        else
+            contrast_select(n)=ideal_contrast_list(n);
+        end
+    end
+    all_contrast_list=strcat('^(',strjoin(contrast_select,'|'),')');
 
-    %find all contrast columns
-    all_contrast_user_defined_idx=column_find(User_Defined_big_table.Properties.VariableNames,all_contrast_list,1);
-    all_contrast_idx=column_find(big_table.Properties.VariableNames,all_contrast_list,1);
+   % This is a landmine I am partly creating right now but this table is
+   % super messy--- we want to keep all the columns to the left of voxels in the
+   % dataset because I am assuming that comes from the cloud notebook -- for book keeping. We
+   % find that to filter out the other stuff on top of the 
+   
+   % Get the bookkeeping Columns
+   pos_index=column_find(User_Defined_big_table.Properties.VariableNames,'^(voxels)$');
+   keep_user_defined_bookkeeping=logical([ones(1,pos_index-1),zeros(1, width(User_Defined_big_table)-(pos_index-1))]);
+   pos_index=column_find(big_table.Properties.VariableNames,'^(voxels)$');
+   keep_bookkeeping=logical([ones(1,pos_index-1),zeros(1, width(big_table)-(pos_index-1))]);
 
-    % find bad means
-    bad_contrast_user_defined_idx=and(all_contrast_user_defined_idx,~keep_user_defined_idx);
-    bad_contrast_idx=and(all_contrast_idx,~keep_idx);
+   %find all contrast columns
+   all_contrast_user_defined_idx=column_find(User_Defined_big_table.Properties.VariableNames,all_contrast_list,1);
+   all_contrast_idx=column_find(big_table.Properties.VariableNames,all_contrast_list,1);
 
-    % find names of bad means
-    bad_contrast_user_defined_names=User_Defined_big_table.Properties.VariableNames(bad_contrast_user_defined_idx);
-    bad_contrast_names=big_table.Properties.VariableNames(bad_contrast_idx);
+   ALL_KEEP_user_defined_idx=or(keep_user_defined_bookkeeping,all_contrast_user_defined_idx);
+   ALL_KEEP_idx=or(keep_bookkeeping,all_contrast_idx);
 
-    bad_contrast_user_defined_names=strrep(bad_contrast_user_defined_names,'_mean','_');
-    bad_contrast_names=strrep(bad_contrast_names,'_mean','_');
+   User_Defined_big_table=User_Defined_big_table(:,ALL_KEEP_user_defined_idx);
+   big_table=big_table(:,ALL_KEEP_idx);
 
-    %all bad contrasts
-    bad_contrast_user_defined_idx=column_find(User_Defined_big_table.Properties.VariableNames,strcat('^(',strjoin(bad_contrast_user_defined_names,'|'),')'),1);
-    bad_contrast_idx=column_find(big_table.Properties.VariableNames,strcat('^(',strjoin(bad_contrast_names,'|'),')'),1);
-
-    User_Defined_big_table=User_Defined_big_table(:,~bad_contrast_user_defined_idx);
-    big_table=big_table(:,~bad_contrast_idx);
+     %This is what seems to do the breaking of the data???
+     %all_contrast_list='(_mean|voxels|volume_mm3|volume_fraction)$';
+     % Okay the point is we do not have to go so crazy on this to drop out
+     % all columns not involving this contrast.
+     %Finding All contrast columns to keep
+     % all_contrast_user_defined_idx=column_find(User_Defined_big_table.Properties.VariableNames,all_contrast_list,1);
+     % all_contrast_idx=column_find(big_table.Properties.VariableNames,all_contrast_list,1);
+     %      keep_user_defined_idx=column_find(User_Defined_big_table.Properties.VariableNames,strcat('^(',strjoin(ideal_contrast_list,'|'),')$'),1);
+     %      keep_idx=column_find(big_table.Properties.VariableNames,strcat('^(',strjoin(ideal_contrast_list,'|'),')$'),1);
+     %
+     %     % find bad means
+     %     bad_contrast_user_defined_idx=and(all_contrast_user_defined_idx,~keep_user_defined_idx);
+     %     bad_contrast_idx=and(all_contrast_idx,~keep_idx);
+     %
+     %     % find names of bad means
+     %     bad_contrast_user_defined_names=User_Defined_big_table.Properties.VariableNames(bad_contrast_user_defined_idx);
+     %     bad_contrast_names=big_table.Properties.VariableNames(bad_contrast_idx);
+     %
+     %     bad_contrast_user_defined_names=strrep(bad_contrast_user_defined_names,'_mean','_');
+     %     bad_contrast_names=strrep(bad_contrast_names,'_mean','_');
+     %
+     %     %all bad contrasts
+     %     bad_contrast_user_defined_idx=column_find(User_Defined_big_table.Properties.VariableNames,strcat('^(',strjoin(bad_contrast_user_defined_names,'|'),')'),1);
+     %     bad_contrast_idx=column_find(big_table.Properties.VariableNames,strcat('^(',strjoin(bad_contrast_names,'|'),')'),1);
+     %
+     %     User_Defined_big_table=User_Defined_big_table(:,~bad_contrast_user_defined_idx);
+     %     big_table=big_table(:,~bad_contrast_idx);
 
     % force important columns to text
     big_table=column2text(big_table,test_conditions);
@@ -236,7 +267,7 @@ for o=1:numel(voxel_wise)
 
     else
         %% Do check for CoV noise
-        [cov_table] = cov_generation(big_table);
+        [cov_table] = cov_generation(big_table,ideal_contrast_list);
         civm_write_table(cov_table,fullfile(save_location,'Subject_CoV_Table.csv'));
 
         [mean_CoV_specimen_table,mean_CoV_ROI_table] = cov_noise_analysis(cov_table);
@@ -283,21 +314,21 @@ for o=1:numel(voxel_wise)
             
             try
                 if isempty(remove_zscore_grouping{i_testcondition}) && opts.findmedianspecimen==1
-                    [bilat_specimen_zscore] = zscoring_finder(bilat_table,model_GROUPING,opts.findmedianspecimen);
-                    [left_specimen_zscore] = zscoring_finder(left_table,model_GROUPING,opts.findmedianspecimen);
-                    [right_specimen_zscore] = zscoring_finder(right_table,model_GROUPING,opts.findmedianspecimen);
+                    [bilat_specimen_zscore] = zscoring_finder(bilat_table,ideal_contrast_list,model_GROUPING,opts.findmedianspecimen);
+                    [left_specimen_zscore] = zscoring_finder(left_table,ideal_contrast_list,model_GROUPING,opts.findmedianspecimen);
+                    [right_specimen_zscore] = zscoring_finder(right_table,ideal_contrast_list,model_GROUPING,opts.findmedianspecimen);
                 elseif ~isempty(remove_zscore_grouping{i_testcondition}) && opts.findmedianspecimen==1
-                    [bilat_table_standardized,bilat_specimen_zscore] = zscoring_finder(bilat_table,model_GROUPING,opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
-                    [left_table_standardized,left_specimen_zscore] = zscoring_finder(left_table,model_GROUPING,opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
-                    [right_table_standardized,right_specimen_zscore] = zscoring_finder(right_table,model_GROUPING,opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
+                    [bilat_table_standardized,bilat_specimen_zscore] = zscoring_finder(bilat_table,ideal_contrast_list,model_GROUPING,opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
+                    [left_table_standardized,left_specimen_zscore] = zscoring_finder(left_table,ideal_contrast_list,model_GROUPING,opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
+                    [right_table_standardized,right_specimen_zscore] = zscoring_finder(right_table,ideal_contrast_list,model_GROUPING,opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
 
                     civm_write_table(bilat_table_standardized,fullfile(save_location,strcat(group_names{m},'_Bilat_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
                     civm_write_table(left_table_standardized,fullfile(save_location,strcat(group_names{m},'_Left_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
                     civm_write_table(right_table_standardized,fullfile(save_location,strcat(group_names{m},'_Right_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
                 elseif ~isempty(remove_zscore_grouping{i_testcondition}) && opts.findmedianspecimen==0
-                    [bilat_table_standardized] = zscoring_finder(bilat_table,model_GROUPING,opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
-                    [left_table_standardized] = zscoring_finder(left_table,model_GROUPING,opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
-                    [right_table_standardized] = zscoring_finder(right_table,model_GROUPING,opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
+                    [bilat_table_standardized] = zscoring_finder(bilat_table,ideal_contrast_list,model_GROUPING,opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
+                    [left_table_standardized] = zscoring_finder(left_table,ideal_contrast_list,model_GROUPING,opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
+                    [right_table_standardized] = zscoring_finder(right_table,ideal_contrast_list,model_GROUPING,opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
 
                     civm_write_table(bilat_table_standardized,fullfile(save_location,strcat(group_names{m},'_Bilat_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
                     civm_write_table(left_table_standardized,fullfile(save_location,strcat(group_names{m},'_Left_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
@@ -314,13 +345,13 @@ for o=1:numel(voxel_wise)
             end
 
             if isempty(remove_zscore_grouping{i_testcondition})
-                [bilat_result_table,bilat_multi_compare_table,bilat_group_summary_stats] = calc_stats(bilat_table,model_GROUPING,stats_test);
-                [left_result_table,left_multi_compare_table,left_group_summary_stats] = calc_stats(left_table,model_GROUPING,stats_test);
-                [right_result_table,right_multi_compare_table,right_group_summary_stats] = calc_stats(right_table,model_GROUPING,stats_test);
+                [bilat_result_table,bilat_multi_compare_table,bilat_group_summary_stats] = calc_stats(bilat_table,ideal_contrast_list,model_GROUPING,stats_test);
+                [left_result_table,left_multi_compare_table,left_group_summary_stats] = calc_stats(left_table,ideal_contrast_list,model_GROUPING,stats_test);
+                [right_result_table,right_multi_compare_table,right_group_summary_stats] = calc_stats(right_table,ideal_contrast_list,model_GROUPING,stats_test);
             else
-                [bilat_result_table,bilat_multi_compare_table,bilat_group_summary_stats] = calc_stats(bilat_table_standardized,model_GROUPING,stats_test);
-                [left_result_table,left_multi_compare_table,left_group_summary_stats] = calc_stats(left_table_standardized,model_GROUPING,stats_test);
-                [right_result_table,right_multi_compare_table,right_group_summary_stats] = calc_stats(right_table_standardized,model_GROUPING,stats_test);
+                [bilat_result_table,bilat_multi_compare_table,bilat_group_summary_stats] = calc_stats(bilat_table_standardized,ideal_contrast_list,model_GROUPING,stats_test);
+                [left_result_table,left_multi_compare_table,left_group_summary_stats] = calc_stats(left_table_standardized,ideal_contrast_list,model_GROUPING,stats_test);
+                [right_result_table,right_multi_compare_table,right_group_summary_stats] = calc_stats(right_table_standardized,ideal_contrast_list,model_GROUPING,stats_test);
             end
 
             %Defining the Stratificaiton into the result tables
@@ -377,22 +408,22 @@ for o=1:numel(voxel_wise)
         right_specimen_zscore=table;
         try
             if isempty(remove_zscore_grouping{i_testcondition}) && opts.findmedianspecimen==1
-                [bilat_specimen_zscore] = zscoring_finder(bilat_table,test_conditions{i_testcondition},opts.findmedianspecimen);
-                [left_specimen_zscore] = zscoring_finder(left_table,test_conditions{i_testcondition},opts.findmedianspecimen);
-                [right_specimen_zscore] = zscoring_finder(right_table,test_conditions{i_testcondition},opts.findmedianspecimen);
+                [bilat_specimen_zscore] = zscoring_finder(bilat_table,ideal_contrast_list,test_conditions{i_testcondition},opts.findmedianspecimen);
+                [left_specimen_zscore] = zscoring_finder(left_table,ideal_contrast_list,test_conditions{i_testcondition},opts.findmedianspecimen);
+                [right_specimen_zscore] = zscoring_finder(right_table,ideal_contrast_list,test_conditions{i_testcondition},opts.findmedianspecimen);
             elseif ~isempty(remove_zscore_grouping{i_testcondition}) && opts.findmedianspecimen==1 
-                [bilat_table_standardized,bilat_specimen_zscore] = zscoring_finder(bilat_table,test_conditions{i_testcondition},opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
-                [left_table_standardized,left_specimen_zscore] = zscoring_finder(left_table,test_conditions{i_testcondition},opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
-                [right_table_standardized,right_specimen_zscore] = zscoring_finder(right_table,test_conditions{i_testcondition},opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
+                [bilat_table_standardized,bilat_specimen_zscore] = zscoring_finder(bilat_table,ideal_contrast_list,test_conditions{i_testcondition},opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
+                [left_table_standardized,left_specimen_zscore] = zscoring_finder(left_table,ideal_contrast_list,test_conditions{i_testcondition},opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
+                [right_table_standardized,right_specimen_zscore] = zscoring_finder(right_table,ideal_contrast_list,test_conditions{i_testcondition},opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
 
                 civm_write_table(bilat_table_standardized,fullfile(save_location,strcat('Bilat_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
                 civm_write_table(left_table_standardized,fullfile(save_location,strcat('Left_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
                 civm_write_table(right_table_standardized,fullfile(save_location,strcat('Right_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
 
             elseif ~isempty(remove_zscore_grouping{i_testcondition}) && opts.findmedianspecimen == 0 
-                [bilat_table_standardized] = zscoring_finder(bilat_table,test_conditions{i_testcondition},opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
-                [left_table_standardized] = zscoring_finder(left_table,test_conditions{i_testcondition},opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
-                [right_table_standardized] = zscoring_finder(right_table,test_conditions{i_testcondition},opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
+                [bilat_table_standardized] = zscoring_finder(bilat_table,ideal_contrast_list,test_conditions{i_testcondition},opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
+                [left_table_standardized] = zscoring_finder(left_table,ideal_contrast_list,test_conditions{i_testcondition},opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
+                [right_table_standardized] = zscoring_finder(right_table,ideal_contrast_list,test_conditions{i_testcondition},opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
 
                 civm_write_table(bilat_table_standardized,fullfile(save_location,strcat('Bilat_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
                 civm_write_table(left_table_standardized,fullfile(save_location,strcat('Left_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
@@ -412,13 +443,13 @@ for o=1:numel(voxel_wise)
         %Bilat, Left, and Right
         try
             if isempty(remove_zscore_grouping{i_testcondition})
-                [bilat_result_table,bilat_multi_compare_table,bilat_group_summary_stats] = calc_stats(bilat_table,test_conditions{i_testcondition},stats_test);
-                [left_result_table,left_multi_compare_table,left_group_summary_stats] = calc_stats(left_table,test_conditions{i_testcondition},stats_test);
-                [right_result_table,right_multi_compare_table,right_group_summary_stats] = calc_stats(right_table,test_conditions{i_testcondition},stats_test);
+                [bilat_result_table,bilat_multi_compare_table,bilat_group_summary_stats] = calc_stats(bilat_table,ideal_contrast_list,test_conditions{i_testcondition},stats_test);
+                [left_result_table,left_multi_compare_table,left_group_summary_stats] = calc_stats(left_table,ideal_contrast_list,test_conditions{i_testcondition},stats_test);
+                [right_result_table,right_multi_compare_table,right_group_summary_stats] = calc_stats(right_table,ideal_contrast_list,test_conditions{i_testcondition},stats_test);
             else
-                [bilat_result_table,bilat_multi_compare_table,bilat_group_summary_stats] = calc_stats(bilat_table_standardized,test_conditions{i_testcondition},stats_test);
-                [left_result_table,left_multi_compare_table,left_group_summary_stats] = calc_stats(left_table_standardized,test_conditions{i_testcondition},stats_test);
-                [right_result_table,right_multi_compare_table,right_group_summary_stats] = calc_stats(right_table_standardized,test_conditions{i_testcondition},stats_test);
+                [bilat_result_table,bilat_multi_compare_table,bilat_group_summary_stats] = calc_stats(bilat_table_standardized,ideal_contrast_list,test_conditions{i_testcondition},stats_test);
+                [left_result_table,left_multi_compare_table,left_group_summary_stats] = calc_stats(left_table_standardized,ideal_contrast_list,test_conditions{i_testcondition},stats_test);
+                [right_result_table,right_multi_compare_table,right_group_summary_stats] = calc_stats(right_table_standardized,ideal_contrast_list,test_conditions{i_testcondition},stats_test);
 
             end
         catch merr
