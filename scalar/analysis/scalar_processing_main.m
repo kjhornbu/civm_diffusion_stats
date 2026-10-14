@@ -1,49 +1,11 @@
 function [output_path_table] = scalar_processing_main(dataframe,save_location,group,subgroup,test_conditions,remove_zscore_grouping,stats_test,opts)
 %% The meat of the script that generates the scalar analysis of the data set
 
-%% process each stat type
-if exist('opts','var')
-    for n=1: numel(opts.scalarContrastMetrics)
-        voxel_wise{n} =opts.scalarContrastMetrics(n).Name{:};
-        voxel_wise_keys{n} =opts.scalarContrastMetrics(n).Column{:};
-        all_ideal_contrast_list{n}=opts.scalarContrastMetrics(n).List(:);
-    end
-end
-
+%% Preliminaries
+% CIVM Knowledge of our dataset
 v = {'Left', 'Bilateral', 'Right'};
 k = [-1, 0, 1];
 HemisphereAssignmentKey = containers.Map(k, v);
-
-%% check if erode stats are part of data frame, and skip with warning if not
-if isempty( column_find(dataframe,'^stat_path_erode$') )
-    warning('There are NO Erode Stat Paths Specified -- NO Erode Region Data Summaries will be Generated');
-    pause(3);
-    idx=reg_match(voxel_wise,'^(Erode)$');
-    pos_idx=find(idx);
-
-    if ~isempty(pos_idx)
-        opts.scalarContrastMetrics(pos_idx)=[];
-
-        voxel_wise{pos_idx}=[];
-        voxel_wise_keys{pos_idx}=[];
-        all_ideal_contrast_list{pos_idx}=[];
-    end
-
-    idx_NOTempty=~cellfun('isempty',voxel_wise);
-
-    opts.scalarContrastMetrics=opts.scalarContrastMetrics(idx_NOTempty);
-    voxel_wise = voxel_wise(idx_NOTempty) ;
-    voxel_wise_keys = voxel_wise_keys(idx_NOTempty) ;
-    all_ideal_contrast_list = all_ideal_contrast_list(idx_NOTempty) ;
-end
-
-%% Check if too many input groupings
-if numel(test_conditions)>1 && ~ischar(test_conditions{1})
-    error('We don''t currently support multiple stats models (like Sex+Strain then doing Sex+Strain+Sex:Strain with single call) in 1 go. You need to call scalar processing main multiple times yourself.');
-    %This was actually for the  case that had you pushing like 5 stats
-    %models in one go... rather than stratification... the stratification
-    %being broken was a "happy accident".
-end
 
 %Defining output path table
 output_path_table=table;
@@ -54,6 +16,39 @@ output_path_table.StatsResults={};
 output_path_table.Posthoc={};
 output_path_table.GroupTable={};
 output_path_table.SubjectTable={};
+
+%% process each stat type
+if exist('opts','var')
+    for n=1: numel(opts.scalarContrastMetrics)
+        voxel_wise{n} =opts.scalarContrastMetrics(n).Name{:};
+        voxel_wise_keys{n} =opts.scalarContrastMetrics(n).Column{:};
+    end
+end
+
+%% check if erode stats are part of data frame, and skip with warning if not
+if isempty( column_find(dataframe,'^stat_path_erode$') )
+    warning('There are NO Erode Stat Paths Specified -- NO Erode Region Data Summaries will be Generated');
+    pause(3);
+    idx=reg_match(voxel_wise,'^(Erode)$');
+    pos_idx=find(idx);
+
+    if ~isempty(pos_idx)
+        opts.scalarContrastMetrics(pos_idx)=[];
+        voxel_wise{pos_idx}=[];
+        voxel_wise_keys{pos_idx}=[];
+    end
+
+    idx_NOTempty=~cellfun('isempty',voxel_wise);
+    opts.scalarContrastMetrics=opts.scalarContrastMetrics(idx_NOTempty);
+    voxel_wise = voxel_wise(idx_NOTempty) ;
+    voxel_wise_keys = voxel_wise_keys(idx_NOTempty) ;
+end
+
+%% Check if too many input groupings
+if numel(test_conditions)>1 && ~ischar(test_conditions{1})
+    error('We don''t currently support multiple stats models (like Sex+Strain then doing Sex+Strain+Sex:Strain with single call) in 1 go. You need to call scalar processing main multiple times yourself.');
+end
+
 
 for o=1:numel(voxel_wise)
     if o==1
@@ -185,12 +180,10 @@ for o=1:numel(voxel_wise)
                 end
 
                 for m=1:numel(contrast_list)
-
                     temp_bilat_con=((left_table.(contrast_list(m))(left_idx==i_testcondition).*left_table.(volume_list(1))(left_idx==i_testcondition))+(right_table.(contrast_list(m))(right_idx==i_testcondition).*right_table.(volume_list(1))(right_idx==i_testcondition)))./(left_table.(volume_list(1))(left_idx==i_testcondition)+right_table.(volume_list(1))(right_idx==i_testcondition));
                     bilat_table.(contrast_list(m))(bilat_length+[1:numel(temp_bilat_ROI)])=temp_bilat_con;
 
                 end
-
                 group_logical_idx=~cellfun(@isempty,regexpi(left_table.Properties.VariableNames,'group'));
                 group_positional_idx=find(group_logical_idx==1);
                 group_setting_name=left_table.Properties.VariableNames(group_positional_idx);
@@ -202,14 +195,11 @@ for o=1:numel(voxel_wise)
                 bilat_table.specimen(bilat_length+[1:numel(temp_bilat_ROI)])=left_table.specimen(left_idx==i_testcondition);
 
                 bilat_table.hemisphere_assignment(bilat_length+[1:numel(temp_bilat_ROI)])=0;
-
             end
         end
 
         big_table=vertcat(left_table,right_table,bilat_table);
-
         civm_write_table(big_table,fullfile(save_location,'Subject_Data_Table_Regenerated_Bilateral.csv'));
-
     else
         %% Do check for CoV noise
         [cov_table] = cov_generation(big_table,opts.scalarContrastMetrics(o).List(:));
@@ -225,10 +215,6 @@ for o=1:numel(voxel_wise)
     %Loop over test conditions --- the models in the system (we only allow
     %one model at a time now  and have a check condition to disappear at
     %this point so don't allow the looping.
-
-
-    % thought for later make the bilateral L/R a loop rather than doing
-    % things 3 times (would definately make cleaner)
 
     i_testcondition=1;
     % test conditions builds along second dimension not first in the structure.
@@ -316,10 +302,10 @@ for o=1:numel(voxel_wise)
                     [specimen_zscore] = zscoring_finder(filtered_table,opts.scalarContrastMetrics(o).List(:),test_conditions{i_testcondition},opts.findmedianspecimen);
                 elseif ~isempty(remove_zscore_grouping{i_testcondition}) && opts.findmedianspecimen==1
                     [table_standardized,specimen_zscore] = zscoring_finder(filtered_table,opts.scalarContrastMetrics(o).List(:),test_conditions{i_testcondition},opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
-                    civm_write_table(table_standardized,fullfile(save_location,strcat(group_names{m},'_',HemisphereAssignmentKey(hemi_set(hemi)),'_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
+                    civm_write_table(table_standardized,fullfile(save_location,strcat(HemisphereAssignmentKey(hemi_set(hemi)),'_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
                 elseif ~isempty(remove_zscore_grouping{i_testcondition}) && opts.findmedianspecimen==0
                     [table_standardized] = zscoring_finder(filtered_table,opts.scalarContrastMetrics(o).List(:),test_conditions{i_testcondition},opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
-                    civm_write_table(table_standardized,fullfile(save_location,strcat(group_names{m},'_',HemisphereAssignmentKey(hemi_set(hemi)),'_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
+                    civm_write_table(table_standardized,fullfile(save_location,strcat(HemisphereAssignmentKey(hemi_set(hemi)),'_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
                 end
             catch merr
                 warning(merr.identifier,'zscoring_finder incomplete: %s',merr.message);
@@ -356,8 +342,7 @@ for o=1:numel(voxel_wise)
             %This needs to go on the smallest most useful unit for multicomparison otherwise we
             %can't get the BH calculated correctly -- ie don't to L/R/BI together
             result_table_BHFDR=calculate_BHFDR(result_table,opts.scalarContrastMetrics(o).List(:));
-
-            output_paths=save_output_from_scalar_analysis(save_location,HemisphereAssignmentKey(hemi_set(hemi)),group_names{m},group,subgroup,test_conditions{i_testcondition},group_summary_stats,specimen_zscore,result_table_BHFDR,multi_compare_table);
+            output_paths=save_output_from_scalar_analysis(save_location,HemisphereAssignmentKey(hemi_set(hemi)),[],group,subgroup,test_conditions{i_testcondition},group_summary_stats,specimen_zscore,result_table_BHFDR,multi_compare_table);
 
             %% attempt to assign all paths in one shot to output table
             height_paths_table=height(output_path_table);
