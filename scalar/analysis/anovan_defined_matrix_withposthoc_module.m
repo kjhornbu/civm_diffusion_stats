@@ -1,5 +1,5 @@
 function [output_fullspecification,Multi_Compare,name_table] = anovan_defined_matrix_withposthoc_module(...
-    data_subtable,stats_test,name_table,nway_analysis_set,length_name_nointeraction_table)
+    data_subtable,user_contrasts_to_study,stats_test,name_table,nway_analysis_set,length_name_nointeraction_table)
 
 % silly "tables are slow" optimization, just looking at the variable names
 % is slow, so we pull it out ahead.
@@ -8,7 +8,8 @@ data_subtable_columns=data_subtable.Properties.VariableNames;
 check_rob_sheet=sum(~cellfun(@isempty,regexpi(data_subtable_columns,'GN_Symbol')));
 
 %% Where does the data exist in the array
-data_cells=regexpi(data_subtable_columns,'(_mean|voxels|volume_mm3|volume_fraction)$');
+data_regex=strcat('^(',strjoin(user_contrasts_to_study,'|'),')$');
+data_cells=regexpi(data_subtable_columns,data_regex);
 data_idx=find(~cellfun(@isempty,data_cells)==1); %actual idx not in logical array format
 data_name=data_subtable_columns(data_idx);
 

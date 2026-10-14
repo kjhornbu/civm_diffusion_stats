@@ -2,10 +2,9 @@ function [data_table] = calculate_BHFDR(data_table,ideal_contrast_list)
 
 %Check the data for the data_table;
 temp_contrast=data_table.contrast;
-temp_contrast(~cellfun(@isempty,regexpi(temp_contrast,{'normvol'})))={'volume_fraction'};
 
 for n=1:numel(ideal_contrast_list)
-    contrast_idx(:,n)=~cellfun(@isempty,regexpi(temp_contrast,ideal_contrast_list{n}));
+    contrast_idx(:,n)=~cellfun(@isempty,regexpi(temp_contrast,ideal_contrast_list{n})); %This should not be needed anymore???
 end
 
 data_table=data_table(sum(contrast_idx,2)>0,:);

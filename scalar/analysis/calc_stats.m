@@ -74,18 +74,18 @@ for n_n=1:numel(ROI_list)
             % Parametric N-Way Anova with no interactions
             type='no_interaction';
             [stats_test.matrix{1}] = binary_interaction_generator(test_grouping,type);
-            [output,multicompare] = anovan_defined_matrix_withposthoc_module(roi_subtable,stats_test,name_table,nway_analysis_set,length_name_nointeraction_table);
+            [output,multicompare] = anovan_defined_matrix_withposthoc_module(roi_subtable,user_contrasts_to_study,stats_test,name_table,nway_analysis_set,length_name_nointeraction_table);
         case 'anovan_pairwise_interaction'
             % Parametric N-Way Anova with no interactions and pairwise
             % interactions.
             type='pairwise';
             [stats_test.matrix{1}] = binary_interaction_generator(test_grouping,type);
-            [output,multicompare] = anovan_defined_matrix_withposthoc_module(roi_subtable,stats_test,name_table,nway_analysis_set,length_name_nointeraction_table);
+            [output,multicompare] = anovan_defined_matrix_withposthoc_module(roi_subtable,user_contrasts_to_study,stats_test,name_table,nway_analysis_set,length_name_nointeraction_table);
         case 'anovan_full_interaction'
             % Parametric N-Way Anova with no interactions and all possible interactions of cofactors.
             type='full';
             [stats_test.matrix{1}] = binary_interaction_generator(test_grouping,type);
-            [output,multicompare] = anovan_defined_matrix_withposthoc_module(roi_subtable,stats_test,name_table,nway_analysis_set,length_name_nointeraction_table);
+            [output,multicompare] = anovan_defined_matrix_withposthoc_module(roi_subtable,user_contrasts_to_study,stats_test,name_table,nway_analysis_set,length_name_nointeraction_table);
         case 'anovan_stepdown_integer_interaction'
             %Parametric N-Way Anova Steps down by level more correctly instead of all combinations to just
             %pairwise
@@ -94,7 +94,7 @@ for n_n=1:numel(ROI_list)
         case 'anovan_defined_matrix'
             %Specific equation based form of entry of terms into the
             %anovan
-            [output,multicompare] = anovan_defined_matrix_withposthoc_module(roi_subtable,stats_test,name_table,nway_analysis_set,length_name_nointeraction_table);
+            [output,multicompare] = anovan_defined_matrix_withposthoc_module(roi_subtable,user_contrasts_to_study,stats_test,name_table,nway_analysis_set,length_name_nointeraction_table);
         case 'friedman'
             % A non-parametric N Ways Anova: NOTE cannot use groups of
             % different N in this
@@ -107,7 +107,7 @@ for n_n=1:numel(ROI_list)
             %check test grouping lenght is 1.
             assert(numel(test_grouping)==1,'You can''t do a 1 way anova with multiple covariates');
             stats_test.matrix{1}=1;
-            [output,multicompare] = anovan_defined_matrix_withposthoc_module(roi_subtable,stats_test,name_table,nway_analysis_set,length_name_nointeraction_table);
+            [output,multicompare] = anovan_defined_matrix_withposthoc_module(roi_subtable,user_contrasts_to_study,stats_test,name_table,nway_analysis_set,length_name_nointeraction_table);
 
             %[output,multicompare] = anova1_withposthoc_module(roi_subtable,test_grouping,stats_test); %Really don't need this can use anovan for it
         case 'kruskalwallis'
