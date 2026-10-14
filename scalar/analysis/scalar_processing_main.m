@@ -309,17 +309,16 @@ for o=1:numel(voxel_wise)
     else
         for hemi=1:numel(hemi_set)
             filtered_table=big_table(big_table.hemisphere_assignment  ==  hemi_set(hemi),:);
-
             % initialize to empty to simplify later logic
             specimen_zscore=table;
             try
                 if isempty(remove_zscore_grouping{i_testcondition}) && opts.findmedianspecimen==1
-                    [specimen_zscore] = zscoring_finder(filtered_table,opts.scalarContrastMetrics(o).List(:),model_GROUPING,opts.findmedianspecimen);
+                    [specimen_zscore] = zscoring_finder(filtered_table,opts.scalarContrastMetrics(o).List(:),test_conditions{i_testcondition},opts.findmedianspecimen);
                 elseif ~isempty(remove_zscore_grouping{i_testcondition}) && opts.findmedianspecimen==1
-                    [table_standardized,specimen_zscore] = zscoring_finder(filtered_table,opts.scalarContrastMetrics(o).List(:),model_GROUPING,opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
+                    [table_standardized,specimen_zscore] = zscoring_finder(filtered_table,opts.scalarContrastMetrics(o).List(:),test_conditions{i_testcondition},opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
                     civm_write_table(table_standardized,fullfile(save_location,strcat(group_names{m},'_',HemisphereAssignmentKey(hemi_set(hemi)),'_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
                 elseif ~isempty(remove_zscore_grouping{i_testcondition}) && opts.findmedianspecimen==0
-                    [table_standardized] = zscoring_finder(filtered_table,opts.scalarContrastMetrics(o).List(:),model_GROUPING,opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
+                    [table_standardized] = zscoring_finder(filtered_table,opts.scalarContrastMetrics(o).List(:),test_conditions{i_testcondition},opts.findmedianspecimen,remove_zscore_grouping{i_testcondition});
                     civm_write_table(table_standardized,fullfile(save_location,strcat(group_names{m},'_',HemisphereAssignmentKey(hemi_set(hemi)),'_Subject_Data_Table_ZScore_Standardized_by_',strjoin(remove_zscore_grouping{i_testcondition},'_'),'.csv')));
                 end
             catch merr
@@ -334,9 +333,9 @@ for o=1:numel(voxel_wise)
 
             try
                 if isempty(remove_zscore_grouping{i_testcondition})
-                    [result_table,multi_compare_table,group_summary_stats] = calc_stats(filtered_table,opts.scalarContrastMetrics(o).List(:),model_GROUPING,stats_test);
+                    [result_table,multi_compare_table,group_summary_stats] = calc_stats(filtered_table,opts.scalarContrastMetrics(o).List(:),test_conditions{i_testcondition},stats_test);
                 else
-                    [result_table,multi_compare_table,group_summary_stats] = calc_stats(table_standardized,opts.scalarContrastMetrics(o).List(:),model_GROUPING,stats_test);
+                    [result_table,multi_compare_table,group_summary_stats] = calc_stats(table_standardized,opts.scalarContrastMetrics(o).List(:),test_conditions{i_testcondition},stats_test);
                 end
 
             catch merr
@@ -358,7 +357,7 @@ for o=1:numel(voxel_wise)
             %can't get the BH calculated correctly -- ie don't to L/R/BI together
             result_table_BHFDR=calculate_BHFDR(result_table,opts.scalarContrastMetrics(o).List(:));
 
-            output_paths=save_output_from_scalar_analysis(save_location,HemisphereAssignmentKey(hemi_set(hemi)),group_names{m},group,subgroup,model_GROUPING,group_summary_stats,specimen_zscore,result_table_BHFDR,multi_compare_table);
+            output_paths=save_output_from_scalar_analysis(save_location,HemisphereAssignmentKey(hemi_set(hemi)),group_names{m},group,subgroup,test_conditions{i_testcondition},group_summary_stats,specimen_zscore,result_table_BHFDR,multi_compare_table);
 
             %% attempt to assign all paths in one shot to output table
             height_paths_table=height(output_path_table);
