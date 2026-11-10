@@ -49,7 +49,6 @@ if numel(test_conditions)>1 && ~ischar(test_conditions{1})
     error('We don''t currently support multiple stats models (like Sex+Strain then doing Sex+Strain+Sex:Strain with single call) in 1 go. You need to call scalar processing main multiple times yourself.');
 end
 
-
 for o=1:numel(voxel_wise)
     if o==1
         keep_save_location=save_location;
@@ -165,12 +164,9 @@ for o=1:numel(voxel_wise)
             else
 
                 bilat_length=size(bilat_table,1);
-
                 temp_bilat_ROI=left_table.ROI(left_idx==i_testcondition);
                 bilat_table.ROI(bilat_length+[1:numel(temp_bilat_ROI)])=temp_bilat_ROI;
-
                 bilat_table.structure(bilat_length+[1:numel(temp_bilat_ROI)])=left_table.structure(left_idx==i_testcondition);
-
 
                 for m=1:numel(volume_list)
 
@@ -254,18 +250,16 @@ for o=1:numel(voxel_wise)
                     end
                 catch merr
                     warning(merr.identifier,'zscoring_finder incomplete: %s',merr.message);
-                    %if it doesn't work we aren't trying to hard right now --
-                    %typically it is a string related issued with non
-                    %categorical terms
-                    %
-                    % I think we should at least force ourselves to see the
-                    % error...?
                 end
+                try
+                    if isempty(remove_zscore_grouping{i_testcondition})
+                        [result_table,multi_compare_table,group_summary_stats] = calc_stats(filtered_table,opts.scalarContrastMetrics(o).List(:),model_GROUPING,stats_test);
+                    else
+                        [result_table,multi_compare_table,group_summary_stats] = calc_stats(table_standardized,opts.scalarContrastMetrics(o).List(:),model_GROUPING,stats_test);
+                    end
 
-                if isempty(remove_zscore_grouping{i_testcondition})
-                    [result_table,multi_compare_table,group_summary_stats] = calc_stats(filtered_table,opts.scalarContrastMetrics(o).List(:),model_GROUPING,stats_test);
-                else
-                    [result_table,multi_compare_table,group_summary_stats] = calc_stats(table_standardized,opts.scalarContrastMetrics(o).List(:),model_GROUPING,stats_test);
+                catch merr
+                    db_inplace(mfilename,sprintf('Error in calc stats-> %s',merr.message));
                 end
 
                 %Defining the Stratificaiton into the result tables
@@ -309,21 +303,13 @@ for o=1:numel(voxel_wise)
                 end
             catch merr
                 warning(merr.identifier,'zscoring_finder incomplete: %s',merr.message);
-                %if it doesn't work we aren't trying to hard right now --
-                %typically it is a string related issued with non
-                %categorical terms
-                %
-                % I think we should at least force ourselves to see the
-                % error...?
             end
-
             try
                 if isempty(remove_zscore_grouping{i_testcondition})
                     [result_table,multi_compare_table,group_summary_stats] = calc_stats(filtered_table,opts.scalarContrastMetrics(o).List(:),test_conditions{i_testcondition},stats_test);
                 else
                     [result_table,multi_compare_table,group_summary_stats] = calc_stats(table_standardized,opts.scalarContrastMetrics(o).List(:),test_conditions{i_testcondition},stats_test);
                 end
-
             catch merr
                 db_inplace(mfilename,sprintf('Error in calc stats-> %s',merr.message));
             end
@@ -346,7 +332,7 @@ for o=1:numel(voxel_wise)
 
             %% attempt to assign all paths in one shot to output table
             height_paths_table=height(output_path_table);
-            output_path_table(1+height_paths_table,:)={{hemi_set(hemi)},{voxel_wise{o}},{strat_record},{output_paths.StatsResults}, {output_paths.Posthoc}, {output_paths.GroupTable}, {subject_data_table_path}};
+            output_path_table(1+height_paths_table,:)={{hemi_set(hemi)},{voxel_wise{o}},{'-'},{output_paths.StatsResults}, {output_paths.Posthoc}, {output_paths.GroupTable}, {subject_data_table_path}};
         end
     end
 end
