@@ -1,4 +1,4 @@
-function [group,subgroup,test_criteria,test_remove_criteria,stats_test_scalar,stats_test_manova,plot_criteria,studymodel,compare_criteria,Summary_Criteria] = clean_up_stats_setup(configuration_struct,pairwise_criteria,pval_threshold)
+function [group,subgroup,test_criteria,test_remove_criteria,stats_test_scalar,stats_test_manova,plot_criteria,studymodel,compare_criteria,Summary_Criteria] = clean_up_stats_setup(configuration_struct,pval_threshold)
 %% Layout of Group and subgroup Factors
 %group={'genotype','stratifier'};
 %subgroup={'sex'};
@@ -19,6 +19,18 @@ for n=1:numel(group_random_logical)
     end
 end
 
+group_continuous=configuration_struct.test_criteria.CONTINUOUS(GROUP_positional_idx(idxGROUP))';
+group_continuous_logical=~cellfun(@isempty,group_continuous);
+
+
+for n=1:numel(group_continuous_logical)
+    if group_continuous_logical(n)
+        group_continuous_vector{n}= 'continuous';
+    else
+        group_continuous_vector{n}= 'discrete';
+    end
+end
+
 SUBGROUP_logical_idx=~cellfun(@isempty,configuration_struct.test_criteria.SUBGROUP);
 SUBGROUP_positional_idx=find(SUBGROUP_logical_idx);
 [valSUBGROUP,~,idxSUBGROUP]=unique(configuration_struct.test_criteria.SUBGROUP(SUBGROUP_positional_idx));
@@ -32,6 +44,17 @@ for n=1:numel(subgroup_random_logical)
         subgroup_random_vector{n}= 'random';
     else
         subgroup_random_vector{n}= 'fixed';
+    end
+end
+
+subgroup_continuous=configuration_struct.test_criteria.CONTINUOUS(SUBGROUP_positional_idx(idxSUBGROUP))';
+subgroup_continuous_logical=~cellfun(@isempty,subgroup_continuous);
+
+for n=1:numel(subgroup_continuous_logical)
+    if subgroup_continuous_logical(n)
+        subgroup_continuous_vector{n}= 'continuous';
+    else
+        subgroup_continuous_vector{n}= 'discrete';
     end
 end
 
@@ -116,22 +139,30 @@ stats_test_scalar=struct;
 
 stats_test_scalar.name=configuration_struct.scalar_name;
 stats_test_scalar.effect_type_group=group_random_vector;
+stats_test_scalar.variable_type_group=group_continuous_vector;
 stats_test_scalar.group_name=group;
+
 if ~isempty(subgroup)
     stats_test_scalar.effect_type_subgroup=subgroup_random_vector;
+    stats_test_scalar.variable_type_subgroup=subgroup_continuous_vector;
     stats_test_scalar.subgroup_name=subgroup;
 end
+
 stats_test_scalar.matrix{1}=matrix;
 stats_test_scalar.pval_threshold=pval_threshold;
 
 stats_test_manova=struct;
 stats_test_manova.name=configuration_struct.manova_name;
 stats_test_manova.effect_type_group=group_random_vector;
+stats_test_manova.variable_type_group=group_continuous_vector;
 stats_test_manova.group_name=group;
+
 if ~isempty(subgroup)
     stats_test_manova.effect_type_subgroup=subgroup_random_vector;
+    stats_test_manova.variable_type_subgroup=subgroup_continuous_vector;
     stats_test_manova.subgroup_name=subgroup;
 end
+
 stats_test_manova.matrix{1}=matrix;
 stats_test_manova.pval_threshold=pval_threshold;
 
@@ -143,7 +174,7 @@ stats_test_manova.pval_threshold=pval_threshold;
 %should just keept it to those and then from there apply other things. Have
 %a button in the script to port from one sheet to the other and just apply
 %the 
-
+pairwise_criteria=configuration_struct.pairwise_criteria;
 source={'control','treatment'};
 for o=1:numel(source)
     for n=1:height(pairwise_criteria.(source{o}))

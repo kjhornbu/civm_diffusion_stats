@@ -339,13 +339,14 @@ clear p n;
 if ~opts.keep_last_setup
     configuration_table=stats_configuration_ui(dataframe_path);
     configuration_struct=assignmodelmatrix_ui(configuration_table);
-    [pairwise_criteria]=pairwise_compare_ui_apply2summary(configuration_struct,dataframe_path);
+    clear configuration_table
+    [configuration_struct]=pairwise_compare_ui_apply2summary(configuration_struct,dataframe_path);
 
     %save pairwise_criteria, configuration struct
-    save(config_file,'pairwise_criteria','configuration_struct','-mat');
+    save(config_file,'configuration_struct','-mat');
 else
     % load pairwise_criteria, configuration struct
-    load(config_file,'pairwise_criteria','configuration_struct');
+    load(config_file,'configuration_struct');
 end
 
 %save opts so can redo fully
@@ -366,8 +367,10 @@ end
 
 save(opts_file,'opts','-mat');
 
+% the major configuration components at this point are 
+
 [group, subgroup, test_criteria, test_remove_criteria, stats_test_scalar, stats_test_manova, plot_criteria, studymodel, compare_criteria, Summary_Criteria] = ...
-    clean_up_stats_setup(configuration_struct, pairwise_criteria,opts.pvalThreshold);
+    clean_up_stats_setup(configuration_struct,opts.pvalThreshold);
 
 %% Scalar Analysis
 dataframe=civm_read_table(dataframe_path);

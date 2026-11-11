@@ -1,4 +1,4 @@
-function [pairwise_criteria] = pairwise_compare_ui_apply2summary(configuration_struct,input_doc)
+function [configuration_struct] = pairwise_compare_ui_apply2summary(configuration_struct,input_doc)
 
 if istable(input_doc)
     dataFrame=input_doc;
@@ -288,6 +288,8 @@ waitfor(next_button,'ButtonPushedFcn');
         pairwise_criteria.control=controlpw;
         pairwise_criteria.treatment=treatmentpw;
 
+        configuration_struct.pairwise_criteria=pairwise_criteria; 
+        
         close(fig);
         return
     end
