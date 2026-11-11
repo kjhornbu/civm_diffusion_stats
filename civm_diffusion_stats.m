@@ -436,7 +436,6 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
     % In theory to plot more just modify plotting_sheet_types and
     % plotting_hemispheres to whatever you want.
 
-
     px=sprintf('^%s$',strjoin(plotting_sheet_types,'|'));
     st_idx=row_find(output_paths_table,'voxel_wise',px,1);
     h_idx=any( row_find(output_paths_table,'hemisphere',plotting_hemispheres,1), 2);

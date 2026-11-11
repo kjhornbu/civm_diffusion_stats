@@ -39,11 +39,16 @@ waitfor(next_button,'ButtonPushedFcn');
         find_Interaction_col=event.Source.Data.Properties.VariableNames(event.Indices(2));
 
         %Check for only one of the number in the data set
-        test=regexpi(find_Interaction_col,'^(GROUP|SUBGROUP)$');
-        if ~isempty(test)
+        test=~cellfun(@isempty,regexpi(find_Interaction_col,'^(GROUP|SUBGROUP)$'));
+        random_test=~cellfun(@isempty,regexpi(find_Interaction_col,'^(RANDOM)$'));
+        cont_test=~cellfun(@isempty,regexpi(find_Interaction_col,'^(CONTINUOUS)$'));
+
+        if test
             [Data,colorupdaterequired] = checkNumbering(src,Data,event,find_Interaction_col);
-        else
+        elseif random_test
             [Data,colorupdaterequired] = assignRandomEffect(src,Data,event);
+        elseif cont_test
+            [Data,colorupdaterequired] = assignContinuousVariable(src,Data,event);
         end
 
         %color those that are in error
@@ -61,13 +66,42 @@ waitfor(next_button,'ButtonPushedFcn');
     function [Data, colorupdaterequired] = assignRandomEffect(src,Data,event)
         colorupdaterequired=false;
         current_val=event.NewData;
-        prior_val=event.PreviousData;
-
-        if ~strcmp(current_val,prior_val)
-            colorupdaterequired=true;
-        end
 
         Data{event.Indices(1),event.Indices(2)}={current_val};
+    end
+
+    function [Data, colorupdaterequired] = assignContinuousVariable(src,Data,event)
+        
+        data_grab=Data.Column_Names{event.Indices(1)};
+
+        colorupdaterequired=false;
+        current_val=event.NewData;
+        
+        if ~isempty(event.NewData)
+            [colorupdaterequired]=checkContinous(src,data_grab,colorupdaterequired);
+        else
+           colorupdaterequired=true;
+        end
+        
+        Data{event.Indices(1),event.Indices(2)}={current_val};
+    end
+
+    function[colorupdaterequired] = checkContinous(src,color_grab,colorupdaterequired)
+
+       data_col=dataFrame(:,color_grab);
+       colType = class(dataFrame.(color_grab));
+       [a,b,c]=unique(data_col);
+
+       %Autochecker checks for things that automatically would rule
+       %something out as a continous variable-categorical terms. For
+       %numeric terms that have very low amounts of repeats
+
+       if nnz(strcmp(colType,{'string','cell'})) | ( strcmp(colType,'double') & nnz(sum(c==1:numel(a)')>=2))
+           % Strings cannot be continous. 
+           % if it is double and has more than at least 2 entries of the
+           % exact same value per entry -- probably continous
+           colorupdaterequired=true;
+       end
     end
 
     function [Data,colorupdaterequired] = checkNumbering(src,Data,event,find_Interaction_col)
@@ -103,36 +137,32 @@ waitfor(next_button,'ButtonPushedFcn');
     end
 
     function [] = colorupdater_stats_config(src,event)
-        ui_size=size(src.Data);
+        try
+            row_position = event.DisplaySelection(1);
+        catch
+            row_position = event.DisplayIndices(1);
+        end
 
-        row_position = event.DisplaySelection(1);
         remove_style_fcn(src,row_position)
 
         % Assorted Other Issues
-        if reg_match(event.InteractionVariable,'SUBGROUP|GROUP')
-            color = [1 1 0]; %yellow hey there is somethign going on here...
-            % (probably adding something outside of scope) That isn't in one of our main update columns
-            col_positions= event.DisplaySelection(2);
 
-            for o=1:numel(col_positions)
-                %only color the Include Critera that remains
-                s = uistyle("BackgroundColor",color);
-                addStyle(src,s,"cell",[row_position,col_positions(o)]);
-            end
+        try
+            col_positions = event.DisplaySelection(2);
+        catch
+            col_positions = event.DisplayIndices(2);
         end
 
-        %Random
-        random_entry=str2num(src.Data.("RANDOM"){row_position});
-        if random_entry == 1
-            color = [0.6 1 0.6]; %green
-            col_positions=1:ui_size(2);
-
-            for o=1:numel(col_positions)
-                %only color the Include Critera that remains
-                s = uistyle("BackgroundColor",color);
-                addStyle(src,s,"cell",[row_position,col_positions(o)]);
-            end
+        if (col_positions==1 | col_positions==2 | col_positions==4) & ~isempty(event.NewData)
+            color = [1 1 0]; % Yellow
+            s = uistyle("BackgroundColor",color);
+            addStyle(src,s,"cell",[row_position,col_positions]);
+        elseif ~isempty(event.NewData)
+            color = [1 0 0]; %red -- Some other error and there is data there
+            s = uistyle("BackgroundColor",color);
+            addStyle(src,s,"cell",[row_position,col_positions]);
         end
+            
     end
 
     function[] = remove_style_fcn(src,row_position)
@@ -164,8 +194,9 @@ waitfor(next_button,'ButtonPushedFcn');
         Data=addvars(Data,repmat({''},size(Data,1),1),'Before',1);
         Data=addvars(Data,repmat({''},size(Data,1),1),'Before',1);
         Data=addvars(Data,repmat({''},size(Data,1),1),'Before',1);
+        Data=addvars(Data,repmat({''},size(Data,1),1),'Before',1);
 
         %And Call them something Useful
-        Data = renamevars(Data,1:3,["GROUP","SUBGROUP","RANDOM"]);
+        Data = renamevars(Data,1:4,["GROUP","SUBGROUP","RANDOM","CONTINUOUS"]);
     end
 end

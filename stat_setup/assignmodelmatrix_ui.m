@@ -21,8 +21,12 @@ SUBGROUP_positional_idx=find(SUBGROUP_logical_idx);
 only_interesting_col_names=vertcat(configuration_table.Column_Names(GROUP_positional_idx(idxGROUP)),configuration_table.Column_Names(SUBGROUP_positional_idx(idxSUBGROUP))); 
 model_table=table('Size',[1 numel(only_interesting_col_names)],'VariableTypes',repmat({'logical'},[numel(only_interesting_col_names),1]),'VariableNames',only_interesting_col_names);
 model_table.Properties.RowNames=strsplit(num2str(1))';
-
 blank_table=model_table;
+
+nest_table=table('Size',[1 1]*numel(only_interesting_col_names),'VariableTypes',repmat({'logical'},[numel(only_interesting_col_names) 1]),'VariableNames',only_interesting_col_names);
+nest_table.Properties.RowNames=only_interesting_col_names;
+blank_nest_table=nest_table;
+
 
 fig=uifigure('Position',[100 100 2150 550]);
 main_grid = uigridlayout(fig,[1,2]);
@@ -48,10 +52,10 @@ uil_L2=uilabel(left_bottom_tertiary_grid,'text',sprintf(strcat('Connectome Stati
 uitext_L2=uieditfield(left_bottom_tertiary_grid,'text','Value','omnimanova_defined_matrix');
 uitext_L2.ValueChangedFcn=@(src,event) text_model(src,event,'manova');
 
-ui_instruction=uilabel(left_secondary_grid,'text',sprintf('Click to populate matrix model representation for both regression models. Multiple entries in a row indicate interactions between clicked terms.\nClick "Main Effect Model" or "Full Interaction Model" to populate the matrix automatically. Click "Clear Matrix Model" to clear out the current matrix. Click the  + to add new rows.'));
+ui_instruction=uilabel(left_secondary_grid,'text',sprintf('Click to populate matrix model representation for both regression models. Multiple entries in a row indicate interactions between clicked terms.\nClick "Main Effect Model" or "Full Interaction Model" to populate the matrix automatically. Click "Add Nested Terms" to indicate what terms included in the model are children delineations of another term. Click "Clear Matrix Model" to clear out the current matrix. Click the  + to add new rows.'));
 
-left_extra_bottom_tertiary_grid = uigridlayout(left_secondary_grid,[1,3]);
-left_extra_bottom_tertiary_grid.ColumnWidth = {'1x','1x','1x'};
+left_extra_bottom_tertiary_grid = uigridlayout(left_secondary_grid,[1,4]);
+left_extra_bottom_tertiary_grid.ColumnWidth = {'1x','1x','1x','1x'};
 left_extra_bottom_tertiary_grid.RowHeight = {'1x'};
 
 main_effect_button = uibutton(left_extra_bottom_tertiary_grid,'Text','Main Effect Model');
@@ -59,6 +63,9 @@ main_effect_button.ButtonPushedFcn=@main_effect_pushed;
 
 full_interaction_button = uibutton(left_extra_bottom_tertiary_grid,'Text','Full Interaction Model');
 full_interaction_button.ButtonPushedFcn=@full_interaction_pushed;
+
+nested_matrix_button = uibutton(left_extra_bottom_tertiary_grid,'Text','Add Nested Terms');
+nested_matrix_button.ButtonPushedFcn=@create_nested_terms;
 
 clear_matrix_button = uibutton(left_extra_bottom_tertiary_grid,'Text','Clear Matrix Model');
 clear_matrix_button.ButtonPushedFcn=@clear_matrix_button_pushed;
@@ -116,6 +123,7 @@ waitfor(next_button,'ButtonPushedFcn');
         model_table=uit.Data;
     end
 
+
     function full_interaction_pushed(src,event)
         clear_matrix_button_pushed(src,event)
 
@@ -132,6 +140,49 @@ waitfor(next_button,'ButtonPushedFcn');
         end
         model_table=uit.Data;
     end
+
+    function create_nested_terms(src,event)
+        nest_fig=uifigure('Position',[100 100 2150 550]);
+
+        nest_grid = uigridlayout(nest_fig,[3,1]);
+        nest_grid.ColumnWidth = {'1x'};
+        nest_grid.RowHeight = {'1x',65,'1x'};
+
+        nest_instructions=uilabel(nest_grid,'text',sprintf('Row and column headings are all the allocated groupings in the dataset. Rows nest into Columns. For example if Group 2 is nested in Group 1, you would select the checkbox on Row-Group 2, Column-Group 1. \n Click "Clear Matrix Model" to clear out the current matrix.\n Click "Return to Model" to save and return to the Scalar Statistical Model Setting Page.'));
+
+        nest_grid_2=uigridlayout(nest_grid,[1,2]);
+        nest_grid_2.ColumnWidth = {'1x','1x'};
+        nest_grid_2.RowHeight = {'1x'};
+
+        clear_nest_button = uibutton(nest_grid_2,'Text','Clear Matrix Model');
+        clear_nest_button.ButtonPushedFcn=@clear_nest_model;
+
+        return_2_model_button = uibutton(nest_grid_2,'Text','Return to Model');
+        return_2_model_button.ButtonPushedFcn=@return_to_model_pressed;
+
+        uit_nest=uitable(nest_grid);
+        uit_nest.Data=nest_table;
+        Data_size=size(nest_table);
+        uit_nest.ColumnEditable=repmat(true,[1, Data_size(2)]);
+        uit_nest.DisplayDataChangedFcn=@track_nest_changes;
+
+        function clear_nest_model(src,event)
+            %replace the model table and the saving table with an empty table
+            nest_table=blank_nest_table;
+            uit_nest.Data=blank_nest_table;
+        end
+        function return_to_model_pressed(src,event)
+            %combine model with config
+            nest_table=uit_nest.Data; %final make sure we have all the data
+            configuration.nest_model=uit_nest;
+            close(nest_fig);
+            return
+        end
+        function track_nest_changes(src,event)
+            nest_table=uit_nest.Data; %make sure current data is in the saving table
+        end
+    end
+
     function clear_matrix_button_pushed(src,event)
         %replace the model table and the saving table with an empty table
         model_table=blank_table;
@@ -140,7 +191,6 @@ waitfor(next_button,'ButtonPushedFcn');
     function track_changes(src,event)
         model_table=uit.Data; %make sure current data is in the saving table
     end
-
     function add_row_button_pushed(src, event)
         %Make sure when we are adding rows that stuff got putt into the
         %model_table correctly.
@@ -186,6 +236,13 @@ waitfor(next_button,'ButtonPushedFcn');
         %combine model with config
         model_table=uit.Data; %final make sure we have all the data
         configuration.model_table=model_table;
+
+        % if we didn't assign a nst table before, we need to go make one
+        % now. 
+        if nnz(~cellfun(@isempty,regexpi(fieldnames(configuration),'nest_table')))==0
+            configuration.nest_model=nest_table;
+        end
+        
         close(fig);
         return
     end
