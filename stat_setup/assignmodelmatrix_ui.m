@@ -33,16 +33,20 @@ blank_nest_table=nest_table;
 
 %% Start GUI Interface
 fig=uifigure('Position',[100 100 2150 550]);
-main_grid = uigridlayout(fig,[1,2]);
-main_grid.ColumnWidth = {'1x','1x'};
-main_grid.RowHeight = {'1x'};
+pre_panel_grid = uigridlayout(fig,[1,1]);
+pre_panel_grid.ColumnWidth = {'1x'};
+pre_panel_grid.RowHeight = {'1x'};
 
-main_panel=uipanel(main_grid, ...
+main_panel=uipanel(pre_panel_grid, ...
     "Title",'Statistical Model Setting', ...
     "BackgroundColor","white");
 
+main_grid = uigridlayout(main_panel,[1,2]);
+main_grid.ColumnWidth = {'1x','1x'};
+main_grid.RowHeight = {'1x'};
+
 %LEFT Side
-data_grid_L = uigridlayout(main_panel,[6,1]);
+data_grid_L = uigridlayout(main_grid,[6,1]);
 data_grid_L.ColumnWidth = {'1x'};
 data_grid_L.RowHeight = {'1x','1x','1x',65,'1x',65};
 
@@ -91,7 +95,7 @@ add_row_button = uibutton(data_grid_L,'Text','+');
 add_row_button.ButtonPushedFcn=@add_row_button_pushed;
 
 % Right Side
-data_grid_R = uigridlayout(main_panel,[3,1]);
+data_grid_R = uigridlayout(main_grid,[3,1]);
 data_grid_R.ColumnWidth = {'1x'};
 data_grid_R.RowHeight = {'1x','1x',65};
 
