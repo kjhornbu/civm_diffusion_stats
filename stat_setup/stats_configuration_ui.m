@@ -90,15 +90,16 @@ waitfor(next_button,'ButtonPushedFcn');
 
        data_col=dataFrame(:,color_grab);
        colType = class(dataFrame.(color_grab));
-       [a,b,c]=unique(data_col);
+       [a,~,c]=unique(data_col);
 
        %Autochecker checks for things that automatically would rule
        %something out as a continous variable-categorical terms. For
-       %numeric terms that have very low amounts of repeats
+       %numeric terms that have very low amounts of repeats, or is just
+       %nans the size of the data.
 
-       if nnz(strcmp(colType,{'string','cell'})) | ( strcmp(colType,'double') & nnz(sum(c==1:numel(a)')>=2))
+       if nnz(strcmp(colType,{'string','cell'})) | ( strcmp(colType,'double') & nnz(sum(c==1:numel(a)')>2)) | nnz(isnan(table2array(a(:,1))))==height(data_col)
            % Strings cannot be continous. 
-           % if it is double and has more than at least 2 entries of the
+           % if it is double and has more than 2 entries of the
            % exact same value per entry -- probably continous
            colorupdaterequired=true;
        end

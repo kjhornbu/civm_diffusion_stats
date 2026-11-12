@@ -52,7 +52,7 @@ uil_L2=uilabel(left_bottom_tertiary_grid,'text',sprintf(strcat('Connectome Stati
 uitext_L2=uieditfield(left_bottom_tertiary_grid,'text','Value','omnimanova_defined_matrix');
 uitext_L2.ValueChangedFcn=@(src,event) text_model(src,event,'manova');
 
-ui_instruction=uilabel(left_secondary_grid,'text',sprintf('Click to populate matrix model representation for both regression models. Multiple entries in a row indicate interactions between clicked terms.\nClick "Main Effect Model" or "Full Interaction Model" to populate the matrix automatically. Click "Add Nested Terms" to indicate what terms included in the model are children delineations of another term. Click "Clear Matrix Model" to clear out the current matrix. Click the  + to add new rows.'));
+ui_instruction=uilabel(left_secondary_grid,'text',sprintf('Click to populate matrix model representation for both regression models. Multiple entries in a row indicate interactions between clicked terms\nClick "Main Effect Model" or "Full Interaction Model" to populate the matrix automatically.\nClick "Add Nested Terms" to indicate what terms included in the model are children delineations of another term.\nClick "Clear Matrix Model" to clear out the current matrix. Click the  + to add new rows.'));
 
 left_extra_bottom_tertiary_grid = uigridlayout(left_secondary_grid,[1,4]);
 left_extra_bottom_tertiary_grid.ColumnWidth = {'1x','1x','1x','1x'};
@@ -148,7 +148,7 @@ waitfor(next_button,'ButtonPushedFcn');
         nest_grid.ColumnWidth = {'1x'};
         nest_grid.RowHeight = {'1x',65,'1x'};
 
-        nest_instructions=uilabel(nest_grid,'text',sprintf('Row and column headings are all the allocated groupings in the dataset. Rows nest into Columns. For example if Group 2 is nested in Group 1, you would select the checkbox on Row-Group 2, Column-Group 1. \n Click "Clear Matrix Model" to clear out the current matrix.\n Click "Return to Model" to save and return to the Scalar Statistical Model Setting Page.'));
+        nest_instructions=uilabel(nest_grid,'text',sprintf('Statistical Model - Nested Groupings \n \n Row and column headings are all the allocated groupings in the dataset. Rows nest into Columns. For example if Group 2 is nested in Group 1, you would select the checkbox on Row-Group 2, Column-Group 1. \n Click "Clear Matrix Model" to clear out the current nesting entries.\n Click "Return to Model" to save and return to the main statistical model setting page.'));
 
         nest_grid_2=uigridlayout(nest_grid,[1,2]);
         nest_grid_2.ColumnWidth = {'1x','1x'};

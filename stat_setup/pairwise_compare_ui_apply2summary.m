@@ -46,8 +46,6 @@ for n=1:size(model_array,1)
     studymodel{n}=strjoin(configuration_struct.model_table.Properties.VariableNames(model_array(n,:)),':');
 end
 
-
-
 %% Start the ui for figure generation
 fig=uifigure('Position',[100 100 2150 1100]);
 main_grid = uigridlayout(fig,[2,1]); % Have two grids one with all the info in it and another which holds the next button
@@ -95,6 +93,11 @@ Left_1_teriary_grid= uigridlayout(teriary_grid,[2,1]);
 Left_1_teriary_grid.ColumnWidth = {'1x'};
 Left_1_teriary_grid.RowHeight = {65,'1x'};
 uil=uilabel(Left_1_teriary_grid,'Text','');
+
+uit_makecomparision_image=uitable(Left_1_teriary_grid,'ColumnEditable',true);
+uit_makecomparision_image.Data=applytosummary_ppt;
+uit_makecomparision_image.Data.Properties.RowNames=strsplit(num2str(1))';
+uit_makecomparision_image.DisplayDataChangedFcn=@(src,event)update_text(src,event,'checkbox');
 
 uit_applytosummaryppt=uitable(Left_1_teriary_grid,'ColumnEditable',true);
 uit_applytosummaryppt.Data=applytosummary_ppt;
@@ -289,7 +292,7 @@ waitfor(next_button,'ButtonPushedFcn');
         pairwise_criteria.treatment=treatmentpw;
 
         configuration_struct.pairwise_criteria=pairwise_criteria; 
-        
+
         close(fig);
         return
     end

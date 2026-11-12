@@ -1,4 +1,4 @@
-function [group,subgroup,test_criteria,test_remove_criteria,stats_test_scalar,stats_test_manova,plot_criteria,studymodel,compare_criteria,Summary_Criteria] = clean_up_stats_setup(configuration_struct,pval_threshold)
+function [group,subgroup,test_criteria,test_remove_criteria,stats_test_scalar,stats_test_manova,plot_criteria,studymodel,compare_criteria,Summary_Criteria,pairwise_criteria] = clean_up_stats_setup(configuration_struct,pval_threshold)
 %% Layout of Group and subgroup Factors
 %group={'genotype','stratifier'};
 %subgroup={'sex'};

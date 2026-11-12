@@ -1,6 +1,4 @@
 function [ config_file ] = civm_diffusion_stats(varargin)
-% no help for you HEYYYYY I TRY
-
 % Expected that google_doc is a file which civm_read_table will load
 % will save updated copy to cleaned_google_doc_path
 % from cleaned googledoc, will build and save dataframe sheet to dataframe.
@@ -342,10 +340,12 @@ if ~opts.keep_last_setup
     clear configuration_table
     [configuration_struct]=pairwise_compare_ui_apply2summary(configuration_struct,dataframe_path);
 
-    %save pairwise_criteria, configuration struct
+    %save configuration struct (which now includes
+    % pariwise_criteria)
     save(config_file,'configuration_struct','-mat');
 else
-    % load pairwise_criteria, configuration struct
+    % load configuration struct (which now includes
+    % pariwise_criteria)
     load(config_file,'configuration_struct');
 end
 
@@ -369,7 +369,7 @@ save(opts_file,'opts','-mat');
 
 % the major configuration components at this point are 
 
-[group, subgroup, test_criteria, test_remove_criteria, stats_test_scalar, stats_test_manova, plot_criteria, studymodel, compare_criteria, Summary_Criteria] = ...
+[group, subgroup, test_criteria, test_remove_criteria, stats_test_scalar, stats_test_manova, plot_criteria, studymodel, compare_criteria, Summary_Criteria,pairwise_criteria] = ...
     clean_up_stats_setup(configuration_struct,opts.pvalThreshold);
 
 %% Scalar Analysis
@@ -539,10 +539,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
             %this generates our master queue for the dataset. 
            [main_plot_queue{n},main_composite_queue{n},~]=ontology_and_slice_generator(group_stats_file, column_setup, scalar_complex_vis_dir, previously_loaded_labelfile);
 
-
-
         end
-
 
         % Do Actual Running of queues
         plot_queue=vertcat(main_plot_queue{:});
