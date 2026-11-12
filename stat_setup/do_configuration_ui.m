@@ -5,7 +5,7 @@ main_grid = uigridlayout(fig,[3,1]);
 main_grid.RowHeight = {'1x','1x',65};
 main_grid.ColumnWidth = {'1x'};
 
-uil=uilabel(main_grid,'text',sprintf(['A configuration file exists for this project at: %s.\n\n' ...
+uilabel(main_grid,'text',sprintf(['A configuration file exists for this project at: %s.\n\n' ...
     'DO YOU WANT TO MAKE A NEW CONFIGURATION FILE?'],setup_file));
 
 yes_no_buttons = uibuttongroup(main_grid);

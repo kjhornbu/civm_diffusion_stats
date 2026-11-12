@@ -1,12 +1,14 @@
 function [configuration] = assignmodelmatrix_ui(configuration_table)
-%settup struct of configuration
+%% Preliminaries
+
+% Setup configuration
 configuration.test_criteria=configuration_table;
 configuration.scalar_name='anovan_defined_matrix';
 configuration.manova_name='omnimanova_defined_matrix';
 configuration.zscore='none';
 configuration.stratification='none';
 
-%different model types
+%different model types that are possible
 scalar_stat_models={'anovan_defined_matrix, anovan_no_interaction, anovan_pairwise_interaction, anovan_full_interaction,\nanova_1way, kruskalwallis. Only in MATLAB 2023+: manova_nway_fullinteraction, manova_nway_no_interaction'};
 manova_stat_models={'omnimanova_full_interactions, omnimanova_defined_matrix'};
 
@@ -18,7 +20,9 @@ SUBGROUP_logical_idx=~cellfun(@isempty,configuration_table.SUBGROUP);
 SUBGROUP_positional_idx=find(SUBGROUP_logical_idx);
 [valSUBGROUP,~,idxSUBGROUP]=unique(configuration_table.SUBGROUP(SUBGROUP_positional_idx));
 
+%set up model clickable table and nesting clickable table
 only_interesting_col_names=vertcat(configuration_table.Column_Names(GROUP_positional_idx(idxGROUP)),configuration_table.Column_Names(SUBGROUP_positional_idx(idxSUBGROUP))); 
+
 model_table=table('Size',[1 numel(only_interesting_col_names)],'VariableTypes',repmat({'logical'},[numel(only_interesting_col_names),1]),'VariableNames',only_interesting_col_names);
 model_table.Properties.RowNames=strsplit(num2str(1))';
 blank_table=model_table;
@@ -27,86 +31,90 @@ nest_table=table('Size',[1 1]*numel(only_interesting_col_names),'VariableTypes',
 nest_table.Properties.RowNames=only_interesting_col_names;
 blank_nest_table=nest_table;
 
-
+%% Start GUI Interface
 fig=uifigure('Position',[100 100 2150 550]);
 main_grid = uigridlayout(fig,[1,2]);
 main_grid.ColumnWidth = {'1x','1x'};
 main_grid.RowHeight = {'1x'};
 
+uipanel(main_grid, ...
+    "Title",'Statistical Model Setting', ...
+    "BackgroundColor","white");
+
 %LEFT Side
-left_secondary_grid = uigridlayout(main_grid,[6,1]);
-left_secondary_grid.ColumnWidth = {'1x'};
-left_secondary_grid.RowHeight = {'1x','1x','1x',65,'1x',65};
+data_grid_L = uigridlayout(main_grid,[6,1]);
+data_grid_L.ColumnWidth = {'1x'};
+data_grid_L.RowHeight = {'1x','1x','1x',65,'1x',65};
 
-left_top_tertiary_grid = uigridlayout(left_secondary_grid,[2,1]);
-left_top_tertiary_grid.ColumnWidth = {'1x'};
-left_top_tertiary_grid.RowHeight = {'1x','1x'};
-uil_L1=uilabel(left_top_tertiary_grid,'text',sprintf(strcat('Scalar Statistical Model\nOptions:',32,scalar_stat_models{:})));
-uitext_L1=uieditfield(left_top_tertiary_grid,'text','Value','anovan_defined_matrix');
-uitext_L1.ValueChangedFcn=@(src,event) text_model(src,event,'scalar');
+model_options_S = uigridlayout(data_grid_L,[2,1]);
+model_options_S.ColumnWidth = {'1x'};
+model_options_S.RowHeight = {'1x','1x'};
 
-left_bottom_tertiary_grid = uigridlayout(left_secondary_grid,[2,1]);
-left_bottom_tertiary_grid.ColumnWidth = {'1x'};
-left_bottom_tertiary_grid.RowHeight = {'1x','1x'};
-uil_L2=uilabel(left_bottom_tertiary_grid,'text',sprintf(strcat('Connectome Statistical Model\nOptions:',32,manova_stat_models{:})));
-uitext_L2=uieditfield(left_bottom_tertiary_grid,'text','Value','omnimanova_defined_matrix');
-uitext_L2.ValueChangedFcn=@(src,event) text_model(src,event,'manova');
+uilabel(model_options_S,'text',sprintf(strcat('Scalar Statistical Model\nOptions:',32,scalar_stat_models{:})));
+uitext_S=uieditfield(model_options_S,'text','Value','anovan_defined_matrix');
+uitext_S.ValueChangedFcn=@(src,event) text_model(src,event,'scalar');
 
-ui_instruction=uilabel(left_secondary_grid,'text',sprintf('Click to populate matrix model representation for both regression models. Multiple entries in a row indicate interactions between clicked terms\nClick "Main Effect Model" or "Full Interaction Model" to populate the matrix automatically.\nClick "Add Nested Terms" to indicate what terms included in the model are children delineations of another term.\nClick "Clear Matrix Model" to clear out the current matrix. Click the  + to add new rows.'));
+model_options_C = uigridlayout(data_grid_L,[2,1]);
+model_options_C.ColumnWidth = {'1x'};
+model_options_C.RowHeight = {'1x','1x'};
 
-left_extra_bottom_tertiary_grid = uigridlayout(left_secondary_grid,[1,4]);
-left_extra_bottom_tertiary_grid.ColumnWidth = {'1x','1x','1x','1x'};
-left_extra_bottom_tertiary_grid.RowHeight = {'1x'};
+uilabel(model_options_C,'text',sprintf(strcat('Connectome Statistical Model\nOptions:',32,manova_stat_models{:})));
+uitext_C=uieditfield(model_options_C,'text','Value','omnimanova_defined_matrix');
+uitext_C.ValueChangedFcn=@(src,event) text_model(src,event,'manova');
 
-main_effect_button = uibutton(left_extra_bottom_tertiary_grid,'Text','Main Effect Model');
+uilabel(data_grid_L,'text',sprintf('Click to populate matrix model representation for both regression models. Multiple entries in a row indicate interactions between clicked terms\nClick "Main Effect Model" or "Full Interaction Model" to populate the matrix automatically.\nClick "Add Nested Terms" to indicate what terms included in the model are children delineations of another term.\nClick "Clear Matrix Model" to clear out the current matrix. Click the  + to add new rows.'));
+
+button_grid = uigridlayout(data_grid_L,[1,4]);
+button_grid.ColumnWidth = {'1x','1x','1x','1x'};
+button_grid.RowHeight = {'1x'};
+
+main_effect_button = uibutton(button_grid,'Text','Main Effect Model');
 main_effect_button.ButtonPushedFcn=@main_effect_pushed;
 
-full_interaction_button = uibutton(left_extra_bottom_tertiary_grid,'Text','Full Interaction Model');
+full_interaction_button = uibutton(button_grid,'Text','Full Interaction Model');
 full_interaction_button.ButtonPushedFcn=@full_interaction_pushed;
 
-nested_matrix_button = uibutton(left_extra_bottom_tertiary_grid,'Text','Add Nested Terms');
-nested_matrix_button.ButtonPushedFcn=@create_nested_terms;
+nested_model_button = uibutton(button_grid,'Text','Add Nested Terms');
+nested_model_button.ButtonPushedFcn=@create_nested_terms;
 
-clear_matrix_button = uibutton(left_extra_bottom_tertiary_grid,'Text','Clear Matrix Model');
+clear_matrix_button = uibutton(button_grid,'Text','Clear Matrix Model');
 clear_matrix_button.ButtonPushedFcn=@clear_matrix_button_pushed;
 
-uit=uitable(left_secondary_grid);
+uit=uitable(data_grid_L);
 uit.Data=model_table;
 
-Data_size=size(model_table);
-uit.ColumnEditable=repmat(true,[1,Data_size(2)]);
+temp=size(model_table);
+uit.ColumnEditable=repmat(true,[1,temp(2)]);
 uit.DisplayDataChangedFcn=@track_changes;
 
-add_row_button = uibutton(left_secondary_grid,'Text','+');
+add_row_button = uibutton(data_grid_L,'Text','+');
 add_row_button.ButtonPushedFcn=@add_row_button_pushed;
 
 % Right Side
+data_grid_R = uigridlayout(main_grid,[3,1]);
+data_grid_R.ColumnWidth = {'1x'};
+data_grid_R.RowHeight = {'1x','1x',65};
 
-right_secondary_grid = uigridlayout(main_grid,[3,1]);
-right_secondary_grid.ColumnWidth = {'1x'};
-right_secondary_grid.RowHeight = {'1x','1x',65};
+normalization_input = uigridlayout(data_grid_R,[2,1]);
+normalization_input.ColumnWidth = {'1x'};
+normalization_input.RowHeight = {'1x',65};
+uilabel(normalization_input,'text',sprintf(strcat('Column Name for Z-Score Normalization\n\nOptions:',32,strjoin(only_interesting_col_names,', '))));
+uitext_normalization=uieditfield(normalization_input,'text','Value','No Z-Scoring');
+uitext_normalization.ValueChangedFcn=@(src,event) text_check_col(src,event,'zscore');
 
-top_tertiary_grid = uigridlayout(right_secondary_grid,[2,1]);
-top_tertiary_grid.ColumnWidth = {'1x'};
-top_tertiary_grid.RowHeight = {'1x',65};
+stratification_input = uigridlayout(data_grid_R,[2,1]);
+stratification_input.ColumnWidth = {'1x'};
+stratification_input.RowHeight = {'1x',65};
 
-uil_1=uilabel(top_tertiary_grid,'text',sprintf(strcat('Column Name for Z-Score Normalization\n\nOptions:',32,strjoin(only_interesting_col_names,', '))));
-uitext_1=uieditfield(top_tertiary_grid,'text','Value','No Z-Scoring');
-uitext_1.ValueChangedFcn=@(src,event) text_check_col(src,event,'zscore');
+uilabel(stratification_input,'text', sprintf(strcat('Column Name (ONLY 1) for Stratification\n\nOptions:',32,strjoin(only_interesting_col_names,', '))));
+uitext_stratification=uieditfield(stratification_input,'text','Value','No Stratification');
+uitext_stratification.ValueChangedFcn=@(src,event) text_check_col(src,event,'stratification');
 
-bottom_tertiary_grid = uigridlayout(right_secondary_grid,[2,1]);
-bottom_tertiary_grid.ColumnWidth = {'1x'};
-bottom_tertiary_grid.RowHeight = {'1x',65};
-
-uil_2=uilabel(bottom_tertiary_grid,'text', sprintf(strcat('Column Name (ONLY 1) for Stratification\n\nOptions:',32,strjoin(only_interesting_col_names,', '))));
-uitext_2=uieditfield(bottom_tertiary_grid,'text','Value','No Stratification');
-uitext_2.ValueChangedFcn=@(src,event) text_check_col(src,event,'stratification');
-
-next_button = uibutton(right_secondary_grid,'Text','NEXT');
+next_button = uibutton(data_grid_R,'Text','NEXT');
 next_button.ButtonPushedFcn=@next_button_pressed;
 waitfor(next_button,'ButtonPushedFcn');
 
-%internal actions
+%% All Internal Functions
     function main_effect_pushed(src,event)
         clear_matrix_button_pushed(src,event)
         terms=width(model_table);
@@ -122,7 +130,6 @@ waitfor(next_button,'ButtonPushedFcn');
         end
         model_table=uit.Data;
     end
-
 
     function full_interaction_pushed(src,event)
         clear_matrix_button_pushed(src,event)
@@ -142,30 +149,31 @@ waitfor(next_button,'ButtonPushedFcn');
     end
 
     function create_nested_terms(src,event)
-        nest_fig=uifigure('Position',[100 100 2150 550]);
+        nest_main_grid=uifigure('Position',[100 100 2150 550]);
 
-        nest_grid = uigridlayout(nest_fig,[3,1]);
+        nest_grid = uigridlayout(nest_main_grid,[3,1]);
         nest_grid.ColumnWidth = {'1x'};
         nest_grid.RowHeight = {'1x',65,'1x'};
 
-        nest_instructions=uilabel(nest_grid,'text',sprintf('Statistical Model - Nested Groupings \n \n Row and column headings are all the allocated groupings in the dataset. Rows nest into Columns. For example if Group 2 is nested in Group 1, you would select the checkbox on Row-Group 2, Column-Group 1. \n Click "Clear Matrix Model" to clear out the current nesting entries.\n Click "Return to Model" to save and return to the main statistical model setting page.'));
+        uilabel(nest_grid,'text',sprintf('Statistical Model - Nested Groupings \n \n Row and column headings are all the allocated groupings in the dataset. Rows nest into Columns.... For example if Group 2 is nested in Group 1, you would select the checkbox on Row-Group 2, Column-Group 1. \n Click "Clear Matrix Model" to clear out the current nesting entries.\n Click "Return to Model" to save and return to the main statistical model setting page.'));
 
-        nest_grid_2=uigridlayout(nest_grid,[1,2]);
-        nest_grid_2.ColumnWidth = {'1x','1x'};
-        nest_grid_2.RowHeight = {'1x'};
+        nest_button_grid=uigridlayout(nest_grid,[1,2]);
+        nest_button_grid.ColumnWidth = {'1x','1x'};
+        nest_button_grid.RowHeight = {'1x'};
 
-        clear_nest_button = uibutton(nest_grid_2,'Text','Clear Matrix Model');
+        clear_nest_button = uibutton(nest_button_grid,'Text','Clear Matrix Model');
         clear_nest_button.ButtonPushedFcn=@clear_nest_model;
 
-        return_2_model_button = uibutton(nest_grid_2,'Text','Return to Model');
+        return_2_model_button = uibutton(nest_button_grid,'Text','Return to Model');
         return_2_model_button.ButtonPushedFcn=@return_to_model_pressed;
 
         uit_nest=uitable(nest_grid);
         uit_nest.Data=nest_table;
-        Data_size=size(nest_table);
-        uit_nest.ColumnEditable=repmat(true,[1, Data_size(2)]);
+        temp_nest=size(nest_table);
+        uit_nest.ColumnEditable=repmat(true,[1, temp_nest(2)]);
         uit_nest.DisplayDataChangedFcn=@track_nest_changes;
 
+        % internal to nesting functions
         function clear_nest_model(src,event)
             %replace the model table and the saving table with an empty table
             nest_table=blank_nest_table;
@@ -175,7 +183,7 @@ waitfor(next_button,'ButtonPushedFcn');
             %combine model with config
             nest_table=uit_nest.Data; %final make sure we have all the data
             configuration.nest_model=uit_nest;
-            close(nest_fig);
+            close(nest_main_grid);
             return
         end
         function track_nest_changes(src,event)
@@ -188,6 +196,7 @@ waitfor(next_button,'ButtonPushedFcn');
         model_table=blank_table;
         uit.Data=blank_table;
     end
+
     function track_changes(src,event)
         model_table=uit.Data; %make sure current data is in the saving table
     end
@@ -242,7 +251,7 @@ waitfor(next_button,'ButtonPushedFcn');
         if nnz(~cellfun(@isempty,regexpi(fieldnames(configuration),'nest_table')))==0
             configuration.nest_model=nest_table;
         end
-        
+
         close(fig);
         return
     end
