@@ -22,7 +22,6 @@ end
 group_continuous=configuration_struct.test_criteria.CONTINUOUS(GROUP_positional_idx(idxGROUP))';
 group_continuous_logical=~cellfun(@isempty,group_continuous);
 
-
 for n=1:numel(group_continuous_logical)
     if group_continuous_logical(n)
         group_continuous_vector{n}= 'continuous';
@@ -132,7 +131,6 @@ else
 
    test_remove_criteria={[group_cells, subgroup_cells]};
 end
-
 
 %% Make Stats_Test Groupings
 stats_test_scalar=struct;
