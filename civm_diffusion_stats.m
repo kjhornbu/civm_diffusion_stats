@@ -1,24 +1,95 @@
 function [ config_file ] = civm_diffusion_stats(varargin)
+%% CIVM_DIFFUSION_STATS
+% Runs statistical analysis for connectomes and scalar creating summmary
+% documents for both
+%
+%
+% Current Input Parameters:
+%
+% Required: Order Matters must be first in the parameter block
+%
+% studyID - The CIVM Project code for the Study, such as 20.5xFAD.01
+% statSaveDir - Path to where the analysis will be saved, ie folder in B drive
+%
+% Optional: Order Doesn't Matter in calling these
+%
+% configFile - Path to what configuration will be used. The configuration
+%    in the case is primarily the statistical model parameters not this input
+%    parameters. Default = ''. 
+% findmedianspecimen - Indicates if you want to find the most median
+%    specimen during scalar analysis which can be helpful for choosing
+%    specimen for doing lightsheet. Default = false.
+%
 % Expected that google_doc is a file which civm_read_table will load
 % will save updated copy to cleaned_google_doc_path
 % from cleaned googledoc, will build and save dataframe sheet to dataframe.
 % scans which are accepted into datframe are polished into polished_sheets
-% project_research_archive is the search location for connectome dirs
-%    (alternative name connecome_search_dir?)
-% atlas_ontology_path is path to a lookup table. (in the future is should
-% be optional. Alternative name "substitute_lookup_table"? )
-% pval_cols are the pvalue columns we're testing ...?
-% pval_theshold is our significance threshold.
-% save dir is where our bulk stat processing will be saved. Internally
-% save_dir will be separated for scalar_and_volume and connectomics.
 %
+% dataframePath - A path to a dataframe file. Default =[]. You must have at
+%    least 1 existing file path between dataframePath, cleanedGoogleDocPath,
+%    and googleDocPath for the analysis to run.
+% cleanedGoogleDocPath - A path to a cleaned google file - this removes some of
+%    the name missspelling etc. Default =[]. You must have at  least 1 existing 
+%    file path between dataframePath, cleanedGoogleDocPath, and googleDocPath 
+%    for the analysis to run.
+% googleDocPath - A path to the raw google doc pulled off of google drive 
+%    (aka the cloud notebooks). Typically works best as a txt rather than a tsv.
+%    Default =[]. You must have at  least 1 existing file path between dataframePath,
+%    cleanedGoogleDocPath, and googleDocPath for the analysis to run.
+% polishedSheetPath - the scalar statistics sheets are stored in the oracle
+%    archive for each specimen in the study. as part of the stat setup
+%    process, we polish the stats by creating parent structures and removing
+%    regions that have little meaning. This is the path where those saved
+%    files are placed. Default = []. 
+% researchArchivePath - The path to the oracle archive folder for the
+%    data. You can indicate more than 1 if you assign it with {1}, {2}.
+%    project_research_archive{1}=fullfile('A:/',studyID,'research');
+%    project_research_archive{2}=fullfile('A:/',studyID_2,'research'); 
+% overrideLabelLUT- path to what label look up should be used. Default is [].
+%    But, typically we use:
+%    fullfile(getenv("WORKSTATION_HOME"),'static_data','atlas','symmetric15um','labels','RCCF','symmetric15um_RCCF_labels_lookup.txt');
+% pvalThreshold - Threshold for "significance" in pvalue analysis. Default = 0.05.
+% pvalType - What types of pvalue to look at. Default = list2cell('pval_BH pval'). 
+% analysisPipelineType - If this run is Scalar/Connectome or both. Default
+%    = list2cell('Scalar Connectome') which runs both scalar and connectome.
+%    If you want just one type {'Scalar'} or {'Connectome'} here for that option.
+% isSuffixOptional - If you don't have that suffix is it okay? (ie just do
+%    best for matching). Default = false
+% suffix - The suffix we are matching with. Default = []. 
+% allowMissing - Is it okay to keep running if some specimen are missing in
+%    the study. Default = false.
+% assumeNLSAM - If you aren't remaking a dataframe and this is Default = false. 
+% alternative_statsheet_dir - instead of pulling all the scalar data from
+%    the archive you might pull just the scalar sheets from a flat directory.
+%    This is when you do that. It has a differnet loading mechanism. 
+% Scalar_Sheet_Path_csv - These are not populated currently. suspect it
+%    will be where the sheets are saved? 
+% Connectome_Sheet_Path_csv - These are not populated currently. suspect it
+%    will be where the sheets are saved?
+% user - The name of the user. It is written on the summary documents so we
+%    have a written record about who did what run. If you don't provide your
+%    name it will pull a name indication from your computer's username. 
+% extendedStudyColumns - other columns that NEED to be in the dataframe and
+% the data will check for. 
+% scalarContrastMetrics - the metrics we are actually studying in the
+%    scalar data set and how to work with them. The default is the non-eroded
+%    data, which is input as so.
+%     default_scalarContrast=struct;
+%     default_scalarContrast(1).Name={'Non_Erode'}; 
+%     default_scalarContrast(1).Column={'stat_path'};
+%     default_scalarContrast(1).erode={'0'};
+%     default_scalarContrast(1).level={'0'};
+%     default_scalarContrast(1).bilateral=false;
+%     default_scalarContrast(1).nickname={'leaf'};
+%     default_scalarContrast(1).stat_extension={strcat('_e',default_scalarContrast(1).erode,'_L',default_scalarContrast(1).level,'_',default_scalarContrast(1).nickname,'.txt')};
+%     default_scalarContrast(1).List=list2cell("volume_mm3 volume_fraction fa_mean ad_mean md_mean rd_mean tdi_mean"); % Right now we can't do things others than the _mean --- IE I can't do STD is that because of hard coding I did?
+
 % maybe we should re-arrange the function args to sorted by "inputs in order used
 % or simplicity", "outputs in order used or simplicity".
 % user, google_doc, project_research_archive, atlas_ontolgoy_path,
 % pval_cols, pval_threshold, save_dir, cleaned_google_doc_path,
 % dataframe_path
 
-% pretend we've parsed options, and found an assume nlsam option.
 % Input Options Parser
 p = inputParser;
 
