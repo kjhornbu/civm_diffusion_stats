@@ -11,7 +11,8 @@ function [ config_file ] = civm_diffusion_stats(varargin)
 % studyID - The CIVM Project code for the Study, such as 20.5xFAD.01
 % statSaveDir - Path to where the analysis will be saved, ie folder in B drive
 %
-% Optional: Order Doesn't Matter in calling these
+% Optional: Order Doesn't Matter in calling these, Blocked by Generally
+% Working on Similar Things.
 %
 % configFile - Path to what configuration will be used. The configuration
 %    in the case is primarily the statistical model parameters not this input
@@ -36,6 +37,7 @@ function [ config_file ] = civm_diffusion_stats(varargin)
 %    (aka the cloud notebooks). Typically works best as a txt rather than a tsv.
 %    Default =[]. You must have at  least 1 existing file path between dataframePath,
 %    cleanedGoogleDocPath, and googleDocPath for the analysis to run.
+%
 % polishedSheetPath - the scalar statistics sheets are stored in the oracle
 %    archive for each specimen in the study. as part of the stat setup
 %    process, we polish the stats by creating parent structures and removing
@@ -45,6 +47,7 @@ function [ config_file ] = civm_diffusion_stats(varargin)
 %    data. You can indicate more than 1 if you assign it with {1}, {2}.
 %    project_research_archive{1}=fullfile('A:/',studyID,'research');
 %    project_research_archive{2}=fullfile('A:/',studyID_2,'research'); 
+%
 % overrideLabelLUT- path to what label look up should be used. Default is [].
 %    But, typically we use:
 %    fullfile(getenv("WORKSTATION_HOME"),'static_data','atlas','symmetric15um','labels','RCCF','symmetric15um_RCCF_labels_lookup.txt');
@@ -62,15 +65,20 @@ function [ config_file ] = civm_diffusion_stats(varargin)
 % alternative_statsheet_dir - instead of pulling all the scalar data from
 %    the archive you might pull just the scalar sheets from a flat directory.
 %    This is when you do that. It has a differnet loading mechanism. 
+%
 % Scalar_Sheet_Path_csv - These are not populated currently. suspect it
 %    will be where the sheets are saved? 
 % Connectome_Sheet_Path_csv - These are not populated currently. suspect it
 %    will be where the sheets are saved?
+%
 % user - The name of the user. It is written on the summary documents so we
 %    have a written record about who did what run. If you don't provide your
-%    name it will pull a name indication from your computer's username. 
+%    name it will pull a name indication from your computer's username.
+%
 % extendedStudyColumns - other columns that NEED to be in the dataframe and
-% the data will check for. 
+% the data will check for. For example if you HAVE to have age or something
+% like that.
+%
 % scalarContrastMetrics - the metrics we are actually studying in the
 %    scalar data set and how to work with them. The default is the non-eroded
 %    data, which is input as so.
@@ -82,14 +90,34 @@ function [ config_file ] = civm_diffusion_stats(varargin)
 %     default_scalarContrast(1).bilateral=false;
 %     default_scalarContrast(1).nickname={'leaf'};
 %     default_scalarContrast(1).stat_extension={strcat('_e',default_scalarContrast(1).erode,'_L',default_scalarContrast(1).level,'_',default_scalarContrast(1).nickname,'.txt')};
-%     default_scalarContrast(1).List=list2cell("volume_mm3 volume_fraction fa_mean ad_mean md_mean rd_mean tdi_mean"); % Right now we can't do things others than the _mean --- IE I can't do STD is that because of hard coding I did?
+%     default_scalarContrast(1).List=list2cell("volume_mm3 volume_fraction
+%     fa_mean ad_mean md_mean rd_mean tdi_mean"); % If it exists as a
+%     contrast in the subject_data_table you can use it as a
+%     scalarContrast.
+%
+%     Examples for how to do other types
+%
+%     [1] Eroded stats
+%      default_scalarContrast(2).Name={'Erode'}; 
+%      default_scalarContrast(2).Column={'stat_path_erode'};
+%      default_scalarContrast(2).erode={'1'};
+%      default_scalarContrast(2).level={'0'};
+%      default_scalarContrast(2).bilateral=false;
+%      default_scalarContrast(2).nickname={'leaf'};
+%      default_scalarContrast(2).stat_extension={strcat('_e',default_scalarContrast(2).erode,'_L',default_scalarContrast(2).level,'_',default_scalarContrast(2).nickname,'.txt')};
+%      default_scalarContrast(2).List=list2cell("fa_mean ad_mean md_mean rd_mean");
+%
+%    [2]The former QSDR that Harrison used.
+%     default_scalarContrast(3).Name={'lightsheet'}; 
+%     default_scalarContrast(3).Column={'stat_path'}; 
+%     default_scalarContrast(3).erode={'0'};
+%     default_scalarContrast(3).level={'0'};
+%     default_scalarContrast(3).bilateral=false;
+%     default_scalarContrast(3).nickname={'leaf'};
+%     default_scalarContrast(3).stat_extension={strcat('_e',default_scalarContrast(3).erode,'_L',default_scalarContrast(3).level,'_',default_scalarContrast(3).nickname,'.txt')};
+%     default_scalarContrast(3).List=strcatlist2cell(strrep('dti_fa,ad,md,rd,iso,qa,rdi,t-inc-ad,t-inc-md,t-inc-rd,t-inc-gfa,t-inc-dti-fa,t-inc-iso,t-inc-qa,t-dec-ad,t-dec-md,t-dec-rd,t-dec-gfa,t-dec-dti-fa,t-dec-iso,t-dec-qa','-','_')),'_mean');
 
-% maybe we should re-arrange the function args to sorted by "inputs in order used
-% or simplicity", "outputs in order used or simplicity".
-% user, google_doc, project_research_archive, atlas_ontolgoy_path,
-% pval_cols, pval_threshold, save_dir, cleaned_google_doc_path,
-% dataframe_path
-
+%% PRELIMINARIES
 % Input Options Parser
 p = inputParser;
 
@@ -97,8 +125,11 @@ p = inputParser;
 addRequired(p, 'studyID', @(x) ischar(x) || isstring(x)); %what the study will be called
 addRequired(p, 'statSaveDir', @(x) ischar(x) || isstring(x)); %where the data is going to be saved
 
-% Add parameters -- Kinda optional but depends! (not positionally
-% dependant)
+% === Other Key Inputs ===
+% Add parameters -- Kinda optional but depends -- The checker at the end ...
+% will provide notice of this! (not positionally dependant, chunked by
+% general type of thing that is getting set)
+
 addParameter(p, 'configFile','', @(x) ischar(x) || isstring(x));
 addParameter(p,'findmedianspecimen',false,  @(x) isscalar(x) && ismember(x, [false, true]));
 addParameter(p, 'dataframePath',[], @(x) ischar(x) || isstring(x));
@@ -108,7 +139,6 @@ addParameter(p, 'googleDocPath',[], @(x) ischar(x) || isstring(x));
 addParameter(p, 'polishedSheetPath',[], @(x) ischar(x) || isstring(x));
 addParameter(p, 'researchArchivePath',[], @(x) ischar(x) || isstring(x)|| iscell(x));
 
-% Add parameters -- Optional Options that are not positionally dependant 
 addParameter(p, 'overrideLabelLUT', [], @(x) ischar(x) || isstring(x));
 addParameter(p, 'pvalThreshold', 0.05, @(x) isnumeric(x) && numel(x) == 1 && x>=0 && x <=1);
 addParameter(p, 'pvalType', list2cell('pval_BH pval'), @(x) ischar(x) || isstring(x) || iscell(x));
@@ -121,7 +151,6 @@ addParameter(p, 'alternative_statsheet_dir',[], @(x) ischar(x) || isstring(x) ||
 
 addParameter(p,'Scalar_Sheet_Path_csv',[], @(x) ischar(x) || isstring(x) || iscell(x));
 addParameter(p,'Connectome_Sheet_Path_csv',[], @(x) ischar(x) || isstring(x) || iscell(x));
-
 
 if isempty(getenv('USER')), user_name=getenv('USERNAME'); end
 addParameter(p, 'user', user_name, @(x) ischar(x) || isstring(x) || iscell(x)); 
@@ -136,28 +165,7 @@ default_scalarContrast(1).level={'0'};
 default_scalarContrast(1).bilateral=false;
 default_scalarContrast(1).nickname={'leaf'};
 default_scalarContrast(1).stat_extension={strcat('_e',default_scalarContrast(1).erode,'_L',default_scalarContrast(1).level,'_',default_scalarContrast(1).nickname,'.txt')};
-default_scalarContrast(1).List=list2cell("volume_mm3 volume_fraction fa_mean ad_mean md_mean rd_mean tdi_mean"); % Right now we can't do things others than the _mean --- IE I can't do STD is that because of hard coding I did?
-
-%Examples for how to do other types
-% [1] Eroded stats
-% default_scalarContrast(2).Name={'Erode'}; 
-% default_scalarContrast(2).Column={'stat_path_erode'};
-% default_scalarContrast(2).erode={'1'};
-% default_scalarContrast(2).level={'0'};
-% default_scalarContrast(2).bilateral=false;
-% default_scalarContrast(2).nickname={'leaf'};
-% default_scalarContrast(2).stat_extension={strcat('_e',default_scalarContrast(2).erode,'_L',default_scalarContrast(2).level,'_',default_scalarContrast(2).nickname,'.txt')};
-% default_scalarContrast(2).List=list2cell("fa_mean ad_mean md_mean rd_mean");
-
-%[2]The former QSDR that harrison used.-- I converted it into the modern layout that we are using. 
-%default_scalarContrast(3).Name={'lightsheet'}; 
-%default_scalarContrast(3).Column={'stat_path'}; 
-%default_scalarContrast(3).erode={'0'};
-% default_scalarContrast(3).level={'0'};
-%default_scalarContrast(3).bilateral=false;
-% default_scalarContrast(3).nickname={'leaf'};
-%default_scalarContrast(3).stat_extension={strcat('_e',default_scalarContrast(3).erode,'_L',default_scalarContrast(3).level,'_',default_scalarContrast(3).nickname,'.txt')};
-%default_scalarContrast(3).List=strcatlist2cell(strrep('dti_fa,ad,md,rd,iso,qa,rdi,t-inc-ad,t-inc-md,t-inc-rd,t-inc-gfa,t-inc-dti-fa,t-inc-iso,t-inc-qa,t-dec-ad,t-dec-md,t-dec-rd,t-dec-gfa,t-dec-dti-fa,t-dec-iso,t-dec-qa','-','_')),'_mean');
+default_scalarContrast(1).List=list2cell("volume_mm3 volume_fraction fa_mean ad_mean md_mean rd_mean tdi_mean");
 
 addParameter(p,'scalarContrastMetrics',default_scalarContrast, @(x) isstruct(x));
 
@@ -166,279 +174,13 @@ parse(p, varargin{:});
 opts=p.Results; 
 opts = optsErrorChecking(opts);
 
-%Unpack back into variable form
+
+%% Get the Statistical Model Input
+opts=setStatisticalModelInput(opts);
+
+%% Unpack back into variable form
 user=opts.user;
 studyID=opts.studyID; 
-
-dataframe_path=opts.dataframePath;
-config_file=opts.configFile;
-save_dir=opts.statSaveDir;
-
-%% Need to add a check about labels when we are keeping a dataframe to make sure we actually able to use the dataframe provided -- that is has labels for connectome
-%% Data setup -- User Input form
-opts.keep_last_frame = 0; % if 0 we are NOT keeping the last data frame, if 1 we ARE keeping the last dataframe
-for m=1:numel(opts.using_series)
-    %% Do a data handler to make a new version if a dataframe or a cleanedgoogleDocPath
-    if m==1
-        if exist(opts.(opts.using),'file') && ~reg_match(opts.using,'^(googleDocPath)$')
-            [opts.keep_last_frame] = do_frame_ui(opts.(opts.using),opts.using);
-            if ~opts.keep_last_frame
-                [path,name,extension]=fileparts(opts.(opts.using));
-                info=dir(opts.(opts.using));
-                idate=datetime(info.date);
-                idate.Format='yyyy-MM-dd''T''HHmm';
-                old_file_path=fullfile(path,sprintf('%s_%s%s',name,char(idate),extension));
-                movefile(opts.(opts.using),old_file_path) %stashing prior doc at same name location
-            else
-                %Clear out any lingering names in the dataframe table related to
-                %the past group/subgrouping.
-                frame=civm_read_table(opts.(opts.using));
-                not_empty_logical=~cellfun(@isempty,frame.Properties.VariableDescriptions);
-                not_empty_positional=find(not_empty_logical);
-
-                for n=1:numel(not_empty_positional)
-                    frame.Properties.VariableDescriptions(not_empty_positional(n))={''};
-                end
-
-                civm_write_table(frame,opts.(opts.using));
-            end
-        else
-            continue;
-            %we just use the googleDocPath we don't do anything funny with it
-        end
-    else
-        if exist(opts.(opts.using_series{m}),'file')
-            [path,name,extension]=fileparts(opts.(opts.using_series{m}));
-            info=dir(opts.(opts.using_series{m}));
-            idate=datetime(info.date);
-            idate.Format='yyyy-MM-dd''T''HHmm';
-            old_file_path=fullfile(path,sprintf('%s_%s%s',name,char(idate),extension));
-            movefile(opts.(opts.using_series{m}),old_file_path) %stashing prior doc at same name location
-        end
-    end
-end
-
-if ~opts.keep_last_frame % if 0 we are NOT keeping the last data frame, if 1 we ARE keeping the last dataframe
-
-    %% NOT KEEPING LAST DATAFRAME
-    for m=1:numel(opts.using_series)
-        if reg_match(opts.using_series{m},'^(googleDocPath)$')
-            notebook=civm_read_table(opts.(opts.using_series{m}));
-            % force all columns to be treated as text.
-            notebook=column2text(notebook,notebook.Properties.VariableNames);
-
-            if iscell(notebook) && numel(notebook)  == 1
-                notebook=uncell(notebook);
-            elseif iscell(notebook) && 1 < numel(notebook) 
-                %James combing stuff together code
-                warning('%s\n\t%s\n','experimental conjoining of data sheets.','THESE MUST BE HIGHLY COMPATIBLE FOR THIS TO WORK');
-                % should I enter auto-debug for any thing requiring user intervention with
-                % helpful suggestions?
-                db_inplace(mfilename,'auto-debug for experimental feature. DO NOT provide cell arrays of sheets if you dont want this.');
-                % load all, get column headings into cell of struct
-                docs=cell([numel(notebook),1]);
-                fields=cell([numel(notebook),1]);
-                field_matching_required=zeros(size(notebook),'logical');
-                colname_match_data=cell([numel(notebook),1]);
-                for idx_d=1:numel(notebook)
-                    docs{idx_d}=civm_read_table(notebook{idx_d});
-                    % force all columns to be treated as text.
-                    docs{idx_d}=column2text(docs{idx_d},docs{idx_d}.Properties.VariableNames);
-                    fields{idx_d}=docs{idx_d}.Properties.VariableNames;
-                    [not_uniform,idx_1,idx_n]=setxor(fields{1},fields{idx_d},'stable');
-                    if numel( not_uniform )
-                        field_matching_required(idx_d)=true;
-                        colname_match_data(idx_d)={{idx_1,idx_n}};
-                    end
-                end
-                % allow user to somehow pick which columns could conjoin...
-                if any(field_matching_required)
-                    all_columns=unique([fields{:}],'stable');
-                    non_matching=cell2table(cell([0,numel(all_columns)]),'VariableNames',all_columns);
-                    for idx_d=1:numel(notebook)
-                        %[columns_to_add,idx_all]=setxor(all_columns,fields{idx_d},'stable');
-                        [common_column_names,idx_all,idx_n]=intersect(all_columns,fields{idx_d},'stable');
-                        %[idx_1,idx_n]=colname_match_data{idx_d}{:}
-                        row_dat=zeros([1,numel(all_columns)],'logical');
-                        row_dat(idx_all)=true;
-                        non_matching(idx_d,:)=num2cell(row_dat);
-
-                        % just invent columns as empties :-p
-                        idx_all=find(~row_dat);
-                        for idx_a=idx_all
-                            col_name=all_columns{idx_a};
-                            %fprintf('\t%s',col_name);
-                            docs{idx_d}.(col_name)=repmat({''},[height(docs{idx_d}),1]);
-                        end
-                    end
-
-                end
-                cloud_notebook=concat_tables({},docs{:});
-                clear docs fields field_matching_required colname_match_data idx_d idx_all idx_a idx_n col_name non_matching idx_1 all_columns not_uniform;
-            end
-
-            notebook = civm_metadata_cleanup(notebook,opts.extendedStudyColumns);
-            if opts.assumeNLSAM
-                % alternative options, tryNLSAM where we would at some later point
-                % try with and without NLSAM, although James doesnt like that due to the ambiguouity.
-                % assumes nlsam is not part of runno, and adds it.
-                %cloud_notebook.CIVM_Scan_ID=cellfun(@(x) sprintf('%sNLSAM',x),cloud_notebook.CIVM_Scan_ID,'UniformOutput',false);
-                % forces nlsam at end of runno, but doesnt accidentially add it
-                % when it already exists.
-                notebook.CIVM_Scan_ID=cellfun(@(x) regexprep(x,'^(.*?)(NLSAM)?$',"$1NLSAM"),notebook.CIVM_Scan_ID,'UniformOutput',false);
-            end
-
-        elseif reg_match(opts.using_series{m},'^(cleanedGoogleDocPath)$')
-            if ~exist('notebook','var')
-                % if we've not loaded a bunch of notebooks and combined them
-                % already, load the notebook now.
-                notebook=civm_read_table(opts.('googleDocPath'));
-                % force all columns to be treated as text.
-                notebook=column2text(notebook,notebook.Properties.VariableNames);
-
-                notebook = civm_metadata_cleanup(notebook,opts.extendedStudyColumns);
-                if opts.assumeNLSAM
-                    % alternative options, tryNLSAM where we would at some later point
-                    % try with and without NLSAM, although James doesnt like that due to the ambiguouity.
-                    % assumes nlsam is not part of runno, and adds it.
-                    %cloud_notebook.CIVM_Scan_ID=cellfun(@(x) sprintf('%sNLSAM',x),cloud_notebook.CIVM_Scan_ID,'UniformOutput',false);
-                    % forces nlsam at end of runno, but doesnt accidentially add it
-                    % when it already exists.
-                    notebook.CIVM_Scan_ID=cellfun(@(x) regexprep(x,'^(.*?)(NLSAM)?$',"$1NLSAM"),notebook.CIVM_Scan_ID,'UniformOutput',false);
-                end
-            end
-
-            %do visualization to do final cleanup of cloudnotebook
-            edit_frame_ui(notebook,opts.(opts.using_series{m}),opts.using_series{m});
-
-        elseif reg_match(opts.using_series{m},'^(dataframePath)$')
-            % if we've not loaded a bunch of notebooks and combined them
-            % already, load the notebook now.
-            notebook=civm_read_table(opts.cleanedGoogleDocPath);
-            % force all columns to be treated as text.
-
-            edit_frame_ui(notebook,opts.(opts.using_series{m}),opts.using_series{m});
-            cloudnotebook_to_dataframe('CIVM_Scan_ID',opts.(opts.using_series{m}),opts);
-        end
-    end
-else
-    %% KEEPING LAST DATAFRAME
-    for m=1:numel(opts.using_series)
-        if reg_match(opts.using_series{m},'^(googleDocPath)$')
-            notebook=civm_read_table(opts.(opts.using_series{m}));
-            % force all columns to be treated as text.
-            notebook=column2text(notebook,notebook.Properties.VariableNames);
-            notebook = civm_metadata_cleanup(notebook,opts.extendedStudyColumns);
-            if opts.assumeNLSAM
-                % alternative options, tryNLSAM where we would at some later point
-                % try with and without NLSAM, although James doesnt like that due to the ambiguouity.
-                % assumes nlsam is not part of runno, and adds it.
-                %cloud_notebook.CIVM_Scan_ID=cellfun(@(x) sprintf('%sNLSAM',x),cloud_notebook.CIVM_Scan_ID,'UniformOutput',false);
-                % forces nlsam at end of runno, but doesnt accidentially add it
-                % when it already exists.
-                notebook.CIVM_Scan_ID=cellfun(@(x) regexprep(x,'^(.*?)(NLSAM)?$',"$1NLSAM"),notebook.CIVM_Scan_ID,'UniformOutput',false);
-            end
-
-        elseif reg_match(opts.using_series{m},'^(cleanedGoogleDocPath)$')
-
-            %do visualization to do final cleanup of cloudnotebook
-            if m==1
-                continue;
-                %% CHECK THAT NOTEBOOK HERE FOR IF YOU HAVE THE THING?
-            else
-                if ~exist('notebook','var')
-                    % if we've not loaded a bunch of notebooks and combined them
-                    % already, load the notebook now.
-                    notebook=civm_read_table(opts.(opts.using_series{m}));
-                    % force all columns to be treated as text.
-                    notebook=column2text(notebook,notebook.Properties.VariableNames);
-                end
-
-                edit_frame_ui(notebook,opts.(opts.using_series{m}),opts.using_series{m});
-            end
-
-        elseif reg_match(opts.using_series{m},'^(dataframePath)$')
-            % if we've not loaded a bunch of notebooks and combined them
-            % already, load the notebook now.
-            % force all columns to be treated as text.
-            if m==1
-                continue;
-                %% CHECK THAT NOTEBOOK HERE FOR IF YOU HAVE THE THING?
-            else
-                if ~exist('notebook','var')
-                    notebook=civm_read_table(opts.cleanedGoogleDocPath);
-                    notebook=column2text(notebook,notebook.Properties.VariableNames);
-                end
-                edit_frame_ui(notebook,opts.(opts.using_series{m}),opts.using_series{m});
-                cloudnotebook_to_dataframe('CIVM_Scan_ID',opts.(opts.using_series{m}),opts);
-            end
-        end
-    end
-end
-
-%% Stats Setup
-% set a setup.mat path where we can save the configuration data, to let
-% people skip it next time.
-if isempty(config_file)
-    [~,n,~]=fileparts(dataframe_path);
-    config_file=fullfile(save_dir,sprintf('%s_setup.mat',n));
-end
-
-clear n;
-% check thing exists -- intialize to do it.
-opts.keep_last_setup=0;
-if exist(config_file,'file')
-    % prompt for keeping configuration (1 == keep)
-    opts.keep_last_setup=do_configuration_ui(config_file);
-
-    if ~opts.keep_last_setup
-        % when NOT keeping, rename the previous to contain its save date so
-        % we can tell what we ran and when.
-        info=dir(config_file);
-        [p,n,~]=fileparts(config_file);
-        idate=datetime(info.date);
-        idate.Format='yyyy-MM-dd''T''HHmm';
-        old_file=fullfile(p,sprintf('%s_%s.mat',n,char(idate)));
-        movefile(config_file,old_file)
-        clear info idate old_file;
-    end
-end
-clear p n;
-
-if ~opts.keep_last_setup
-    configuration_table=stats_configuration_ui(dataframe_path);
-    configuration_struct=assignmodelmatrix_ui(configuration_table);
-    clear configuration_table
-    [configuration_struct]=pairwise_compare_ui_apply2summary(configuration_struct,dataframe_path);
-
-    %save configuration struct (which now includes
-    % pariwise_criteria)
-    save(config_file,'configuration_struct','-mat');
-else
-    % load configuration struct (which now includes
-    % pariwise_criteria)
-    load(config_file,'configuration_struct');
-end
-
-%save opts so can redo fully
-temp_opt=strsplit(config_file,'.mat');
-opts_file=strcat(temp_opt{1},'_opts.mat');
-
-if exist(opts_file,'file')
-   % rename the previous to contain its save date so
-    % we can tell what we ran and when.
-    info=dir(opts_file);
-    [p,n,~]=fileparts(opts_file);
-    idate=datetime(info.date);
-    idate.Format='yyyy-MM-dd''T''HHmm';
-    old_file=fullfile(p,sprintf('%s_%s.mat',n,char(idate)));
-    movefile(opts_file,old_file)
-    clear info idate old_file;
-end
-
-save(opts_file,'opts','-mat');
-
-% the major configuration components at this point are 
 
 [group, subgroup, test_criteria, test_remove_criteria, stats_test_scalar, stats_test_manova, plot_criteria, studymodel, compare_criteria, Summary_Criteria,pairwise_criteria] = ...
     clean_up_stats_setup(configuration_struct,opts.pvalThreshold);

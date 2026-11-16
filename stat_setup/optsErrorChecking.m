@@ -16,12 +16,12 @@ if nnz(pvalTypeIdx)<numel(pvalTypeIdx)
 end
 
 %The dataframe is saved in the  main folder
-[path,name,~]=fileparts(opts.statSaveDir);
+[path,~,~]=fileparts(opts.statSaveDir);
 %% Check data sheets
 if ~isempty(opts.dataframePath) &&  exist(opts.dataframePath,'file')
-     %use dataframePath 
-     opts.using='dataframePath';
-     % Ask if want to remake the dataframe at location
+    %use dataframePath
+    opts.using='dataframePath';
+    % Ask if want to remake the dataframe at location
 else
     if ~isempty(opts.cleanedGoogleDocPath) && exist(opts.cleanedGoogleDocPath,'file')
         %use cleanedGoogleDocPath
@@ -63,10 +63,10 @@ elseif reg_match(opts.using,'^(dataframePath)$')
 end
 
 %% Check input sheet polishing
-if ~iscell(opts.researchArchivePath) 
+if ~iscell(opts.researchArchivePath)
     if ~isempty(opts.researchArchivePath)
         opts.researchArchivePath={opts.researchArchivePath};
-    else 
+    else
         opts.researchArchivePath={};
     end
 end
@@ -79,7 +79,7 @@ if ~isempty(opts.polishedSheetPath)
         else
             error('polishedSheetPath has not been populated and there is no research archive to pull from! Provide "researchArchivePath" so the sheets can be polished.');
         end
-    else 
+    else
         %opts.polish='checkcomplete';
         %polishedsheets have already been formed. Check to make sure all
         %have been polished for given sheet then continue
