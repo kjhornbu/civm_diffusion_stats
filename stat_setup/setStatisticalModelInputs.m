@@ -1,13 +1,6 @@
 function [opts] = setStatisticalModelInputs(opts)
 %% Data setup -- User Input form
 
-%% Unpack back into variable form
-dataframe_path=opts.dataframePath;
-config_file=opts.configFile;
-save_dir=opts.statSaveDir;
-
-
-
 %% CHECK first what to start from [1] Dataframe? [2] cleaned/Edited google doc then Dataframe? [3] googledoc then cleaned/edited google doc then dataframe? 
 opts.keep_last_frame = 0; % if 0 we are NOT keeping the last sheet indicated, if 1 we ARE keeping the last sheet indicated
 Connectome_Type_IDX=nnz(reg_match(opts.analysisPipelineType,'^(Connectome)$'));
@@ -78,7 +71,9 @@ if ~opts.keep_last_frame % if 0 we are NOT keeping the last sheet indicated, if 
             if iscell(notebook) && numel(notebook)  == 1
                 notebook=uncell(notebook);
             elseif iscell(notebook) && 1 < numel(notebook)
-                %James combing stuff together code
+                %James combing stuff together code -- lots of issues with
+                %it unsure if currently working keeping in place for James.
+                %
                 warning('%s\n\t%s\n','experimental conjoining of data sheets.','THESE MUST BE HIGHLY COMPATIBLE FOR THIS TO WORK');
                 % should I enter auto-debug for any thing requiring user intervention with
                 % helpful suggestions?
@@ -256,39 +251,39 @@ end
 %% Stats Setup
 % set a setup.mat path where we can save the configuration data, to let
 % people skip it next time.
-if isempty(config_file)
-    [~,n,~]=fileparts(dataframe_path);
-    config_file=fullfile(save_dir,sprintf('%s_setup.mat',n));
+if isempty(opts.configFile)
+    [~,n,~]=fileparts(opts.dataframePath);
+    opts.configFile=fullfile(opts.statSaveDir,sprintf('%s_setup.mat',n));
 end
 
 clear n;
 % check thing exists -- intialize to do it.
 opts.keep_last_setup=0;
-if exist(config_file,'file')
+if exist(opts.configFile,'file')
     % prompt for keeping configuration (1 == keep)
-    opts.keep_last_setup=do_configuration_ui(config_file);
+    opts.keep_last_setup=do_configuration_ui(opts.configFile);
 
     % always create a last which keeps a record of the prior opts used
     % along with the statistical model. 
     %if ~opts.keep_last_setup
         % when NOT keeping, rename the previous to contain its save date so
         % we can tell what we ran and when.
-        info=dir(config_file);
-        [p,n,~]=fileparts(config_file);
+        info=dir(opts.configFile);
+        [p,n,~]=fileparts(opts.configFile);
         idate=datetime(info.date);
         idate.Format='yyyy-MM-dd''T''HHmm';
         old_file=fullfile(p,sprintf('%s_%s.mat',n,char(idate)));
-        movefile(config_file,old_file)
+        movefile(opts.configFile,old_file)
         clear info idate;
     %end
 end
 clear p n;
 
 if ~opts.keep_last_setup
-    configuration_table=stats_configuration_ui(dataframe_path);
+    configuration_table=stats_configuration_ui(opts.dataframePath);
     statistical_model=assignmodelmatrix_ui(configuration_table);
     clear configuration_table
-    [statistical_model]=pairwise_compare_ui_apply2summary(statistical_model,dataframe_path);
+    [statistical_model]=pairwise_compare_ui_apply2summary(statistical_model,opts.dataframePath);
 
     opts.statistical_model=statistical_model;
 elseif opts.keep_last_setup & exist('old_file', 'var')
@@ -296,11 +291,11 @@ elseif opts.keep_last_setup & exist('old_file', 'var')
     temp_opts=load(old_file);
     opts.statistical_model=temp_opts.opts.statistical_model;
 
-elseif opts.keep_last_setup & ~exist(config_file,'file')
+elseif opts.keep_last_setup & ~exist(opts.configFile,'file')
     error('You said to keep the last statistical model setup but did not give an existing file to look in!!!');
 end
 
 %save all of opts into a single file
-save(config_file,'opts','-mat');
+save(opts.configFile,'opts','-mat');
 
 end
