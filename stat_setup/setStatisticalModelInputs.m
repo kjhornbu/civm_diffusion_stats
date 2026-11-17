@@ -1,20 +1,15 @@
 function [opts] = setStatisticalModelInputs(opts)
+%% Data setup -- User Input form
 
 %% Unpack back into variable form
 dataframe_path=opts.dataframePath;
 config_file=opts.configFile;
 save_dir=opts.statSaveDir;
 
-%% Keep last dataframe check-- but need to check that labels are in the dataset if doing connectomic stuff
-
-
-
-
-
 %% Keep last Statistical Model in Config? Otherwise will take what you have passed and the prior statistical model input.
 
 
-%% Data setup -- User Input form
+%% CHECK first what to start from [1] Dataframe? [2] cleaned/Edited google doc then Dataframe? [3] googledoc then cleaned/edited google doc then dataframe? 
 opts.keep_last_frame = 0; % if 0 we are NOT keeping the last data frame, if 1 we ARE keeping the last dataframe
 Connectome_Type_IDX=nnz(reg_match(opts.analysisPipelineType,'^(Connectome)$'));
 for m=1:numel(opts.using_series)
@@ -25,6 +20,12 @@ for m=1:numel(opts.using_series)
             [opts.keep_last_frame] = do_frame_ui(opts.(opts.using),opts.using);
 
             if Connectome_Type_IDX & reg_match(opts.using,'^(dataframePath)$') & opts.keep_last_frame
+                %If you are starting from a old dataframe it must have
+                %labels inside of it to be able to process connectomic
+                %data. I don't think we have to check again to confirm that
+                %the dataframePath exists the using_series is generated
+                %earlier and checks for that.
+
                 temp_dataframe=civm_read_table(opts.dataframePath);
                 assert(~isempty(temp_dataframe.label_path),'Cannot Keep This Exact Dataframe for Connectomics! There are no Labels provided in it!')
             end
@@ -170,7 +171,7 @@ if ~opts.keep_last_frame % if 0 we are NOT keeping the last data frame, if 1 we 
         end
     end
 else
-    %% KEEPING LAST DATAFRAME
+    %% KEEPING LAST DATAFRAME item
     for m=1:numel(opts.using_series)
         if reg_match(opts.using_series{m},'^(googleDocPath)$')
             notebook=civm_read_table(opts.(opts.using_series{m}));
@@ -191,8 +192,16 @@ else
 
             %do visualization to do final cleanup of cloudnotebook
             if m==1
+                %first check the NLSAM
+                test_notebook=civm_read_table(opts.(opts.using_series{m}));
+                if opts.assumeNLSAM
+                    assert((nnz(~cellfun(@isempty,regexpi(test_notebook.CIVM_Scan_ID,'^(.*?)(NLSAM)?$'))) & opts.assumeNLSAM),"You said to use the same cleanedGoogleDocPath but there is NLSAM where there shouldn't be!")
+                elseif ~opts.assumeNLSAM
+                    assert(~(nnz(~cellfun(@isempty,regexpi(test_notebook.CIVM_Scan_ID,'^(.*?)(NLSAM)?$'))) & opts.assumeNLSAM),"You said to use the same cleanedGoogleDocPath but there is not NLSAM where there should be!")
+                end
+                clear test_notebook
+
                 continue;
-                %% CHECK THAT NOTEBOOK HERE FOR IF YOU HAVE THE THING?
             else
                 if ~exist('notebook','var')
                     % if we've not loaded a bunch of notebooks and combined them
@@ -210,8 +219,16 @@ else
             % already, load the notebook now.
             % force all columns to be treated as text.
             if m==1
+                %first check the NLSAM
+               test_notebook=civm_read_table(opts.(opts.using_series{m}));
+                if opts.assumeNLSAM
+                    assert((nnz(~cellfun(@isempty,regexpi(test_notebook.CIVM_Scan_ID,'^(.*?)(NLSAM)?$'))) & opts.assumeNLSAM),"You said to use the same Dataframe but there is NLSAM where there shouldn't be!")
+                elseif ~opts.assumeNLSAM
+                    assert(~(nnz(~cellfun(@isempty,regexpi(test_notebook.CIVM_Scan_ID,'^(.*?)(NLSAM)?$'))) & opts.assumeNLSAM),"You said to use the same Dataframe but there is not NLSAM where there should be!")
+                end
+                clear test_notebook
+
                 continue;
-                %% CHECK THAT NOTEBOOK HERE FOR IF YOU HAVE THE THING?
             else
                 if ~exist('notebook','var')
                     notebook=civm_read_table(opts.cleanedGoogleDocPath);
