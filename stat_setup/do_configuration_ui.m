@@ -5,8 +5,8 @@ main_grid = uigridlayout(fig,[3,1]);
 main_grid.RowHeight = {'1x','1x',65};
 main_grid.ColumnWidth = {'1x'};
 
-uilabel(main_grid,'text',sprintf(['A configuration file exists for this project at: %s.\n\n' ...
-    'DO YOU WANT TO MAKE A NEW CONFIGURATION FILE?'],setup_file));
+uilabel(main_grid,'text',sprintf(['A statistical model exists for this project within: %s.\n\n' ...
+    'DO YOU WANT TO APPLY A NEW STATISTICAL MODEL \n (ie use current studyParams with this model)?'],setup_file));
 
 yes_no_buttons = uibuttongroup(main_grid);
 rb1 = uiradiobutton(yes_no_buttons,'Position',[10 60 91 15]);

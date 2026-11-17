@@ -6,11 +6,10 @@ dataframe_path=opts.dataframePath;
 config_file=opts.configFile;
 save_dir=opts.statSaveDir;
 
-%% Keep last Statistical Model in Config? Otherwise will take what you have passed and the prior statistical model input.
 
 
 %% CHECK first what to start from [1] Dataframe? [2] cleaned/Edited google doc then Dataframe? [3] googledoc then cleaned/edited google doc then dataframe? 
-opts.keep_last_frame = 0; % if 0 we are NOT keeping the last data frame, if 1 we ARE keeping the last dataframe
+opts.keep_last_frame = 0; % if 0 we are NOT keeping the last sheet indicated, if 1 we ARE keeping the last sheet indicated
 Connectome_Type_IDX=nnz(reg_match(opts.analysisPipelineType,'^(Connectome)$'));
 for m=1:numel(opts.using_series)
     %% Do a data handler to make a new version if a dataframe or a cleanedgoogleDocPath
@@ -67,8 +66,8 @@ for m=1:numel(opts.using_series)
     end
 end
 
-if ~opts.keep_last_frame % if 0 we are NOT keeping the last data frame, if 1 we ARE keeping the last dataframe
-
+%% What to do if Keeping or Tossing Dataframe/ Edited Google Sheet
+if ~opts.keep_last_frame % if 0 we are NOT keeping the last sheet indicated, if 1 we ARE keeping the last sheet indicated
     %% NOT KEEPING LAST DATAFRAME
     for m=1:numel(opts.using_series)
         if reg_match(opts.using_series{m},'^(googleDocPath)$')
@@ -166,7 +165,20 @@ if ~opts.keep_last_frame % if 0 we are NOT keeping the last data frame, if 1 we 
             notebook=civm_read_table(opts.cleanedGoogleDocPath);
             % force all columns to be treated as text.
 
+            if opts.assumeNLSAM
+                % alternative options, tryNLSAM where we would at some later point
+                % try with and without NLSAM, although James doesnt like that due to the ambiguouity.
+                % assumes nlsam is not part of runno, and adds it.
+                %cloud_notebook.CIVM_Scan_ID=cellfun(@(x) sprintf('%sNLSAM',x),cloud_notebook.CIVM_Scan_ID,'UniformOutput',false);
+                % forces nlsam at end of runno, but doesnt accidentially add it
+                % when it already exists.
+                notebook.CIVM_Scan_ID=cellfun(@(x) regexprep(x,'^(.*?)(NLSAM)?$',"$1NLSAM"),notebook.CIVM_Scan_ID,'UniformOutput',false);
+            end
+
+            %do visualization to do final cleanup of Dataframe
             edit_frame_ui(notebook,opts.(opts.using_series{m}),opts.using_series{m});
+
+            %Convert and find data.
             cloudnotebook_to_dataframe('CIVM_Scan_ID',opts.(opts.using_series{m}),opts);
         end
     end
@@ -256,7 +268,9 @@ if exist(config_file,'file')
     % prompt for keeping configuration (1 == keep)
     opts.keep_last_setup=do_configuration_ui(config_file);
 
-    if ~opts.keep_last_setup
+    % always create a last which keeps a record of the prior opts used
+    % along with the statistical model. 
+    %if ~opts.keep_last_setup
         % when NOT keeping, rename the previous to contain its save date so
         % we can tell what we ran and when.
         info=dir(config_file);
@@ -265,8 +279,8 @@ if exist(config_file,'file')
         idate.Format='yyyy-MM-dd''T''HHmm';
         old_file=fullfile(p,sprintf('%s_%s.mat',n,char(idate)));
         movefile(config_file,old_file)
-        clear info idate old_file;
-    end
+        clear info idate;
+    %end
 end
 clear p n;
 
@@ -276,33 +290,17 @@ if ~opts.keep_last_setup
     clear configuration_table
     [statistical_model]=pairwise_compare_ui_apply2summary(statistical_model,dataframe_path);
 
-    %save configuration struct (which now includes
-    % pariwise_criteria)
-    save(config_file,'statistical_model','-mat');
-else
-    % load configuration struct (which now includes
-    % pariwise_criteria)
-    load(config_file,'statistical_model');
+    opts.statistical_model=statistical_model;
+elseif opts.keep_last_setup & exist('old_file', 'var')
+    % load model from the old file
+    temp_opts=load(old_file);
+    opts.statistical_model=temp_opts.opts.statistical_model;
+
+elseif opts.keep_last_setup & ~exist(config_file,'file')
+    error('You said to keep the last statistical model setup but did not give an existing file to look in!!!');
 end
 
-%save opts so can redo fully
-temp_opt=strsplit(config_file,'.mat');
-opts_file=strcat(temp_opt{1},'_opts.mat');
-
-opts.statistical_model=statistical_model;
-
-if exist(opts_file,'file')
-    % rename the previous to contain its save date so
-    % we can tell what we ran and when.
-    info=dir(opts_file);
-    [p,n,~]=fileparts(opts_file);
-    idate=datetime(info.date);
-    idate.Format='yyyy-MM-dd''T''HHmm';
-    old_file=fullfile(p,sprintf('%s_%s.mat',n,char(idate)));
-    movefile(opts_file,old_file)
-    clear info idate old_file;
-end
-
-save(opts_file,'opts','-mat');
+%save all of opts into a single file
+save(config_file,'opts','-mat');
 
 end
