@@ -5,15 +5,30 @@ dataframe_path=opts.dataframePath;
 config_file=opts.configFile;
 save_dir=opts.statSaveDir;
 
+%% Keep last dataframe check-- but need to check that labels are in the dataset if doing connectomic stuff
 
-%% Need to add a check about labels when we are keeping a dataframe to make sure we actually able to use the dataframe provided -- that is has labels for connectome
+
+
+
+
+%% Keep last Statistical Model in Config? Otherwise will take what you have passed and the prior statistical model input.
+
+
 %% Data setup -- User Input form
 opts.keep_last_frame = 0; % if 0 we are NOT keeping the last data frame, if 1 we ARE keeping the last dataframe
+Connectome_Type_IDX=nnz(reg_match(opts.analysisPipelineType,'^(Connectome)$'));
 for m=1:numel(opts.using_series)
     %% Do a data handler to make a new version if a dataframe or a cleanedgoogleDocPath
     if m==1
         if exist(opts.(opts.using),'file') && ~reg_match(opts.using,'^(googleDocPath)$')
+            
             [opts.keep_last_frame] = do_frame_ui(opts.(opts.using),opts.using);
+
+            if Connectome_Type_IDX & reg_match(opts.using,'^(dataframePath)$') & opts.keep_last_frame
+                temp_dataframe=civm_read_table(opts.dataframePath);
+                assert(~isempty(temp_dataframe.label_path),'Cannot Keep This Exact Dataframe for Connectomics! There are no Labels provided in it!')
+            end
+
             if ~opts.keep_last_frame
                 [path,name,extension]=fileparts(opts.(opts.using));
                 info=dir(opts.(opts.using));
@@ -22,8 +37,9 @@ for m=1:numel(opts.using_series)
                 old_file_path=fullfile(path,sprintf('%s_%s%s',name,char(idate),extension));
                 movefile(opts.(opts.using),old_file_path) %stashing prior doc at same name location
             else
-                %Clear out any lingering names in the dataframe table related to
-                %the past group/subgrouping.
+                % ARE KEEPING THE LAST DATAFRAME!!!
+
+                %Clear out any lingering names in the dataframe table
                 frame=civm_read_table(opts.(opts.using));
                 not_empty_logical=~cellfun(@isempty,frame.Properties.VariableDescriptions);
                 not_empty_positional=find(not_empty_logical);
@@ -239,22 +255,24 @@ clear p n;
 
 if ~opts.keep_last_setup
     configuration_table=stats_configuration_ui(dataframe_path);
-    configuration_struct=assignmodelmatrix_ui(configuration_table);
+    statistical_model=assignmodelmatrix_ui(configuration_table);
     clear configuration_table
-    [configuration_struct]=pairwise_compare_ui_apply2summary(configuration_struct,dataframe_path);
+    [statistical_model]=pairwise_compare_ui_apply2summary(statistical_model,dataframe_path);
 
     %save configuration struct (which now includes
     % pariwise_criteria)
-    save(config_file,'configuration_struct','-mat');
+    save(config_file,'statistical_model','-mat');
 else
     % load configuration struct (which now includes
     % pariwise_criteria)
-    load(config_file,'configuration_struct');
+    load(config_file,'statistical_model');
 end
 
 %save opts so can redo fully
 temp_opt=strsplit(config_file,'.mat');
 opts_file=strcat(temp_opt{1},'_opts.mat');
+
+opts.statistical_model=statistical_model;
 
 if exist(opts_file,'file')
     % rename the previous to contain its save date so

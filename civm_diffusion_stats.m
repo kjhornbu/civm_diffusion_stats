@@ -175,8 +175,8 @@ opts=p.Results;
 opts = optsErrorChecking(opts);
 
 
-%% Get the Statistical Model Input
-opts=setStatisticalModelInput(opts);
+%% Get the Statistical Model Inputs (that is edits to the dataframe and to the statistical model itself) put into a configuration file itself for long term use. 
+opts=setStatisticalModelInputs(opts);
 
 %% Unpack back into variable form
 user=opts.user;
