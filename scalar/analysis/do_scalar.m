@@ -47,7 +47,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
     output_paths=fullfile( opts.statSaveDir,sprintf('%s_Scalar_Sheet_Paths.csv',setup_name));
 
     if ~file_time_check(output_paths, 'newer', opts.configFile)
-        output_paths_table=scalar_processing_main(dataframe,save_scalar,group,subgroup,test_criteria,test_remove_criteria,stats_test_scalar,opts);
+        output_paths_table=scalar_processing_main(dataframe,save_scalar,opts);
 
         %save output path tables to a location
         output_paths_table.hemisphere=cell2mat(output_paths_table.hemisphere);
@@ -78,7 +78,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
     for pt=opts.pvalType
         pvalue_type=pt{1};
         % need to assign to temp to prevent handling pval different from pval_BH
-        output_paths_with_compare=Generate_PairwiseSheet_Plotting( output_paths_table, compare_criteria, pvalue_type, opts.pvalThreshold, {plot_criteria}); %
+        output_paths_with_compare=Generate_PairwiseSheet_Plotting( output_paths_table, opts.statistical_model.compare_criteria, pvalue_type, opts.pvalThreshold, {opts.statistical_model.all_defined_terms}); %
 
         close all
     end
@@ -99,11 +99,11 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
             output_paths_table_single=output_paths_table(n,:);
             for pt=opts.pvalType
                 pvalue_type=pt{1};
-                generate_summary_ppts( output_paths_table_single, studyID, user,pvalue_type, opts.pvalThreshold, studymodel, Summary_Criteria);
+                generate_summary_ppts( output_paths_table_single,  opts.studyID, opts.user,pvalue_type, opts.pvalThreshold, opts.statistical_model.wilkinson_notation, opts.statistical_model.cleaned_pairwise_terms);
             end
         end
 
-        if isempty(test_remove_criteria{1})
+        if isempty(opts.statistical_model.test_remove_criteria{1})
             col_types={'cohenD','percent_change'};
         else
             col_types={'absolute_error'};
@@ -128,13 +128,13 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
             % indicies of the summary criteria, we dont use summary criterais because
             % its not as well connected to what we want.
 
-            summary_idx=pairwise_criteria.control.applytosummary==1;
+            summary_idx= opts.statistical_model.pairwise_criteria.control.applytoppt==1;
 
             % comparison_names version -- technically could be defined so
             % each one is different.
-            case_names=pairwise_criteria.control.case(summary_idx);
+            case_names=opts.statistical_model.pairwise_criteria.control.case(summary_idx);
             name_code=cell(size(case_names));
-            sum_compare=compare_criteria{1}(:,summary_idx);
+            sum_compare=opts.statistical_model.compare_criteria{1}(:,summary_idx);
 
             for col_type_idx=1:numel(col_types)
                 for m=1:size(sum_compare,2)

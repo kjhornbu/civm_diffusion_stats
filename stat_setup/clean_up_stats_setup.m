@@ -267,7 +267,6 @@ for o=1:numel(source)
         Summary_Criteria.(source{o})(n,:)=cell2table(temp2,'VariableNames',temp_varnames);
     end
     Summary_Criteria.(source{o})=Summary_Criteria.(source{o})(Summary_Criteria.(source{o}).applytoppt==1,:);
-    Summary_Criteria.(source{o})=removevars(Summary_Criteria.(source{o}),'applytoppt');
     Summary_Criteria.(source{o})=column_reorder(Summary_Criteria.(source{o}),{'case','source_of_variation'});
 end
 

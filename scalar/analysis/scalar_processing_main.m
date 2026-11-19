@@ -1,5 +1,12 @@
-function [output_path_table] = scalar_processing_main(dataframe,save_location,group,subgroup,test_conditions,remove_zscore_grouping,stats_test,opts)
+function [output_path_table] = scalar_processing_main(dataframe,save_location,opts)
 %% The meat of the script that generates the scalar analysis of the data set
+%orginally what was passed
+%(dataframe,save_scalar,group,subgroup,test_criteria,test_remove_criteria,stats_test_scalar,opts)
+%(dataframe,save_location,group,subgroup,test_conditions,remove_zscore_grouping,stats_test,opts)
+
+test_conditions=opts.statistical_model.model_layout;
+remove_zscore_grouping=opts.statistical_model.test_remove_criteria;
+stats_test=opts.statistical_model.stats_test_scalar;
 
 %% Preliminaries
 % CIVM Knowledge of our dataset
@@ -100,7 +107,7 @@ for o=1:numel(voxel_wise)
     clear idx;
 
     %% assign group/subgroup specified to dataframe, and convert the columns that might accidently be non-strings to strings
-    [dataframe] = clean_df_to_general_entries(group,subgroup,dataframe);
+    [dataframe] = clean_df_to_general_entries(opts.statistical_model.group,opts.statistical_model.subgroup,dataframe);
 
     %% Pull Data from Stat Files
     try
@@ -279,7 +286,7 @@ for o=1:numel(voxel_wise)
                 result_table_BHFDR=calculate_BHFDR(result_table,opts.scalarContrastMetrics(o).List(:));
 
                 %shift the saving location so it is in respect to the given filtering groups in the directory.
-                output_paths=save_output_from_scalar_analysis(save_location,HemisphereAssignmentKey(hemi_set(hemi)),group_names{m},group,subgroup,model_GROUPING,group_summary_stats,specimen_zscore,result_table_BHFDR,multi_compare_table);
+                output_paths=save_output_from_scalar_analysis(save_location,HemisphereAssignmentKey(hemi_set(hemi)),group_names{m},opts.statistical_model.group,opts.statistical_model.subgroup,model_GROUPING,group_summary_stats,specimen_zscore,result_table_BHFDR,multi_compare_table);
 
                 %% attempt to asssign all paths in one shot to output table
                 height_paths_table=height(output_path_table);
@@ -328,7 +335,7 @@ for o=1:numel(voxel_wise)
             %This needs to go on the smallest most useful unit for multicomparison otherwise we
             %can't get the BH calculated correctly -- ie don't to L/R/BI together
             result_table_BHFDR=calculate_BHFDR(result_table,opts.scalarContrastMetrics(o).List(:));
-            output_paths=save_output_from_scalar_analysis(save_location,HemisphereAssignmentKey(hemi_set(hemi)),[],group,subgroup,test_conditions{i_testcondition},group_summary_stats,specimen_zscore,result_table_BHFDR,multi_compare_table);
+            output_paths=save_output_from_scalar_analysis(save_location,HemisphereAssignmentKey(hemi_set(hemi)),[],opts.statistical_model.group,opts.statistical_model.subgroup,test_conditions{i_testcondition},group_summary_stats,specimen_zscore,result_table_BHFDR,multi_compare_table);
 
             %% attempt to assign all paths in one shot to output table
             height_paths_table=height(output_path_table);

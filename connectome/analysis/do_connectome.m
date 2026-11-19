@@ -50,8 +50,6 @@ if sum(reg_match(opts.analysisPipelineType,'^(Connectome)$'))>0
         save_cnt=fullfile( opts.statSaveDir,'Connectomics',opts.statistical_model.stats_test_connectome.name,name_augment);
     end
 
-    
-
     %% MAKE THIS THE CONNECTOME FOLDER
 
     connectome_outputs=list2cell('Unscaled_Omni_Manova BrainScaled_Omni_Manova');
