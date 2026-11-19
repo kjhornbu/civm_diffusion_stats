@@ -45,8 +45,8 @@ end
 %than in the key comparisions.
 
 for source=1:numel(source_of_variation)
-    control_idx=~cellfun(@isempty,regexpi(control_setting.source_of_variation,strcat('^(',source_of_variation(source),')$')));
-    noncontrol_idx=~cellfun(@isempty,regexpi(noncontrol_setting.source_of_variation,strcat('^(',source_of_variation(source),')$')));
+    control_idx=~cellfun(@isempty,regexpi(control_setting.source_of_variation,strcat('^(',source_of_variation(source),')$'))) & control_setting.applytoppt==1;
+    noncontrol_idx=~cellfun(@isempty,regexpi(noncontrol_setting.source_of_variation,strcat('^(',source_of_variation(source),')$'))) & noncontrol_setting.applytoppt==1;
 
     control_positional_idx=find(control_idx==1);
 
@@ -61,7 +61,9 @@ for source=1:numel(source_of_variation)
 
     for pairs_in_group = 1:size(temp_control,1)
 
-        %if we didn't give a cute name then use a standard name
+        %if we didn't give a cute name then use a standard name Selected
+        %from the Control and Non Control Pairs. 
+
         if sum(~cellfun(@isempty,regexpi(noncontrol_setting.Properties.VariableNames,'^(case)$')))
             group_name_full{pairs_in_group}=control_setting.case{control_positional_idx(pairs_in_group)};
         else
@@ -69,6 +71,9 @@ for source=1:numel(source_of_variation)
             group_name_noncontrol{pairs_in_group}=strjoin(table2array(temp_noncontrol(pairs_in_group,:)),' ');
             group_name_full{pairs_in_group}=strcat(group_name_control{pairs_in_group},32,'versus',32,group_name_noncontrol{pairs_in_group});
         end
+
+        % We are trying to find what groups to pull out from the group
+        % table based on selecting the actual data terms.
 
         for group_n=1:numel(control_setting_VariableNames)
             control_idx_inGroupTable{pairs_in_group}(:,group_n)=~cellfun(@isempty,regexpi(Group_Table.(control_setting_VariableNames{group_n}),strcat('^(',temp_control.(control_setting_VariableNames{group_n}){pairs_in_group},')$')));
@@ -79,6 +84,7 @@ for source=1:numel(source_of_variation)
             noncontrol_idx_inGroupTable{pairs_in_group}(:,group_n)=~cellfun(@isempty,regexpi(Group_Table.(noncontrol_setting_VariableNames{group_n}),strcat('^(',temp_noncontrol.(noncontrol_setting_VariableNames{group_n}){pairs_in_group},')$')));
         end
         noncontrol_idx_inGroupTable{pairs_in_group}=sum(noncontrol_idx_inGroupTable{pairs_in_group},2)==numel(noncontrol_setting_VariableNames);
+
     end
 
     for con=1:numel(contrast)
