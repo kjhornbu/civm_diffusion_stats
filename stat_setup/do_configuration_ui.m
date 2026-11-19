@@ -6,7 +6,7 @@ main_grid.RowHeight = {'1x','1x',65};
 main_grid.ColumnWidth = {'1x'};
 
 uilabel(main_grid,'text',sprintf(['A statistical model exists for this project within: %s.\n\n' ...
-    'DO YOU WANT TO APPLY A NEW STATISTICAL MODEL \n (ie use current studyParams with this model)?'],setup_file));
+    'DO YOU WANT TO INPUT A NEW STATISTICAL MODEL (this will use the current input "studyParams" with a new model)?'],setup_file));
 
 yes_no_buttons = uibuttongroup(main_grid);
 rb1 = uiradiobutton(yes_no_buttons,'Position',[10 60 91 15]);

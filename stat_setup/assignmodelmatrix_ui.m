@@ -4,13 +4,13 @@ function [configuration] = assignmodelmatrix_ui(configuration_table)
 % Setup configuration
 configuration.test_criteria=configuration_table;
 configuration.scalar_name='anovan_defined_matrix';
-configuration.manova_name='omnimanova_defined_matrix';
+configuration.connectome_name='omnimanova_defined_matrix';
 configuration.zscore='none';
 configuration.stratification='none';
 
 %different model types that are possible
 scalar_stat_models={'anovan_defined_matrix, anovan_no_interaction, anovan_pairwise_interaction, anovan_full_interaction,\nanova_1way, kruskalwallis. Only in MATLAB 2023+: manova_nway_fullinteraction, manova_nway_no_interaction'};
-manova_stat_models={'omnimanova_full_interactions, omnimanova_defined_matrix'};
+connectome_stat_models={'omnimanova_full_interactions, omnimanova_defined_matrix'};
 
 GROUP_logical_idx=~cellfun(@isempty,configuration_table.GROUP);
 GROUP_positional_idx=find(GROUP_logical_idx);
@@ -62,9 +62,9 @@ model_options_C = uigridlayout(data_grid_L,[2,1]);
 model_options_C.ColumnWidth = {'1x'};
 model_options_C.RowHeight = {'1x','1x'};
 
-uilabel(model_options_C,'text',sprintf(strcat('Connectome Statistical Model\nOptions:',32,manova_stat_models{:})));
+uilabel(model_options_C,'text',sprintf(strcat('Connectome Statistical Model\nOptions:',32,connectome_stat_models{:})));
 uitext_C=uieditfield(model_options_C,'text','Value','omnimanova_defined_matrix');
-uitext_C.ValueChangedFcn=@(src,event) text_model(src,event,'manova');
+uitext_C.ValueChangedFcn=@(src,event) text_model(src,event,'connectome');
 
 uilabel(data_grid_L,'text',sprintf('Click to populate matrix model representation for both regression models. Multiple entries in a row indicate interactions between clicked terms\nClick "Main Effect Model" or "Full Interaction Model" to populate the matrix automatically.\nClick "Add Nested Terms" to indicate what terms included in the model are children delineations of another term.\nClick "Clear Matrix Model" to clear out the current matrix. Click the  + to add new rows.'));
 
@@ -217,9 +217,8 @@ waitfor(next_button,'ButtonPushedFcn');
         if strcmp(entry,'scalar')
             %logical_data_idx=strcmp(src.Value,scalar_stat_models);
             logical_data_idx=~cellfun(@isempty,regexpi(scalar_stat_models,src.Value));
-        elseif strcmp(entry,'manova')
-            %logical_data_idx=strcmp(src.Value,manova_stat_models);
-            logical_data_idx=~cellfun(@isempty,regexpi(manova_stat_models,src.Value));
+        elseif strcmp(entry,'connectome')
+            logical_data_idx=~cellfun(@isempty,regexpi(connectome_stat_models,src.Value));
         end
         if sum(logical_data_idx)==0
             src.Value = 'Does Not Match Any Option Above. Try Again.';

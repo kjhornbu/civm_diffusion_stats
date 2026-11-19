@@ -19,7 +19,7 @@ for m=1:numel(opts.using_series)
                 %earlier and checks for that.
 
                 temp_dataframe=civm_read_table(opts.dataframePath);
-                assert(~isempty(temp_dataframe.label_path),'Cannot Keep This Exact Dataframe for Connectomics! There are no Labels provided in it!')
+                assert(~isempty(temp_dataframe.label_path),'Cannot Keep This Exact Dataframe for Connectomics! There are no Labels provided in it! Try Again.')
             end
 
             if ~opts.keep_last_frame
@@ -202,9 +202,9 @@ else
                 %first check the NLSAM
                 test_notebook=civm_read_table(opts.(opts.using_series{m}));
                 if opts.assumeNLSAM
-                    assert((nnz(~cellfun(@isempty,regexpi(test_notebook.CIVM_Scan_ID,'^(.*?)(NLSAM)?$'))) & opts.assumeNLSAM),"You said to use the same cleanedGoogleDocPath but there is NLSAM where there shouldn't be!")
+                    assert((nnz(~cellfun(@isempty,regexpi(test_notebook.CIVM_Scan_ID,'^(.*?)(NLSAM)?$'))) & opts.assumeNLSAM),"You said to use the same cleanedGoogleDocPath, but there is NLSAM where there shouldn't be!")
                 elseif ~opts.assumeNLSAM
-                    assert(~(nnz(~cellfun(@isempty,regexpi(test_notebook.CIVM_Scan_ID,'^(.*?)(NLSAM)?$'))) & opts.assumeNLSAM),"You said to use the same cleanedGoogleDocPath but there is not NLSAM where there should be!")
+                    assert(~(nnz(~cellfun(@isempty,regexpi(test_notebook.CIVM_Scan_ID,'^(.*?)(NLSAM)?$'))) & opts.assumeNLSAM),"You said to use the same cleanedGoogleDocPath, but there is not NLSAM where there should be!")
                 end
                 clear test_notebook
 
@@ -229,9 +229,9 @@ else
                 %first check the NLSAM
                test_notebook=civm_read_table(opts.(opts.using_series{m}));
                 if opts.assumeNLSAM
-                    assert((nnz(~cellfun(@isempty,regexpi(test_notebook.CIVM_Scan_ID,'^(.*?)(NLSAM)?$'))) & opts.assumeNLSAM),"You said to use the same Dataframe but there is NLSAM where there shouldn't be!")
+                    assert((nnz(~cellfun(@isempty,regexpi(test_notebook.CIVM_Scan_ID,'^(.*?)(NLSAM)?$'))) & opts.assumeNLSAM),"You said to use the same Dataframe, but there is NLSAM where there shouldn't be!")
                 elseif ~opts.assumeNLSAM
-                    assert(~(nnz(~cellfun(@isempty,regexpi(test_notebook.CIVM_Scan_ID,'^(.*?)(NLSAM)?$'))) & opts.assumeNLSAM),"You said to use the same Dataframe but there is not NLSAM where there should be!")
+                    assert(~(nnz(~cellfun(@isempty,regexpi(test_notebook.CIVM_Scan_ID,'^(.*?)(NLSAM)?$'))) & opts.assumeNLSAM),"You said to use the same Dataframe, but there is not NLSAM where there should be!")
                 end
                 clear test_notebook
 

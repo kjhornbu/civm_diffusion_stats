@@ -1,7 +1,23 @@
-function [group,subgroup,test_criteria,test_remove_criteria,stats_test_scalar,stats_test_manova,plot_criteria,studymodel,compare_criteria,Summary_Criteria,pairwise_criteria] = clean_up_stats_setup(configuration_struct,pval_threshold)
+function [opts] = clean_up_stats_setup(opts)
+
+%group,
+    %subgroup,
+    %test_criteria (this is overwriting the LUT of all the terms needs a
+    %better name opts.statistical_model.model_layout)
+    %test_remove_criteria,
+    %stats_test_scalar,
+    %stats_test_connectome,
+    %plot_criteria (now called opts.statistical_model.all_defined_terms),
+    %studymodel(called now opts.statistical_model.wilkinson_notation),
+    %compare_criteria,
+    %Summary_Criteria (called now opts.statistical_model.cleaned_pairwise_term),
+    %pairwise_criteria (already in opts originally)
+
 %% Layout of Group and subgroup Factors
 %group={'genotype','stratifier'};
 %subgroup={'sex'};
+
+configuration_struct=opts.statistical_model;
 
 GROUP_logical_idx=~cellfun(@isempty,configuration_struct.test_criteria.GROUP);
 GROUP_positional_idx=find(GROUP_logical_idx);
@@ -57,6 +73,10 @@ for n=1:numel(subgroup_continuous_logical)
     end
 end
 
+opts.statistical_model.group=group;
+opts.statistical_model.subgroup=subgroup;
+
+
 %% Layout of test_criteria
 %in group and subgroup naming 
 % test_criteria={ {'group2' ; {'group1','subgroup1'}} };
@@ -66,12 +86,18 @@ model_array=table2array(configuration_struct.model_table);
 idx_pos = sum(model_array,1)>0;
 matrix=double(model_array(:,idx_pos));
 model_names = configuration_struct.model_table.Properties.VariableNames(idx_pos);
-plot_criteria=model_names;
+
+opts.statistical_model.all_defined_terms=model_names;
 
 for n=1:size(model_array,1)
     studymodel{n}=strjoin(configuration_struct.model_table.Properties.VariableNames(model_array(n,:)),':');
 end
 studymodel=strjoin(studymodel,'+');
+
+% This does not include the random|continous|nesting in the full notation!!!
+% but good enough for now. 
+
+opts.statistical_model.wilkinson_notation=studymodel;
 
 for n=1:numel(model_names)
     group_compare=strcmp(group,model_names{n});
@@ -87,6 +113,7 @@ for n=1:numel(model_names)
         keyboard;
     end
 end
+
 %% Layout of including stratification
 %hard to straify with more than 1 thing so not supporting that at this
 %moment. Do some fancy work in a dataframe if that is desired. 
@@ -109,6 +136,9 @@ else
     end
 end
 
+
+
+opts.statistical_model.model_layout=test_criteria;
 %% Layout adding in a zscoring requirement
 if strcmp(configuration_struct.zscore,'none')
     test_remove_criteria={{}};
@@ -132,37 +162,48 @@ else
    test_remove_criteria={[group_cells, subgroup_cells]};
 end
 
+opts.statistical_model.test_remove_criteria=test_remove_criteria;
+
 %% Make Stats_Test Groupings
-stats_test_scalar=struct;
 
-stats_test_scalar.name=configuration_struct.scalar_name;
-stats_test_scalar.effect_type_group=group_random_vector;
-stats_test_scalar.variable_type_group=group_continuous_vector;
-stats_test_scalar.group_name=group;
+if nnz(reg_match(opts.analysisPipelineType,'^(Scalar)$'))
+    stats_test_scalar=struct;
 
-if ~isempty(subgroup)
-    stats_test_scalar.effect_type_subgroup=subgroup_random_vector;
-    stats_test_scalar.variable_type_subgroup=subgroup_continuous_vector;
-    stats_test_scalar.subgroup_name=subgroup;
+    stats_test_scalar.name=configuration_struct.scalar_name;
+    stats_test_scalar.effect_type_group=group_random_vector;
+    stats_test_scalar.variable_type_group=group_continuous_vector;
+    stats_test_scalar.group_name=group;
+
+    if ~isempty(subgroup)
+        stats_test_scalar.effect_type_subgroup=subgroup_random_vector;
+        stats_test_scalar.variable_type_subgroup=subgroup_continuous_vector;
+        stats_test_scalar.subgroup_name=subgroup;
+    end
+
+    stats_test_scalar.matrix{1}=matrix;
+    stats_test_scalar.pval_threshold=opts.pvalThreshold;
+
+    opts.statistical_model.stats_test_scalar=stats_test_scalar;
 end
 
-stats_test_scalar.matrix{1}=matrix;
-stats_test_scalar.pval_threshold=pval_threshold;
-
-stats_test_manova=struct;
-stats_test_manova.name=configuration_struct.manova_name;
-stats_test_manova.effect_type_group=group_random_vector;
-stats_test_manova.variable_type_group=group_continuous_vector;
-stats_test_manova.group_name=group;
+if nnz(reg_match(opts.analysisPipelineType,'^(Connectome)$'))
+stats_test_connectome=struct;
+stats_test_connectome.name=configuration_struct.connectome_name;
+stats_test_connectome.effect_type_group=group_random_vector;
+stats_test_connectome.variable_type_group=group_continuous_vector;
+stats_test_connectome.group_name=group;
 
 if ~isempty(subgroup)
-    stats_test_manova.effect_type_subgroup=subgroup_random_vector;
-    stats_test_manova.variable_type_subgroup=subgroup_continuous_vector;
-    stats_test_manova.subgroup_name=subgroup;
+    stats_test_connectome.effect_type_subgroup=subgroup_random_vector;
+    stats_test_connectome.variable_type_subgroup=subgroup_continuous_vector;
+    stats_test_connectome.subgroup_name=subgroup;
 end
 
-stats_test_manova.matrix{1}=matrix;
-stats_test_manova.pval_threshold=pval_threshold;
+stats_test_connectome.matrix{1}=matrix;
+stats_test_connectome.pval_threshold=opts.pvalThreshold;
+
+opts.statistical_model.stats_test_connectome=stats_test_connectome;
+end
 
 %% Compare Criteria that are used to do pairwise comparisions in the datasheets
 % wo regard to the source of variation
@@ -197,6 +238,8 @@ for o=1:numel(source)
     end
 end
 
+opts.statistical_model.compare_criteria=compare_criteria;
+
 %% Clean Pairwise Comparisions that are used to reduce the complexity of the summary powerpoints
 %w regard to the source of variation
 source={'control','treatment'};
@@ -210,7 +253,7 @@ for o=1:numel(source)
                 temp2{m}='-';
             elseif strcmp(temp_varnames{m},'case') || strcmp(temp_varnames{m},'source_of_variation')
                 temp2{m}=char(temp{1,m});
-            elseif  strcmp(temp_varnames{m},'applytosummary')
+            elseif  strcmp(temp_varnames{m},'applytoppt')||strcmp(temp_varnames{m},'makeimage')
                 if temp{1,m}
                     temp2{m}= 1;
                 else
@@ -221,11 +264,16 @@ for o=1:numel(source)
                 temp2{m}=temp_split{2};
             end
         end
-
         Summary_Criteria.(source{o})(n,:)=cell2table(temp2,'VariableNames',temp_varnames);
     end
-    Summary_Criteria.(source{o})=Summary_Criteria.(source{o})(Summary_Criteria.(source{o}).applytosummary==1,:);
-    Summary_Criteria.(source{o})=removevars(Summary_Criteria.(source{o}),'applytosummary');
+    Summary_Criteria.(source{o})=Summary_Criteria.(source{o})(Summary_Criteria.(source{o}).applytoppt==1,:);
+    Summary_Criteria.(source{o})=removevars(Summary_Criteria.(source{o}),'applytoppt');
     Summary_Criteria.(source{o})=column_reorder(Summary_Criteria.(source{o}),{'case','source_of_variation'});
 end
+
+opts.statistical_model.cleaned_pairwise_terms=Summary_Criteria;
+
+%save all of opts into a single file after we have messed with it some so
+%we have this updated form with everything
+save(opts.configFile,'opts','-mat');
 end

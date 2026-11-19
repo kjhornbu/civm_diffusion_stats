@@ -188,7 +188,8 @@ waitfor(next_button,'ButtonPushedFcn');
 
         if ~isempty(entry)
             data=load(entry);
-            pairwise=data.pairwise_criteria;
+            %pairwise=data.pairwise_criteria;
+            pairwise=data.opts.statistical_model.pairwise_criteria;
 
             col_names_con=pairwise.control.Properties.VariableNames;
             col_names_treat=pairwise.treatment.Properties.VariableNames;

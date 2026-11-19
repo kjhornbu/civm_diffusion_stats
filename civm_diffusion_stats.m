@@ -1,4 +1,4 @@
-function [ config_file ] = civm_diffusion_stats(varargin)
+function [ opts ] = civm_diffusion_stats(varargin)
 %% CIVM_DIFFUSION_STATS
 % Runs statistical analysis for connectomes and scalar creating summmary
 % documents for both
@@ -174,66 +174,62 @@ parse(p, varargin{:});
 opts=p.Results; 
 opts = optsErrorChecking(opts);
 
+clear p user_name default_scalarContrast varargin
 
 %% Get the Statistical Model Inputs (that is edits to the dataframe and to the statistical model itself) put into a configuration file itself for long term use. 
-opts=setStatisticalModelInputs(opts);
+opts=setStatisticalModelInputs(opts); 
 
-%% Unpack back into variable form
-user=opts.user;
-studyID=opts.studyID; 
-
-[group, subgroup, test_criteria, test_remove_criteria, stats_test_scalar, stats_test_manova, plot_criteria, studymodel, compare_criteria, Summary_Criteria,pairwise_criteria] = ...
-    clean_up_stats_setup(configuration_struct,opts.pvalThreshold);
+%% This organizes the input into reasonable useable chunks and resaves the configuration file.
+opts = clean_up_stats_setup(opts);
 
 %% Scalar Analysis
-dataframe=civm_read_table(dataframe_path);
-dataframe=column2text(dataframe,{group,subgroup});
+
 
 if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
+dataframe=civm_read_table(opts.dataframePath);
+dataframe=column2text(dataframe,{opts.statistical_model.group,opts.statistical_model.subgroup});
 
     %Setup folder naming
-    if ~exist(fullfile(save_dir,'Scalar_and_Volume'),'dir')
-        mkdir(fullfile(save_dir,'Scalar_and_Volume'))
+    if ~exist(fullfile(opts.statSaveDir,'Scalar_and_Volume'),'dir')
+        mkdir(fullfile( opts.statSaveDir,'Scalar_and_Volume'))
     end
 
-    check_names=fieldnames(stats_test_scalar);
+    check_names=fieldnames(opts.statistical_model.stats_test_scalar);
     idx_subgroup=~cellfun(@isempty,regexpi(check_names,'^(subgroup_name)$'));
     positional_idx_subgroup=find(idx_subgroup);
 
     if ~isempty(positional_idx_subgroup)
-        name_augment=strcat(strjoin(strrep(stats_test_scalar.group_name,'_',''),'_'),'_',strjoin(strrep(stats_test_scalar.subgroup_name,'_',''),'_'));
+        name_augment=strcat(strjoin(strrep(opts.statistical_model.stats_test_scalar.group_name,'_',''),'_'),'_',strjoin(strrep(opts.statistical_model.stats_test_scalar.subgroup_name,'_',''),'_'));
     else
-        name_augment=strcat(strjoin(strrep(stats_test_scalar.group_name,'_',''),'_'));
+        name_augment=strcat(strjoin(strrep(opts.statistical_model.stats_test_scalar.group_name,'_',''),'_'));
     end
 
-    if strcmp(stats_test_scalar.name,'anovan_defined_matrix')
-        temp_testname=strsplit(stats_test_scalar.name,'_');
-        temp_turned_matrix=stats_test_scalar.matrix{:}';
+    if strcmp(opts.statistical_model.stats_test_scalar.name,'anovan_defined_matrix')
+        temp_testname=strsplit(opts.statistical_model.stats_test_scalar.name,'_');
+        temp_turned_matrix=opts.statistical_model.stats_test_scalar.matrix{:}';
         temp_matrix_numbercode=strrep(char(num2str(temp_turned_matrix(:)))',' ', '');
 
-        if ~exist(fullfile(save_dir,'Scalar_and_Volume',strcat(temp_testname{1},'_',temp_matrix_numbercode)),'dir')
-            mkdir(fullfile(save_dir,'Scalar_and_Volume',strcat(temp_testname{1},'_',temp_matrix_numbercode)));
+        if ~exist(fullfile( opts.statSaveDir,'Scalar_and_Volume',strcat(temp_testname{1},'_',temp_matrix_numbercode)),'dir')
+            mkdir(fullfile( opts.statSaveDir,'Scalar_and_Volume',strcat(temp_testname{1},'_',temp_matrix_numbercode)));
         end
 
-        save_scalar=fullfile(save_dir,'Scalar_and_Volume',strcat(temp_testname{1},'_',temp_matrix_numbercode),name_augment);
+        save_scalar=fullfile( opts.statSaveDir,'Scalar_and_Volume',strcat(temp_testname{1},'_',temp_matrix_numbercode),name_augment);
     else
-        if ~exist(fullfile(save_dir,'Scalar_and_Volume',stats_test_scalar.name),'dir')
-            mkdir(fullfile(save_dir,'Scalar_and_Volume',stats_test_scalar.name));
+        if ~exist(fullfile( opts.statSaveDir,'Scalar_and_Volume',opts.statistical_model.stats_test_scalar.name),'dir')
+            mkdir(fullfile( opts.statSaveDir,'Scalar_and_Volume',opts.statistical_model.stats_test_scalar.name));
         end
-        save_scalar=fullfile(save_dir,'Scalar_and_Volume',stats_test_scalar.name,name_augment);
+        save_scalar=fullfile( opts.statSaveDir,'Scalar_and_Volume',opts.statistical_model.stats_test_scalar.name,name_augment);
     end
 
     if ~exist(save_scalar,'dir')
         mkdir(save_scalar);
     end
 
-    % easy to screw up scalar sheet paths
-    %output_paths=fullfile(save_dir,'Scalar_Data_Sheet_Paths.csv');
-    % less easy to screw up.
-    [~,setup_name,~]=fileparts(config_file);
-    %output_paths=fullfile(save_dir,'Scalar_Data_Sheet_Paths.csv');
-    output_paths=fullfile(save_dir,sprintf('%s_Scalar_Sheet_Paths.csv',setup_name));
-    if ~file_time_check(output_paths, 'newer', config_file)
+
+
+    [~,setup_name,~]=fileparts(opts.configFile);
+    output_paths=fullfile( opts.statSaveDir,sprintf('%s_Scalar_Sheet_Paths.csv',setup_name));
+    if ~file_time_check(output_paths, 'newer', opts.configFile)
         output_paths_table=scalar_processing_main(dataframe,save_scalar,group,subgroup,test_criteria,test_remove_criteria,stats_test_scalar,opts);
 
         %save output path tables to a location
@@ -381,35 +377,35 @@ if sum(reg_match(opts.analysisPipelineType,'^(Connectome)$'))>0
     end
 
 
-    if ~exist(fullfile(save_dir,'Connectomics'),'dir')
-        mkdir(fullfile(save_dir,'Connectomics'))
+    if ~exist(fullfile( opts.statSaveDir,'Connectomics'),'dir')
+        mkdir(fullfile( opts.statSaveDir,'Connectomics'))
     end
 
-    check_names=fieldnames(stats_test_manova);
+    check_names=fieldnames(opts.statistical_model.stats_test_connectome);
     idx_subgroup=~cellfun(@isempty,regexpi(check_names,'^(subgroup_name)$'));
     positional_idx_subgroup=find(idx_subgroup);
 
     if ~isempty(positional_idx_subgroup)
-        name_augment=strcat(strjoin(strrep(stats_test_manova.group_name,'_',''),'_'),'_',strjoin(strrep(stats_test_manova.subgroup_name,'_',''),'_'));
+        name_augment=strcat(strjoin(strrep(opts.statistical_model.stats_test_connectome.group_name,'_',''),'_'),'_',strjoin(strrep(opts.statistical_model.stats_test_connectome.subgroup_name,'_',''),'_'));
     else
-        name_augment=strcat(strjoin(strrep(stats_test_manova.group_name,'_',''),'_'));
+        name_augment=strcat(strjoin(strrep(opts.statistical_model.stats_test_connectome.group_name,'_',''),'_'));
     end
 
-    if strcmp(stats_test_manova.name,'omnimanova_defined_matrix')
-        temp_testname=strsplit(stats_test_manova.name,'_');
-        temp_turned_matrix=stats_test_manova.matrix{:}';
+    if strcmp(opts.statistical_model.stats_test_connectome.name,'omnimanova_defined_matrix')
+        temp_testname=strsplit(opts.statistical_model.stats_test_connectome.name,'_');
+        temp_turned_matrix=opts.statistical_model.stats_test_connectome.matrix{:}';
         temp_matrix_numbercode=strrep(char(num2str(temp_turned_matrix(:)))',' ', '');
 
-        if ~exist(fullfile(save_dir,'Connectomics',strcat(temp_testname{1},'_',temp_matrix_numbercode)),'dir')
-            mkdir(fullfile(save_dir,'Connectomics',strcat(temp_testname{1},'_',temp_matrix_numbercode)));
+        if ~exist(fullfile( opts.statSaveDir,'Connectomics',strcat(temp_testname{1},'_',temp_matrix_numbercode)),'dir')
+            mkdir(fullfile( opts.statSaveDir,'Connectomics',strcat(temp_testname{1},'_',temp_matrix_numbercode)));
         end
 
-        save_cnt=fullfile(save_dir,'Connectomics',strcat(temp_testname{1},'_',temp_matrix_numbercode),name_augment);
+        save_cnt=fullfile( opts.statSaveDir,'Connectomics',strcat(temp_testname{1},'_',temp_matrix_numbercode),name_augment);
     else
-        if ~exist(fullfile(save_dir,'Connectomics',stats_test_manova.name),'dir')
-            mkdir(fullfile(save_dir,'Connectomics',stats_test_manova.name));
+        if ~exist(fullfile( opts.statSaveDir,'Connectomics',opts.statistical_model.stats_test_connectome.name),'dir')
+            mkdir(fullfile( opts.statSaveDir,'Connectomics',opts.statistical_model.stats_test_connectome.name));
         end
-        save_cnt=fullfile(save_dir,'Connectomics',stats_test_manova.name,name_augment);
+        save_cnt=fullfile( opts.statSaveDir,'Connectomics',opts.statistical_model.stats_test_connectome.name,name_augment);
     end
 
     connectome_outputs=list2cell('Unscaled_Omni_Manova BrainScaled_Omni_Manova');
@@ -418,7 +414,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Connectome)$'))>0
 
     %% All specimen OmniManova
     for n=1:numel(connectome_outputs)
-        dataframe=civm_read_table(dataframe_path);
+        dataframe=civm_read_table(opts.dataframePath);
 
         if height(dataframe)> max_specimen
             error('Too many specimen in study to complete omni-manova on this system. Max Specimen # for system is %d.',max_specimen);
@@ -439,7 +435,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Connectome)$'))>0
         end
 
         set_scale=n-1;
-        [regional_paths,global_paths]=full_omni_manova_process(dataframe_path,o_dir,group, subgroup,test_criteria,test_remove_criteria,stats_test_manova,do_binarize, do_mean_subtract, do_ptr, do_augment, find_scale, set_scale,opts.pvalThreshold);
+        [regional_paths,global_paths]=full_omni_manova_process(opts.dataframePath,o_dir,group, subgroup,test_criteria,test_remove_criteria,opts.statistical_model.stats_test_connectome,do_binarize, do_mean_subtract, do_ptr, do_augment, find_scale, set_scale,opts.pvalThreshold);
 
         %placed back inside the full_omni_manova process -- to allow
         %for stratification summarizing
@@ -458,7 +454,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Connectome)$'))>0
     % push too hard. (like if number of specimen > 
 
     %% Then do the one remove testing of Omni Manova
-    remove1_dataframe=civm_read_table(dataframe_path);
+    remove1_dataframe=civm_read_table(opts.dataframePath);
     remove1_dataframe=column2text(remove1_dataframe,{group,subgroup});
     fulldataFrame=remove1_dataframe;
 
@@ -483,18 +479,18 @@ oneRM_done=0;
 %Check groupings for n in them if <2 then cannot actually do 1-remove
 %testing without breaking the test.
 
-use_subgroup=isfield(stats_test_manova,'subgroup_name');
-use_group=isfield(stats_test_manova,'group_name');
+use_subgroup=isfield(opts.statistical_model.stats_test_connectome,'subgroup_name');
+use_group=isfield(opts.statistical_model.stats_test_connectome,'group_name');
 if use_group==1
     if use_subgroup==1
-        grouping_names=[stats_test_manova.group_name,stats_test_manova.subgroup_name];
+        grouping_names=[opts.statistical_model.stats_test_connectome.group_name,opts.statistical_model.stats_test_connectome.subgroup_name];
     else
-        grouping_names=[stats_test_manova.group_name];
+        grouping_names=[opts.statistical_model.stats_test_connectome.group_name];
     end
 else
     warning('No Groups with Names defined, you need at least one!')
 end
-grouping_models=stats_test_manova.matrix{1};
+grouping_models=opts.statistical_model.stats_test_connectome.matrix{1};
 
 group_keeper=zeros(height(grouping_models),1);
 for n=1:height(grouping_models)
@@ -508,7 +504,7 @@ if any(group_keeper)
 else
     if dataLimit>0
         % ParFor for One remove testing
-        if ~file_time_check(fullfile(save_cnt,'Pval_Paths.mat'),'newer',dataframe_path)
+        if ~file_time_check(fullfile(save_cnt,'Pval_Paths.mat'),'newer',opts.dataframePath)
             t_start_remove=tic;
             for n=1:numel(connectome_outputs)
                 newDF_dir=fullfile(save_cnt,connectome_outputs{n},'OneRemoveDataFrames');
@@ -532,7 +528,7 @@ else
                         find_scale=n-1;
                     end
                     set_scale=n-1;
-                    param_list_1_rm{s}={updated_dataframe_path,o_dir,group,subgroup,test_criteria,test_remove_criteria,stats_test_manova,do_binarize, do_mean_subtract, do_ptr, do_augment, find_scale, set_scale,opts.pvalThreshold};
+                    param_list_1_rm{s}={updated_dataframe_path,o_dir,group,subgroup,test_criteria,test_remove_criteria,opts.statistical_model.stats_test_connectome,do_binarize, do_mean_subtract, do_ptr, do_augment, find_scale, set_scale,opts.pvalThreshold};
                     remove1_dataframe=fulldataFrame;
                 end
 
