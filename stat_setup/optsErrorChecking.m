@@ -15,6 +15,13 @@ if nnz(pvalTypeIdx)<numel(pvalTypeIdx)
     error('%d pvalue types are not the correct term. Allowed options are: pval_BH, pval or 1xN of options cell array ',numel(pvalTypeIdx)-nnz(pvalTypeIdx))
 end
 
+%% check that the summary types you are using exist in the set you provide
+for n=1:numel(opts.plotting_sheet_types)
+    check_summary_name(n)=~cellfun(@isempty,regexpi(opts.scalarContrastMetrics(:).Name,opts.plotting_sheet_types(n)));
+end
+
+assert(nnz(check_summary_name)==numel(opts.plotting_sheet_types),'You provided names for data you want to plot in the summary that do not exist in your dataset, Try again');
+
 %The dataframe is saved in the  main folder
 [path,~,~]=fileparts(opts.statSaveDir);
 %% Check data sheets
