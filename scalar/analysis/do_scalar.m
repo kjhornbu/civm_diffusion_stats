@@ -1,6 +1,8 @@
 function [opts] = do_scalar(opts)
 %% Scalar Analysis
-if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
+if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))==0
+    return;
+else
     dataframe=civm_read_table(opts.dataframePath);
     dataframe=column2text(dataframe,{opts.statistical_model.group,opts.statistical_model.subgroup});
 
@@ -40,11 +42,9 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
         mkdir(save_scalar);
     end
 
-    
-
     %% MAKE THIS THE SCALAR FOLDER
     [~,setup_name,~]=fileparts(opts.configFile);
-    output_paths=fullfile( opts.statSaveDir,sprintf('%s_Scalar_Sheet_Paths.csv',setup_name));
+    output_paths=fullfile(opts.statSaveDir,sprintf('%s_Scalar_Sheet_Paths.csv',setup_name));
 
     if ~file_time_check(output_paths, 'newer', opts.configFile)
         output_paths_table=scalar_processing_main(dataframe,save_scalar,opts);
@@ -74,7 +74,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
     strat_specific_cols=list2cell('SubjectTable GroupTable StatsResults Posthoc');
     output_paths_table=sortrows(output_paths_table,['SubjectTable' strat_specific_cols]);
 
-    %% create Basic Advanced Figures
+    %% create Basic Advanced Figures - bar plots, cohen F plots, scatter plots for each region, creates the pairwise comparisions within the sheet.
     for pt=opts.pvalType
         pvalue_type=pt{1};
         % need to assign to temp to prevent handling pval different from pval_BH
@@ -84,12 +84,8 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
     end
     output_paths_table=output_paths_with_compare;
 
-    %% Complex figure generation for Scalar Bilateral Non Erode
-    % they are so dependant for ordering to put together but at least getting
-    % the components  here would be a good thing.
 
-    % need to select the proper row of the output_paths_table
-
+%% Check and only create the summary powerpoint and complex figures for the major data set (ex: bilat/ non-erode) we define -- for then pairwise comparision
     [values,~,idx]=unique(output_paths_table.stratification);
 
     if (numel(values) == 1 && ~cellfun(@isempty,regexpi(values,'^(-)$'))) || (numel(values)>1 && height(output_paths_table)==numel(values))
@@ -103,6 +99,10 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
             end
         end
 
+        %% Complex figure generation
+        % they are so dependant for ordering to put together but at least getting
+        % the components  here would be a good thing.
+        % need to select the proper row of the output_paths_table
         if isempty(opts.statistical_model.test_remove_criteria{1})
             col_types={'cohenD','percent_change'};
         else
@@ -163,7 +163,6 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
 
             %this generates our master queue for the dataset.
             [main_plot_queue{n},main_composite_queue{n},~]=ontology_and_slice_generator(group_stats_file, column_setup, scalar_complex_vis_dir, previously_loaded_labelfile);
-
         end
 
         % Do Actual Running of queues
@@ -172,7 +171,6 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
         [function_success] = tracking_running_queues(plot_queue,composite_queue);
 
     end
-
     opts.Scalar_Sheet_Path_csv=output_paths_table;
 end
 

@@ -10,7 +10,6 @@ end
 
 
 pvalTypeIdx=reg_match(opts.pvalType,'^(pval_BH|pval)$');
-
 if nnz(pvalTypeIdx)<numel(pvalTypeIdx)
     error('%d pvalue types are not the correct term. Allowed options are: pval_BH, pval or 1xN of options cell array ',numel(pvalTypeIdx)-nnz(pvalTypeIdx))
 end

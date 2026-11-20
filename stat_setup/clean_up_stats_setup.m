@@ -1,4 +1,5 @@
 function [opts] = clean_up_stats_setup(opts)
+%This groups and structures the opts structure so that work can be done
 
 %group,
     %subgroup,

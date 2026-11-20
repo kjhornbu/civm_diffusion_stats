@@ -228,10 +228,11 @@ else
             if m==1
                 %first check the NLSAM
                test_notebook=civm_read_table(opts.(opts.using_series{m}));
+               temp_check_nlsam=nnz(~cellfun(@isempty,regexpi(test_notebook.CIVM_Scan_ID,'^(.*?)(NLSAM)?$')));
                 if opts.assumeNLSAM
-                    assert((nnz(~cellfun(@isempty,regexpi(test_notebook.CIVM_Scan_ID,'^(.*?)(NLSAM)?$'))) & opts.assumeNLSAM),"You said to use the same Dataframe, but there is NLSAM where there shouldn't be!")
+                    assert((temp_check_nlsam & opts.assumeNLSAM),"You said to use the same Dataframe, but there is NLSAM where there shouldn't be!")
                 elseif ~opts.assumeNLSAM
-                    assert(~(nnz(~cellfun(@isempty,regexpi(test_notebook.CIVM_Scan_ID,'^(.*?)(NLSAM)?$'))) & opts.assumeNLSAM),"You said to use the same Dataframe, but there is not NLSAM where there should be!")
+                    assert(~(temp_check_nlsam & opts.assumeNLSAM),"You said to use the same Dataframe, but there is not NLSAM where there should be!")
                 end
                 clear test_notebook
 
@@ -286,12 +287,12 @@ if ~opts.keep_last_setup
     [statistical_model]=pairwise_compare_ui_apply2summary(statistical_model,opts.dataframePath);
 
     opts.statistical_model=statistical_model;
-elseif opts.keep_last_setup & exist('old_file', 'var')
+elseif opts.keep_last_setup && exist('old_file', 'var')
     % load model from the old file
     temp_opts=load(old_file);
     opts.statistical_model=temp_opts.opts.statistical_model;
 
-elseif opts.keep_last_setup & ~exist(opts.configFile,'file')
+elseif opts.keep_last_setup && ~exist(opts.configFile,'file')
     error('You said to keep the last statistical model setup but did not give an existing file to look in!!!');
 end
 

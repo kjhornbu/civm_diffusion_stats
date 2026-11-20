@@ -10,6 +10,7 @@ while any(~function_success) && stop_too_many>0 && fraction_success>0.7
     fraction_success=sum(function_success)./numel(function_success);
     stop_too_many=stop_too_many-1;
 end
+assert(stop_too_many>0,sprintf('Too many iterations in making plots. %0.2f %% of of the plots were generated',fraction_success*100));
 
 warning('deactivated all svg checking and copositing because of inkscape conversion fails');
 return;
@@ -25,5 +26,7 @@ while any(~command_success) && stop_too_many>0 && fraction_success>0.7
     fraction_success=sum(command_success)./numel(command_success);
     stop_too_many=stop_too_many-1;
 end
+
+assert(stop_too_many>0,sprintf('Too many iterations in making composites. %0.2f %% of of the composites were generated',fraction_success*100));
 
 end

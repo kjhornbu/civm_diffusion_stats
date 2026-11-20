@@ -1,7 +1,8 @@
 function [opts] = do_connectome(opts)
 %% Omni Manova Analysis
-if sum(reg_match(opts.analysisPipelineType,'^(Connectome)$'))>0
-
+if sum(reg_match(opts.analysisPipelineType,'^(Connectome)$'))==0
+    return;
+else
     %getting memory information for the test
     try
         A=memory;
@@ -18,6 +19,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Connectome)$'))>0
         A.MaxPossibleArrayBytes=double_array_data_sizeByte*(max_specimen*number_of_leafs)^2;
     end
 
+    %% MAKE THIS THE CONNECTOME FOLDER and setup subfoldering as needed
 
     if ~exist(fullfile( opts.statSaveDir,'Connectomics'),'dir')
         mkdir(fullfile( opts.statSaveDir,'Connectomics'))
@@ -50,11 +52,8 @@ if sum(reg_match(opts.analysisPipelineType,'^(Connectome)$'))>0
         save_cnt=fullfile( opts.statSaveDir,'Connectomics',opts.statistical_model.stats_test_connectome.name,name_augment);
     end
 
-    %% MAKE THIS THE CONNECTOME FOLDER
-
     t_start=tic;
     Paths_Pval=struct;
-
     %% All specimen OmniManova
     for n=1:numel(opts.connectome_outputs)
         dataframe=civm_read_table(opts.dataframePath);
@@ -78,7 +77,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Connectome)$'))>0
         end
 
         set_scale=n-1;
-        [regional_paths,global_paths]=full_omni_manova_process(opts.dataframePath,o_dir,opts.statistical_model.group, opts.statistical_model.subgroup,opts.statistical_model.model_layout,opts.statistical_model.test_remove_criteria,opts.statistical_model.stats_test_connectome,opts.do_binarize, opts.do_mean_subtract, opts.do_ptr, opts.do_augment, find_scale, set_scale,opts.pvalThreshold);
+        [regional_paths,global_paths]=full_omni_manova_process(opts.dataframePath,o_dir,opts.statistical_model.group, opts.statistical_model.subgroup,opts.statistical_model.model_layout,opts.statistical_model.test_remove_criteria,opts.statistical_model.stats_test_connectome,opts.connectome_set_do_binarize, opts.connectome_set_do_mean_subtract, opts.connectome_set_do_ptr, opts.connectome_set_do_augment, find_scale, set_scale,opts.pvalThreshold);
 
         %placed back inside the full_omni_manova process -- to allow
         %for stratification summarizing
@@ -171,7 +170,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Connectome)$'))>0
                             find_scale=n-1;
                         end
                         set_scale=n-1;
-                        param_list_1_rm{s}={updated_dataframe_path,o_dir,opts.statistical_model.group,opts.statistical_model.subgroup,opts.statistical_model.model_layout,opts.statistical_model.test_remove_criteria,opts.statistical_model.stats_test_connectome,opts.do_binarize, opts.do_mean_subtract, opts.do_ptr, opts.do_augment, find_scale, set_scale,opts.pvalThreshold};
+                        param_list_1_rm{s}={updated_dataframe_path,o_dir,opts.statistical_model.group,opts.statistical_model.subgroup,opts.statistical_model.model_layout,opts.statistical_model.test_remove_criteria,opts.statistical_model.stats_test_connectome,opts.connectome_set_do_binarize, opts.connectome_set_do_mean_subtract, opts.connectome_set_do_ptr, opts.connectome_set_do_augment, find_scale, set_scale,opts.pvalThreshold};
                         remove1_dataframe=fulldataFrame;
                     end
 

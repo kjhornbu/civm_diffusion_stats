@@ -176,11 +176,11 @@ addParameter(p,'scalarContrastMetrics',default_scalarContrast, @(x) isstruct(x))
 addParameter(p,'plotting_sheet_types',{'Non_Erode'}, @(x) ischar(x) || isstring(x) || iscell(x));
 addParameter(p,'plotting_hemispheres',[0], @(x) isnumeric(x) && (x==-1||x==0||x==1));
 
-addParameter(p,'do_binarize', false, @validate_bool);
-addParameter(p,'do_mean_subtract', false, @validate_bool);
-addParameter(p, 'do_ptr', false, @validate_bool);
-addParameter(p, 'do_augment', false, @validate_bool);
-addParameter(p, 'connectome_outputs',list2cell('Unscaled_Omni_Manova BrainScaled_Omni_Manova'),@validate_text);
+addParameter(p,'connectome_set_do_binarize', false, @validate_bool);
+addParameter(p,'connectome_set_do_mean_subtract', false, @validate_bool);
+addParameter(p,'connectome_set_do_ptr', false, @validate_bool);
+addParameter(p,'connectome_set_do_augment', false, @validate_bool);
+addParameter(p,'connectome_outputs',list2cell('Unscaled_Omni_Manova BrainScaled_Omni_Manova'),@validate_text);
 
 %check to make sure that the connectome_outputs are at least one of the two
 %valid options - connectome_outputs=list2cell('Unscaled_Omni_Manova BrainScaled_Omni_Manova');

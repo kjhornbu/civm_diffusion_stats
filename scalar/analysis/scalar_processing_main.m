@@ -125,8 +125,8 @@ for o=1:numel(voxel_wise)
     [User_Defined_big_table] = add_norm_vol_2_data_table(User_Defined_big_table); %We save this one because it makes is clearer to the user
 
     %% Big Table with the useful names as defined by the user added back in.
-    civm_write_table(User_Defined_big_table,fullfile(save_location,'Subject_Data_Table.csv'));
     subject_data_table_path=fullfile(save_location,'Subject_Data_Table.csv');
+    civm_write_table(User_Defined_big_table,subject_data_table_path);
 
     % force important columns to text
     big_table=column2text(big_table,test_conditions);
@@ -294,6 +294,7 @@ for o=1:numel(voxel_wise)
             end
         end
     else
+        %% NOT STRATIFIED
         for hemi=1:numel(hemi_set)
             filtered_table=big_table(big_table.hemisphere_assignment  ==  hemi_set(hemi),:);
             % initialize to empty to simplify later logic
