@@ -62,7 +62,7 @@ end
 cont_logical_idx=((name_table.continous==1)')&(name_table.cross_number<=0); %need the non interaction terms for continuous terms
 cont_positional_idx=find(cont_logical_idx==1);
 
-random_logical_idx=~cellfun(@isempty,regexp(name_table.effect_type,'[Rr]andom'))&(name_table.cross_number<=0); %need the non interaction terms for random terms
+random_logical_idx=((name_table.random==1)')&(name_table.cross_number<=0); %need the non interaction terms for Random terms
 random_positional_idx=find(random_logical_idx==1);
 
 num_lines_to_add=size(stats_test.matrix{1},1) + 2;
@@ -91,7 +91,13 @@ for d_idx=1:numel(data_idx)
             'varnames', group_types_no_interaction,...
             'continuous', cont_positional_idx,...
             'random', random_positional_idx,...
+            'nested',double(table2array(opts.statistical_model.nest_model)),...
             'display','off');
+
+        %currently will break because the nested doesn't exist this deep
+        %into the code but this is what it needs to be to work... need to
+        %add nesting into teh scalar_stat_test and caonnectome_stat_test
+        %structs
 
         positional_idx=find(cell2mat(tbl(2:end,4)))+1;
         singular_terms=tbl(positional_idx,1);

@@ -1,6 +1,5 @@
-function [output_table,multicompare_table,group_output_summary] = calc_stats(data_table,user_contrasts_to_study,test_grouping,stats_test)
+function [output_table,multicompare_table,group_output_summary] = calc_stats(data_table,user_contrasts_to_study,test_condition,stats_test)
 %% This is the main Calculation Script to use for calculation of statistics
-
 
 check_rob_sheet=sum(~cellfun(@isempty,regexpi(data_table.Properties.VariableNames,'GN_Symbol')));
 
@@ -11,7 +10,7 @@ elseif check_rob_sheet==0
 
 end
 
-data_grouping_regex=strcat('^(',strjoin(Bookkeeping_group_summary_list,'|'),'|',strjoin(cellsimplify(test_grouping),'|'),')$');
+data_grouping_regex=strcat('^(',strjoin(Bookkeeping_group_summary_list,'|'),'|',strjoin(cellsimplify(test_condition),'|'),')$');
 
 %preliminary table setup
 output_table=table;
@@ -34,7 +33,7 @@ data_idx=find(~cellfun(@isempty,data_cells)==1); %actual idx not in logical arra
 data_name=data_table.Properties.VariableNames(:,data_idx);
 
 %all the data we want to group on
-[group_mean,group_std,group_median,group_IQR] = group_summary_statistics(data_table,data_name,test_grouping);
+[group_mean,group_std,group_median,group_IQR] = group_summary_statistics(data_table,data_name,test_condition);
 
 group_data_grouping_idx=regexpi(group_mean.Properties.VariableNames,data_grouping_regex);
 group_data_grouping_logical_idx=cellfun(@isempty,group_data_grouping_idx);
@@ -59,7 +58,7 @@ group_output_summary=join(group_output_summary,group_median);
 group_output_summary=join(group_output_summary,group_IQR);
 
 % because its used the same for all rois, we create using the first one.
-[name_table,length_name_nointeraction_table,nway_analysis_set]=build_anova_name_table(data_table(data_table.ROI==ROI_list(1),:),test_grouping,stats_test);
+[name_table,length_name_nointeraction_table,nway_analysis_set]=build_anova_name_table(data_table(data_table.ROI==ROI_list(1),:),test_condition,stats_test);
 
 %% Statsitical analysis with Potential Posthoc Testing
 for n_n=1:numel(ROI_list)
@@ -69,28 +68,31 @@ for n_n=1:numel(ROI_list)
 
     roi_subtable=data_table(data_table.ROI==ROI_list(n_n),:);
 
+    % using basically within 2021 MATLAB:
+
+   % anovan_defined_matrix_withposthoc_module
+   % kruskal_wallis_anova_withposthoc_modulev2
+
+%scalar_stat_models={'anovan_defined_matrix, anovan_no_interaction, anovan_pairwise_interaction, anovan_full_interaction,\nanova_1way, kruskalwallis. Only in MATLAB 2023+: manova_nway_fullinteraction, manova_nway_no_interaction'};
+%connectome_stat_models={'omnimanova_full_interactions, omnimanova_defined_matrix'};
+
     switch stats_test.name
         case 'anovan_no_interaction'
             % Parametric N-Way Anova with no interactions
             type='no_interaction';
-            [stats_test.matrix{1}] = binary_interaction_generator(test_grouping,type);
+            [stats_test.matrix{1}] = binary_interaction_generator(test_condition,type);
             [output,multicompare] = anovan_defined_matrix_withposthoc_module(roi_subtable,user_contrasts_to_study,stats_test,name_table,nway_analysis_set,length_name_nointeraction_table);
         case 'anovan_pairwise_interaction'
             % Parametric N-Way Anova with no interactions and pairwise
             % interactions.
             type='pairwise';
-            [stats_test.matrix{1}] = binary_interaction_generator(test_grouping,type);
+            [stats_test.matrix{1}] = binary_interaction_generator(test_condition,type);
             [output,multicompare] = anovan_defined_matrix_withposthoc_module(roi_subtable,user_contrasts_to_study,stats_test,name_table,nway_analysis_set,length_name_nointeraction_table);
         case 'anovan_full_interaction'
             % Parametric N-Way Anova with no interactions and all possible interactions of cofactors.
             type='full';
-            [stats_test.matrix{1}] = binary_interaction_generator(test_grouping,type);
+            [stats_test.matrix{1}] = binary_interaction_generator(test_condition,type);
             [output,multicompare] = anovan_defined_matrix_withposthoc_module(roi_subtable,user_contrasts_to_study,stats_test,name_table,nway_analysis_set,length_name_nointeraction_table);
-        case 'anovan_stepdown_integer_interaction'
-            %Parametric N-Way Anova Steps down by level more correctly instead of all combinations to just
-            %pairwise
-            error('You should use the defined matrix form of anovan instead of expecting a program to figure out valid interactions for you');
-            %[output,multicompare] = anovan_stepdown_integer_interaction_withposthoc_module(roi_subtable,test_grouping,stats_test);
         case 'anovan_defined_matrix'
             %Specific equation based form of entry of terms into the
             %anovan
@@ -105,14 +107,14 @@ for n_n=1:numel(ROI_list)
         case 'anova_1way'
             % A 1 Way anonva
             %check test grouping lenght is 1.
-            assert(numel(test_grouping)==1,'You can''t do a 1 way anova with multiple covariates');
+            assert(numel(test_condition)==1,'You can''t do a 1 way anova with multiple covariates');
             stats_test.matrix{1}=1;
             [output,multicompare] = anovan_defined_matrix_withposthoc_module(roi_subtable,user_contrasts_to_study,stats_test,name_table,nway_analysis_set,length_name_nointeraction_table);
 
             %[output,multicompare] = anova1_withposthoc_module(roi_subtable,test_grouping,stats_test); %Really don't need this can use anovan for it
         case 'kruskalwallis'
             % A non parametric anova
-            assert(numel(test_grouping)==1,'You can''t do a 1 way anova with multiple covariates');
+            assert(numel(test_condition)==1,'You can''t do a 1 way anova with multiple covariates');
             stats_test.matrix{1}=1;
 
             [output,multicompare] = kruskal_wallis_anova_withposthoc_modulev2(roi_subtable,stats_test,name_table,nway_analysis_set,length_name_nointeraction_table);
@@ -143,21 +145,18 @@ for n_n=1:numel(ROI_list)
 
             %note this posthoc is only with the non-interaction terms!
 
-            [output,multicompare] = manova_nway_fullinteraction_withsimpleposthoc_module(roi_subtable,test_grouping,stats_test);
-        case 'manova_nway_stepdown_interaction'
-            %Need to code in the stepdown in a way that makes sense
-            %currently just the full interaction mode  Will only work in matlab >2023
-            %[output,multicompare] = manova_nway_stepdown_withsimpleposthoc_module(roi_subtable,test_grouping,stats_test);
-            error('You should use the defined matrix form of manovan instead of expecting a program to figure out valid interactions for you');
+            [output,multicompare] = manova_nway_fullinteraction_withsimpleposthoc_module(roi_subtable,test_condition,stats_test);
 
         case 'manova_nway_no_interaction'
             %Need to code in the stepdown in a way that makes sense
             %currently just the full interaction mode  Will only work in matlab >2023
-            [output,multicompare] = manova_nway_no_interaction_withsimpleposthoc_module(roi_subtable,test_grouping,stats_test);
+            [output,multicompare] = manova_nway_no_interaction_withsimpleposthoc_module(roi_subtable,test_condition,stats_test);
 
         case 'manova_nway_defined_matrix'
             error('manova_nway_defined_matrix is not active yet');
 
+        otherwise
+            error('Statistical Test Requested does not match options, Try Again!');
     end
 
     logical_idx=cellfun(@ischar,output.contrast);
