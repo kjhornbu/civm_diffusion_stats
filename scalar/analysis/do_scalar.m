@@ -128,7 +128,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
             % indicies of the summary criteria, we dont use summary criterais because
             % its not as well connected to what we want.
 
-            summary_idx= opts.statistical_model.pairwise_criteria.control.applytoppt==1;
+            summary_idx= opts.statistical_model.pairwise_criteria.control.makeimage==1;
 
             % comparison_names version -- technically could be defined so
             % each one is different.
@@ -172,7 +172,8 @@ if sum(reg_match(opts.analysisPipelineType,'^(Scalar)$'))>0
         [function_success] = tracking_running_queues(plot_queue,composite_queue);
 
     end
+
+    opts.Scalar_Sheet_Path_csv=output_paths_table;
 end
 
-opts.Scalar_Sheet_Path_csv=output_paths_table;
 end

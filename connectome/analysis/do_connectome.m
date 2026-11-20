@@ -52,21 +52,20 @@ if sum(reg_match(opts.analysisPipelineType,'^(Connectome)$'))>0
 
     %% MAKE THIS THE CONNECTOME FOLDER
 
-    connectome_outputs=list2cell('Unscaled_Omni_Manova BrainScaled_Omni_Manova');
-    do_binarize=0; do_mean_subtract=0; do_ptr=0; do_augment=0; t_start=tic;
+    t_start=tic;
     Paths_Pval=struct;
 
     %% All specimen OmniManova
-    for n=1:numel(connectome_outputs)
+    for n=1:numel(opts.connectome_outputs)
         dataframe=civm_read_table(opts.dataframePath);
 
         if height(dataframe)> max_specimen
             error('Too many specimen in study to complete omni-manova on this system. Max Specimen # for system is %d.',max_specimen);
         end
 
-        dataframe=column2text(dataframe,{group,subgroup});
-        Paths_Pval.(connectome_outputs{n})=table;
-        o_dir=fullfile(save_cnt,connectome_outputs{n});
+        dataframe=column2text(dataframe,{opts.statistical_model.group,opts.statistical_model.subgroup});
+        Paths_Pval.(opts.connectome_outputs{n})=table;
+        o_dir=fullfile(save_cnt,opts.connectome_outputs{n});
 
         if ~exist(o_dir,'dir')
             mkdir(o_dir);
@@ -79,7 +78,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Connectome)$'))>0
         end
 
         set_scale=n-1;
-        [regional_paths,global_paths]=full_omni_manova_process(opts.dataframePath,o_dir,group, subgroup,test_criteria,test_remove_criteria,opts.statistical_model.stats_test_connectome,do_binarize, do_mean_subtract, do_ptr, do_augment, find_scale, set_scale,opts.pvalThreshold);
+        [regional_paths,global_paths]=full_omni_manova_process(opts.dataframePath,o_dir,opts.statistical_model.group, opts.statistical_model.subgroup,opts.statistical_model.model_layout,opts.statistical_model.test_remove_criteria,opts.statistical_model.stats_test_connectome,opts.do_binarize, opts.do_mean_subtract, opts.do_ptr, opts.do_augment, find_scale, set_scale,opts.pvalThreshold);
 
         %placed back inside the full_omni_manova process -- to allow
         %for stratification summarizing
@@ -88,9 +87,9 @@ if sum(reg_match(opts.analysisPipelineType,'^(Connectome)$'))>0
 
         % Need to figure out how this is done for the scalar data...
 
-        Paths_Pval.(connectome_outputs{n}).name{1}='All';
-        Paths_Pval.(connectome_outputs{n}).regional{1}=regional_paths.pval;
-        Paths_Pval.(connectome_outputs{n}).global{1}=global_paths.pval;
+        Paths_Pval.(opts.connectome_outputs{n}).name{1}='All';
+        Paths_Pval.(opts.connectome_outputs{n}).regional{1}=regional_paths.pval;
+        Paths_Pval.(opts.connectome_outputs{n}).global{1}=global_paths.pval;
     end
 
     t_omni=toc(t_start);
@@ -99,7 +98,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Connectome)$'))>0
 
     %% Then do the one remove testing of Omni Manova
     remove1_dataframe=civm_read_table(opts.dataframePath);
-    remove1_dataframe=column2text(remove1_dataframe,{group,subgroup});
+    remove1_dataframe=column2text(remove1_dataframe,{opts.statistical_model.group,opts.statistical_model.subgroup});
     fulldataFrame=remove1_dataframe;
 
     num_specimen=height(remove1_dataframe);
@@ -150,8 +149,8 @@ if sum(reg_match(opts.analysisPipelineType,'^(Connectome)$'))>0
             % ParFor for One remove testing
             if ~file_time_check(fullfile(save_cnt,'Pval_Paths.mat'),'newer',opts.dataframePath)
                 t_start_remove=tic;
-                for n=1:numel(connectome_outputs)
-                    newDF_dir=fullfile(save_cnt,connectome_outputs{n},'OneRemoveDataFrames');
+                for n=1:numel(opts.connectome_outputs)
+                    newDF_dir=fullfile(save_cnt,opts.connectome_outputs{n},'OneRemoveDataFrames');
                     if ~exist(newDF_dir,'dir')
                         mkdir(newDF_dir);
                     end
@@ -162,7 +161,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Connectome)$'))>0
                         updated_dataframe_path=fullfile(newDF_dir, strcat(removed_specimen{s},'_removed_DataFrame.txt'));
                         writetable(remove1_dataframe, updated_dataframe_path,'Delimiter', '\t'); %added  tab deliminator
 
-                        o_dir=fullfile(save_cnt,connectome_outputs{n},'OneRemoveTesting',strcat(removed_specimen{s},'_removed'));
+                        o_dir=fullfile(save_cnt,opts.connectome_outputs{n},'OneRemoveTesting',strcat(removed_specimen{s},'_removed'));
                         if ~exist(o_dir,'dir')
                             mkdir(o_dir);
                         end
@@ -172,7 +171,7 @@ if sum(reg_match(opts.analysisPipelineType,'^(Connectome)$'))>0
                             find_scale=n-1;
                         end
                         set_scale=n-1;
-                        param_list_1_rm{s}={updated_dataframe_path,o_dir,group,subgroup,test_criteria,test_remove_criteria,opts.statistical_model.stats_test_connectome,do_binarize, do_mean_subtract, do_ptr, do_augment, find_scale, set_scale,opts.pvalThreshold};
+                        param_list_1_rm{s}={updated_dataframe_path,o_dir,opts.statistical_model.group,opts.statistical_model.subgroup,opts.statistical_model.model_layout,opts.statistical_model.test_remove_criteria,opts.statistical_model.stats_test_connectome,opts.do_binarize, opts.do_mean_subtract, opts.do_ptr, opts.do_augment, find_scale, set_scale,opts.pvalThreshold};
                         remove1_dataframe=fulldataFrame;
                     end
 
@@ -200,9 +199,9 @@ civm_diffusion_stats(studyParams{:});
                     end
 
                     try
-                        Paths_Pval.(connectome_outputs{n}).name((1:numel(name))+1)=name;
-                        Paths_Pval.(connectome_outputs{n}).regional((1:numel(name))+1)=regional_path;
-                        Paths_Pval.(connectome_outputs{n}).global((1:numel(name))+1)=global_path;
+                        Paths_Pval.(opts.connectome_outputs{n}).name((1:numel(name))+1)=name;
+                        Paths_Pval.(opts.connectome_outputs{n}).regional((1:numel(name))+1)=regional_path;
+                        Paths_Pval.(opts.connectome_outputs{n}).global((1:numel(name))+1)=global_path;
                     catch
                         disp(n)
                         keyboard;
@@ -213,8 +212,8 @@ civm_diffusion_stats(studyParams{:});
 
                 save(fullfile(save_cnt,'Pval_Paths.mat'),'Paths_Pval')
                 try
-                    [Sig_Among_1RM_global_paths] = global_one_remove_compile(save_cnt,connectome_outputs,Paths_Pval,opts.pvalThreshold);
-                    [Sig_Among_1RM_regional_paths] = regional_one_remove_compile(save_cnt,connectome_outputs,Paths_Pval,opts.pvalThreshold);
+                    [Sig_Among_1RM_global_paths] = global_one_remove_compile(save_cnt,opts.connectome_outputs,Paths_Pval,opts.pvalThreshold);
+                    [Sig_Among_1RM_regional_paths] = regional_one_remove_compile(save_cnt,opts.connectome_outputs,Paths_Pval,opts.pvalThreshold);
                 catch
                     keyboard;
                 end
@@ -238,9 +237,9 @@ civm_diffusion_stats(studyParams{:});
 
     %% TO DO: Summary PPt for Connectomes
 
-    %generate_summary_ppts_manova(save_cnt,Paths_Pval,studyID,user,connectome_outputs,opts.pvalThreshold,studymodel,configuration_struct)
+    %generate_summary_ppts_manova(save_cnt,Paths_Pval,studyID,user,opts.connectome_outputs,opts.pvalThreshold,studymodel,configuration_struct)
 
+    opts.Connectome_Sheet_Path_csv=fullfile(save_cnt,'Pval_Paths.mat');
 end
 
-opts.Connectome_Sheet_Path_csv=fullfile(save_cnt,'Pval_Paths.mat');
 end
