@@ -68,6 +68,8 @@ random_positional_idx=find(random_logical_idx==1);
 num_lines_to_add=size(stats_test.matrix{1},1) + 2;
 harmonic_puller=logical(ones(size(name_table,1),1));
 
+nesting_terms=double(table2array(stats_test.nest_model));
+
 for d_idx=1:numel(data_idx)
     multi_compare_single_contrast(1)=multi_compare_template;
     multi_compare_single_contrast(1)=[];
@@ -91,7 +93,7 @@ for d_idx=1:numel(data_idx)
             'varnames', group_types_no_interaction,...
             'continuous', cont_positional_idx,...
             'random', random_positional_idx,...
-            'nested',double(table2array(opts.statistical_model.nest_model)),...
+            'nested',nesting_terms,...
             'display','off');
 
         %currently will break because the nested doesn't exist this deep

@@ -183,7 +183,7 @@ if nnz(reg_match(opts.analysisPipelineType,'^(Scalar)$'))
 
     stats_test_scalar.matrix{1}=matrix;
     stats_test_scalar.pval_threshold=opts.pvalThreshold;
-
+    stats_test_scalar.nest_model=opts.statistical_model.nest_model;
     opts.statistical_model.stats_test_scalar=stats_test_scalar;
 end
 
@@ -202,7 +202,7 @@ end
 
 stats_test_connectome.matrix{1}=matrix;
 stats_test_connectome.pval_threshold=opts.pvalThreshold;
-
+stats_test_connectome.nest_model=opts.statistical_model.nest_model;
 opts.statistical_model.stats_test_connectome=stats_test_connectome;
 end
 

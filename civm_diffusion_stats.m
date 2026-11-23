@@ -117,9 +117,21 @@ function [ opts ] = civm_diffusion_stats(varargin)
 %     default_scalarContrast(3).stat_extension={strcat('_e',default_scalarContrast(3).erode,'_L',default_scalarContrast(3).level,'_',default_scalarContrast(3).nickname,'.txt')};
 %     default_scalarContrast(3).List=strcatlist2cell(strrep('dti_fa,ad,md,rd,iso,qa,rdi,t-inc-ad,t-inc-md,t-inc-rd,t-inc-gfa,t-inc-dti-fa,t-inc-iso,t-inc-qa,t-dec-ad,t-dec-md,t-dec-rd,t-dec-gfa,t-dec-dti-fa,t-dec-iso,t-dec-qa','-','_')),'_mean');
 %
-% plotting_sheet_types - which one of the scalarContrastMetrics to actually
+% plotting_sheet_types - default is non-erode, which one of the scalarContrastMetrics to actually
 %    plot in the summary graphics/ppt
-% plotting_hemispheres - What hemisphere we want plotted in the summary graphics/ppt 
+% plotting_hemispheres - default is 0, What hemisphere we want plotted in the summary graphics/ppt 
+%
+% connectome_set_do_binarize - default is false, convert the connectome
+%    graphs into a binary representation of data.
+% connectome_set_do_mean_subtract - default is false,subtract the mean of the connectome from the data
+% connectome_set_do_ptr - default is false, ptr stands for pass to ranks. It changes nodes so ranked 1:N
+%    given number of connections in a given vertex.
+% connectome_set_do_augment - default is false, adjusts the values of the diagonal so the responses are spread
+%    along that instead of being just 0.
+% connectome_outputs - default list2cell('Unscaled_Omni_Manova
+%    BrainScaled_Omni_Manova'), indicates what kind of omni-manova you are
+%    doing - raw matrix (unscaled) or with the connectome scaled by fraction
+%    of brain volume as related to a 435 mm3 with 5 million 
 
 %% PRELIMINARIES
 % Input Options Parser

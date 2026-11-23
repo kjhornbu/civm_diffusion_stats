@@ -13,8 +13,7 @@ randomize_vertex_order=false;
 if do_binarize==1 %binarization so if above or below a certain value you can assign as zero!
     disp('Binarized Graphs...');
     graphs(graphs>0)=1;
-    %graphs(graphs<150)=0;
-    %graphs(graphs<1917)=0;
+
 end
 
 if do_mean_subtract==1
