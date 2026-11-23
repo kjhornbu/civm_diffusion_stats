@@ -88,15 +88,39 @@ idx_pos = sum(model_array,1)>0;
 matrix=double(model_array(:,idx_pos));
 model_names = configuration_struct.model_table.Properties.VariableNames(idx_pos);
 
+nest_model=table2array(configuration_struct.nest_model);
+
+ if ~isempty(subgroup)
+     random_vector={group_random_vector{:} subgroup_random_vector{:}};
+ else
+     random_vector={group_random_vector{:}};
+ end
+ 
+isRandom=cellfun(@isempty,regexpi(random_vector,'fixed'));
+
 opts.statistical_model.all_defined_terms=model_names;
 
 for n=1:size(model_array,1)
-    studymodel{n}=strjoin(configuration_struct.model_table.Properties.VariableNames(model_array(n,:)),':');
-end
-studymodel=strjoin(studymodel,'+');
 
-% This does not include the random|continous|nesting in the full notation!!!
-% but good enough for now. 
+    if isRandom(n)==0 & nnz(nest_model(n))==0
+        % just regular fixed model
+        studymodel{n}=strjoin(configuration_struct.model_table.Properties.VariableNames(model_array(n,:)),':');
+    elseif isRandom(n)==0 & nnz(nest_model(n))>0
+       %nesting model
+       studymodel{n}=strcat(strjoin(configuration_struct.model_table.Properties.VariableNames(model_array(n,:)),':'),'/',strjoin(configuration_struct.nest_model.Properties.VariableNames(nest_model(n,:)),'/'));
+    elseif isRandom(n)==1 & nnz(nest_model(n))==0
+        %random INTERCEPT model
+       studymodel{n}=strcat('1|',strjoin(configuration_struct.model_table.Properties.VariableNames(model_array(n,:)),':'));
+    elseif isRandom(n)==1 & nnz(nest_model(n))>0
+        %random INTERCEPT and nested
+       studymodel{n}=strcat('1|',strjoin(configuration_struct.model_table.Properties.VariableNames(model_array(n,:)),':'),'/',strjoin(configuration_struct.nest_model.Properties.VariableNames(nest_model(n,:)),'/'));
+    else
+        keyboard;
+    end
+    
+end
+
+studymodel=strjoin(studymodel,'+');
 
 opts.statistical_model.wilkinson_notation=studymodel;
 
