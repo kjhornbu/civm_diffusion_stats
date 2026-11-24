@@ -100,16 +100,17 @@ isRandom=cellfun(@isempty,regexpi(random_vector,'fixed'));
 opts.statistical_model.all_defined_terms=model_names;
 
 for n=1:size(model_array,1)
-    if isRandom(n)==0 & nnz(nest_model(n))==0
+
+    if nnz(isRandom(model_array(n,:)))==0 & nnz(nest_model(model_array(n,:)))==0
         % just regular fixed model - most of the time will be this
         studymodel{n}=strjoin(configuration_struct.model_table.Properties.VariableNames(model_array(n,:)),':');
-    elseif isRandom(n)==0 & nnz(nest_model(n))>0
+    elseif nnz(isRandom(model_array(n,:)))==0 & nnz(nest_model(model_array(n,:)))>0
        %nesting model with fixed effects
        studymodel{n}=strcat(strjoin(configuration_struct.model_table.Properties.VariableNames(model_array(n,:)),':'),'/',strjoin(configuration_struct.nest_model.Properties.VariableNames(nest_model(n,:)),'/'));
-    elseif isRandom(n)==1 & nnz(nest_model(n))==0
+    elseif nnz(isRandom(model_array(n,:)))==1 & nnz(nest_model(model_array(n,:)))==0
         %random INTERCEPT model
        studymodel{n}=strcat('1|',strjoin(configuration_struct.model_table.Properties.VariableNames(model_array(n,:)),':'));
-    elseif isRandom(n)==1 & nnz(nest_model(n))>0
+    elseif nnz(isRandom(model_array(n,:)))==1 & nnz(nest_model(model_array(n,:)))>0
         %random INTERCEPT and nested model
        studymodel{n}=strcat('1|',strjoin(configuration_struct.model_table.Properties.VariableNames(model_array(n,:)),':'),'/',strjoin(configuration_struct.nest_model.Properties.VariableNames(nest_model(n,:)),'/'));
     else
