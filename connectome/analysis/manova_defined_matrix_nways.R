@@ -45,17 +45,41 @@ if (length(args) < 4) {
   )
 }
 
+criteria<-read.csv(args[3])
+
 ## Get the data from the ASE File -- giant dataframe of data to look at First try comma separator and on error try the tab separated
 tryCatch({
-  df <- read.csv(args[2])
+  df <- read.csv(args[2],check.names = FALSE)
 }, error = function(err) {
-  df <- read.csv(args[2], sep = '\t')
+  df <- read.csv(args[2], sep = '\t',check.names = FALSE)
 })
 
+
+for (i in seq_len(nrow(criteria))) {
+  target_col <- trimws(criteria$grouping_variable[i]) # Removes any accidental leading/trailing spaces
+  target_type <- trimws(criteria$type[i])
+  
+  # Search for the column name in df
+  col_idx <- match(target_col, names(df))
+  
+  if (is.na(col_idx)) {
+    warning(paste("Column not found in CSV:", target_col))
+    next
+  }
+  
+  # Convert the matched column to make sure it is the type indicated
+  if (target_type == "discrete") {
+    df[[col_idx]] <- as.factor(df[[col_idx]])
+  } else if (target_type == "continuous") {
+    df[[col_idx]] <- as.numeric(df[[col_idx]])
+  }
+}
+
 #Grab number of sources of variation in the study
-number_of_sources_of_variation <- as.numeric(args[3])
+number_of_sources_of_variation <- as.numeric(args[4])
 #Get the actual equation for the model
-source_of_variation <- args[4]
+defined_formula <- args[5]
+
 print("Data loaded by R")
 
 print("Performing MANOVA")
@@ -64,13 +88,13 @@ idx_vertex <- which(grepl("vertex", names(df))) #The index of df equal to vertex
 
 if (rlang::is_empty(idx_vertex)) {
   #Where there is not vertex we only have one "ROI" entry
-  df.statistical_output <- format_manova(df, 1, number_of_sources_of_variation, source_of_variation)
+  df.statistical_output <- format_manova(df, 1, number_of_sources_of_variation, defined_formula)
 } else if (!rlang::is_empty(idx_vertex)) {
   number_of_vertices <- length(unique(df$vertex))
   df.statistical_output <- format_manova(df,
                                          number_of_vertices,
                                          number_of_sources_of_variation,
-                                         source_of_variation)
+                                         defined_formula)
 }
 
 print("MANOVA Done")

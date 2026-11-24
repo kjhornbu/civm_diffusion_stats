@@ -1,4 +1,4 @@
-function [regional_paths,global_paths] = run_manova_in_R(save_dir,group, subgroup,test_criteria, stats_test,regional_paths,global_paths,stratification_name)
+function [regional_paths,global_paths] = run_manova_in_R(save_dir,group, subgroup,test_criteria, defined_formula,stats_test,regional_paths,global_paths,stratification_name)
 
 single_experiment=1;
 %% Perform Actual Manova in R
@@ -14,7 +14,7 @@ switch stats_test.name
         [csv_out,defined_formula]=manova_R_call(out_file,regional_paths.ase,test_criteria);
     case 'omnimanova_defined_matrix'
         definition_matrix=stats_test.matrix{single_experiment};
-        [csv_out,defined_formula]=manova_defined_matrix_R_call(out_file,regional_paths.ase,test_criteria,definition_matrix,stats_test);
+        [csv_out,defined_formula]=manova_defined_matrix_R_call(out_file,regional_paths.ase,defined_formula,definition_matrix,stats_test);
 end
 Plot_N_Save_Pval_from_Rcode(save_dir,csv_out,group,subgroup,defined_formula,stratification_name);
 
@@ -29,7 +29,7 @@ switch stats_test.name
         [global_csv_out,defined_formula]=manova_R_call(out_file,global_paths.ase,test_criteria);
     case 'omnimanova_defined_matrix'
         definition_matrix=stats_test.matrix{single_experiment};
-        [global_csv_out,defined_formula]=manova_defined_matrix_R_call(out_file,global_paths.ase,test_criteria,definition_matrix,stats_test);
+        [global_csv_out,defined_formula]=manova_defined_matrix_R_call(out_file,global_paths.ase,defined_formula,definition_matrix,stats_test);
 end
 Plot_N_Save_Pval_from_Rcode(save_dir,global_csv_out,group,subgroup,defined_formula,stratification_name);
 end

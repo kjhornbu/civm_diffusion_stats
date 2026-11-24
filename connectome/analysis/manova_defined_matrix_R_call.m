@@ -1,7 +1,6 @@
-function [output_file,defined_formula] = manova_defined_matrix_R_call(output_file,file,test_criteria,definition_matrix,stats_test)
+function [output_file,defined_formula] = manova_defined_matrix_R_call(output_file,file,defined_formula,definition_matrix,stats_test)
 
 code_dir=fileparts(mfilename('fullpath'));
-%code_dir=fileparts(which('omni_manova_processing_main'));
 r_code=fullfile(code_dir,'manova_defined_matrix_nways.R');
 assert(exist(r_code,'file'),'couldn''t find the R file to run');
 [s,R_BIN_LOCATION]=system('which Rscript');
@@ -15,56 +14,46 @@ if s~=0
         % THE VERSION IS HARD CODED ON PURPOSE. R (like python) has lots of
         % chaos around libraries and version incompatabilities. 
         R_BIN_LOCATION=fullfile(wks_home,'auxiliary\R-4.3.2\bin\Rscript.exe');
-        %R_BIN_LOCATION="C:\workstation\auxiliary\R-4.3.2\bin\Rscript.exe"; %CTX04 path to R
+        %R_BIN_LOCATION="C:\workstation\auxiliary\R-4.3.2\bin\Rscript.exe"; ---> CTX04 path to R
     elseif ismac
         R_BIN_LOCATION='/usr/local/bin/Rscript';
-        %R_BIN_LOCATION='/usr/local/bin/Rscript'; %General Mac Version -- Might
-        %need to check names for this work for specific machines.
+        % Might need to check names for this work for specific machines.
     end
 end
+
 assert(exist(R_BIN_LOCATION,'file'),'couldn''t find the Rscript program at %s', R_BIN_LOCATION);
 
-test_criteria_text=test_criteria{1};
-
-% we're in progress figuring out how to set random variables in manova. 
-% currently it doesnt work, so this is false.
-WIP_R_RANDOM_STATS=false;
-
-%assignEffect Type
-if WIP_R_RANDOM_STATS
-    for n=1:numel(test_criteria_text)
-        temp=strsplit(test_criteria_text{n},'group');
-        if isempty(temp{1})
-            stats_test.random{n}=stats_test.effect_type_group{str2double(temp{2})};
-        elseif regexpi(temp{1},'sub')
-            stats_test.random{n}=stats_test.effect_type_subgroup{str2double(temp{2})};
-        else
-            keyboard;
-        end
-    end
-end
 % Wilkinson Notation https://www.jstor.org/stable/2346786?seq=1
 %This already did the remove the sources if not actually using that we
 %previously did. This builds stuff with and without the :
 
-for n=1:size(definition_matrix,1)
-
-    R_form_test_criteria{n}=strjoin(test_criteria_text(logical(definition_matrix(n,:))),':');
-
-    if WIP_R_RANDOM_STATS
-        if sum(random_terms)>0
-            random_terms=~cellfun(@isempty,regexpi(stats_test.random(logical(definition_matrix(n,:))),'^(random)$'));
-            R_form_test_criteria{n}=strcat('(1|',R_form_test_criteria{n},')');
-        end
-    end
-
-end
 length_of_sources_of_variation=size(definition_matrix,1);
+
+% create discrete/continous LUT
+try
+    vars = [stats_test.group_name,stats_test.subgroup_name]';
+    types = [stats_test.variable_type_group,stats_test.variable_type_subgroup]';
+    grouping={strcat('group',num2str(1:size(stats_test.group_name,1))');strcat('subgroup',num2str(1:size(stats_test.subgroup_name,1))')};
+catch
+    vars = stats_test.group_name;
+    types = stats_test.variable_type_group;
+    grouping={strcat('group',num2str(1:size(stats_test.group_name,1))')};
+end
+criteriaTable = table(grouping,vars,types, 'VariableNames', {'grouping_variable','variable','type'});
+
+criteriaFile = fullfile(fileparts(output_file),'criteria.csv');
+
+%flip into a general writing version
+for n=1:height(criteriaTable)
+   defined_formula=strrep(defined_formula,criteriaTable.variable{n},criteriaTable.grouping_variable{n});
+end
+
+writetable(criteriaTable,criteriaFile);
 
 % Call R
 fprintf('Calling R MANOVA\n')
 try
-    cmd=sprintf('%s --vanilla %s %s %s %d "%s"', R_BIN_LOCATION, r_code, output_file,file,length_of_sources_of_variation,strjoin(R_form_test_criteria,'+'));
+    cmd=sprintf('%s --vanilla %s %s %s %s %d "%s"', R_BIN_LOCATION, r_code, output_file,file,criteriaFile,length_of_sources_of_variation,defined_formula);
     [s,sout]=system(cmd);
 catch
     keyboard
@@ -72,6 +61,5 @@ end
 assert(s==0,sout);
 fprintf('R call completed\n')
 
-defined_formula=strjoin(R_form_test_criteria,'+');
 end
 

@@ -77,11 +77,10 @@ end
 opts.statistical_model.group=group;
 opts.statistical_model.subgroup=subgroup;
 
-
 %% Layout of test_criteria
 %in group and subgroup naming 
 % test_criteria={ {'group2' ; {'group1','subgroup1'}} };
-%test_criteria={{'group2';{'group1','subgroup1'}},{'group1','group2','subgroup1'}};
+%test_criteria={{'group1','group2','subgroup1'}};
 
 model_array=table2array(configuration_struct.model_table);
 idx_pos = sum(model_array,1)>0;
@@ -101,27 +100,27 @@ isRandom=cellfun(@isempty,regexpi(random_vector,'fixed'));
 opts.statistical_model.all_defined_terms=model_names;
 
 for n=1:size(model_array,1)
-
     if isRandom(n)==0 & nnz(nest_model(n))==0
-        % just regular fixed model
+        % just regular fixed model - most of the time will be this
         studymodel{n}=strjoin(configuration_struct.model_table.Properties.VariableNames(model_array(n,:)),':');
     elseif isRandom(n)==0 & nnz(nest_model(n))>0
-       %nesting model
+       %nesting model with fixed effects
        studymodel{n}=strcat(strjoin(configuration_struct.model_table.Properties.VariableNames(model_array(n,:)),':'),'/',strjoin(configuration_struct.nest_model.Properties.VariableNames(nest_model(n,:)),'/'));
     elseif isRandom(n)==1 & nnz(nest_model(n))==0
         %random INTERCEPT model
        studymodel{n}=strcat('1|',strjoin(configuration_struct.model_table.Properties.VariableNames(model_array(n,:)),':'));
     elseif isRandom(n)==1 & nnz(nest_model(n))>0
-        %random INTERCEPT and nested
+        %random INTERCEPT and nested model
        studymodel{n}=strcat('1|',strjoin(configuration_struct.model_table.Properties.VariableNames(model_array(n,:)),':'),'/',strjoin(configuration_struct.nest_model.Properties.VariableNames(nest_model(n,:)),'/'));
     else
         keyboard;
     end
-    
 end
 
-studymodel=strjoin(studymodel,'+');
+% for scalar don't need to add notation for the continous stuff... need to
+% for connectomes because R needs you to indicate it.
 
+studymodel=strjoin(studymodel,'+');
 opts.statistical_model.wilkinson_notation=studymodel;
 
 for n=1:numel(model_names)
@@ -160,8 +159,6 @@ else
         end
     end
 end
-
-
 
 opts.statistical_model.model_layout=test_criteria;
 %% Layout adding in a zscoring requirement

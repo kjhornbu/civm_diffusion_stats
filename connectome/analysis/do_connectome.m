@@ -76,8 +76,13 @@ else
             find_scale=1;
         end
 
-        set_scale=n-1;
-        [regional_paths,global_paths]=full_omni_manova_process(opts.dataframePath,o_dir,opts.statistical_model.group, opts.statistical_model.subgroup,opts.statistical_model.model_layout,opts.statistical_model.test_remove_criteria,opts.statistical_model.stats_test_connectome,opts.connectome_set_do_binarize, opts.connectome_set_do_mean_subtract, opts.connectome_set_do_ptr, opts.connectome_set_do_augment, find_scale, set_scale,opts.pvalThreshold);
+        if strcmp(opts.connectome_outputs(n),'Unscaled_Omni_Manova')
+            set_scale=0;
+        elseif strcmp(opts.connectome_outputs(n),'BrainScaled_Omni_Manova')
+            set_scale=1;
+        end
+        
+        [regional_paths,global_paths]=full_omni_manova_process(opts.dataframePath,o_dir,opts.statistical_model.group, opts.statistical_model.subgroup,opts.statistical_model.model_layout,opts.statistical_model.test_remove_criteria,opts.statistical_model.wilkinson_notation, opts.statistical_model.stats_test_connectome,opts.connectome_set_do_binarize, opts.connectome_set_do_mean_subtract, opts.connectome_set_do_ptr, opts.connectome_set_do_augment, find_scale, set_scale,opts.pvalThreshold);
 
         %placed back inside the full_omni_manova process -- to allow
         %for stratification summarizing
@@ -170,23 +175,9 @@ else
                             find_scale=n-1;
                         end
                         set_scale=n-1;
-                        param_list_1_rm{s}={updated_dataframe_path,o_dir,opts.statistical_model.group,opts.statistical_model.subgroup,opts.statistical_model.model_layout,opts.statistical_model.test_remove_criteria,opts.statistical_model.stats_test_connectome,opts.connectome_set_do_binarize, opts.connectome_set_do_mean_subtract, opts.connectome_set_do_ptr, opts.connectome_set_do_augment, find_scale, set_scale,opts.pvalThreshold};
+                        param_list_1_rm{s}={updated_dataframe_path,o_dir,opts.statistical_model.group,opts.statistical_model.subgroup,opts.statistical_model.model_layout,opts.statistical_model.test_remove_criteria,opts.statistical_model.wilkinson_notation,opts.statistical_model.stats_test_connectome,opts.connectome_set_do_binarize, opts.connectome_set_do_mean_subtract, opts.connectome_set_do_ptr, opts.connectome_set_do_augment, find_scale, set_scale,opts.pvalThreshold};
                         remove1_dataframe=fulldataFrame;
                     end
-
-                    % actual run omnimanova process for 1 remove
-                    %We keep having problems where with a character parsing
-                    %the error in question
-                    %{
-                Error using civm_diffusion_stats/parfor%consume_1
-Conversion to char from cell is not possible.
-
-Error in civm_diffusion_stats (line 662)
-                parfor s=1:num_specimen
-
-Error in example_run_stat_pipeline_205xFAD01_KH_QA_20260408_AllTogether (line 37)
-civm_diffusion_stats(studyParams{:});
-                    %}
 
                     parfor s=1:num_specimen
 

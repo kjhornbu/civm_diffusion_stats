@@ -1,5 +1,5 @@
 function [regional_paths, global_paths,stratified] = full_omni_manova_process( ...
-    dataframe_path, save_dir, group, subgroup, test_criteria, zscore_configuration, stats_test_manova, ...
+    dataframe_path, save_dir, group, subgroup, test_criteria, zscore_configuration,defined_formula, stats_test_manova, ...
     do_binarize, do_mean_subtract, do_ptr, do_augment, find_scale, set_scale,pval_threshold)
 
 %Determine stratificaiton
@@ -21,6 +21,7 @@ dataframe=sortrows(dataframe,'CIVM_Scan_ID','ascend');
 
 max_ase_param_count=inf;
 test_idx=1;
+
 for r=1:height(stats_test_manova.matrix{test_idx})
     criteria_idx=logical(stats_test_manova.matrix{test_idx}(r,:));
     if ~stratified
@@ -45,6 +46,7 @@ for r=1:height(stats_test_manova.matrix{test_idx})
     end
     max_ase_param_count=min([max_ase_param_count;group_counts]);
 end
+
 
 [regional_paths] = switch_ase_file_on_counts(regional_paths,max_ase_param_count,ase_param_count_R);
 [global_paths] = switch_ase_file_on_counts(global_paths,max_ase_param_count,ase_param_count_G);
@@ -120,7 +122,7 @@ if stratified
         writetable(ase_global_select, ase_file);
         global_paths.ase=ase_file;
 
-        [regional_paths,global_paths] = run_manova_in_R(ase_path,group, subgroup,test_criteria{2}, stats_test_manova,regional_paths,global_paths,stratification_groups_global{global_idx_range(strat)});
+        [regional_paths,global_paths] = run_manova_in_R(ase_path,group, subgroup,test_criteria{2},defined_formula, stats_test_manova,regional_paths,global_paths,stratification_groups_global{global_idx_range(strat)});
 
         regional_paths.ase=temp_regional;
         global_paths.ase=temp_global;
@@ -129,7 +131,7 @@ if stratified
         regional_interesting_results(ase_path,regional_paths.pval,pval_threshold); % These do the summary plotting in the case that we stratifiy
     end
 else
-    [regional_paths,global_paths] = run_manova_in_R(save_dir,group, subgroup,test_criteria, stats_test_manova,regional_paths,global_paths,'');
+    [regional_paths,global_paths] = run_manova_in_R(save_dir,group, subgroup,test_criteria,defined_formula,stats_test_manova,regional_paths,global_paths,'');
 
     global_interesting_results(save_dir,global_paths.pval,pval_threshold); % These do the summary plotting in the case that we stratifiy
     regional_interesting_results(save_dir,regional_paths.pval,pval_threshold); % These do the summary plotting in the case that we stratifiy

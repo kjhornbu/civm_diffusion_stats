@@ -14,6 +14,9 @@ end
 %Clean test_critera form
 R_form_test_critera=test_criteria{1};
 
+% we need to work on this so we can actually use the criteria on loading.
+error('we need to work on this so we can actually use the criteria on loading.');
+
     %Call R
     fprintf('Calling R MANOVA\n')
 
